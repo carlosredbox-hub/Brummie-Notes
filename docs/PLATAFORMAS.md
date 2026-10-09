@@ -32,7 +32,7 @@ APK de teste em `android/app/build/outputs/apk/debug/`. Gradle é instalado pela
 
 `.github/workflows/release.yml` faz validação, build Windows e build Android em paralelo e só publica quando ambos terminam com sucesso. Enviar tag `vX.Y.Z` que coincida com `package.json` cria release com instalador `.exe`, ZIP portátil, APK e SHA256SUMS; com assinatura configurada inclui AAB. Execução manual gera artifacts sem publicar release. Versões Android: major ≤ 2000, minor/patch ≤ 999, código `major*1000000+minor*1000+patch`.
 
-O workflow precisa estar commitado e enviado ao GitHub. O repositório estava sem commits antes deste trabalho; nenhum push, tag ou release remota foi realizado por esta tarefa. `GITHUB_TOKEN` do workflow fornece a permissão de releases, sem token pessoal.
+O código e o workflow estão publicados na branch `main` do GitHub. A tag `v1.0.0` foi enviada para iniciar a primeira release; acompanhe o resultado em [GitHub Actions](https://github.com/carlosredbox-hub/Brummie-Notes/actions). Novas versões exigem commit, push e tag correspondentes. `GITHUB_TOKEN` do workflow fornece a permissão de releases, sem token pessoal.
 
 Configure em **Settings → Secrets and variables → Actions**:
 
@@ -49,6 +49,6 @@ Forneça todos os quatro juntos e mantenha a mesma chave para futuras atualizaç
 - ZIP portátil Windows x64 foi gerado e seu pacote inspecionado: contém somente desktop e manifesto, sem banco ou backend. A geração local do NSIS não foi concluída por ausência de Wine no Linux; a action usa runner Windows.
 - APK debug compilou com SDK 35 e JDK 17, e sua assinatura v2 foi verificada. Android 10+; ainda não foi instalado/testado em dispositivo ou emulador.
 - Tentativas de smoke Electron nesta máquina sem display terminaram antes de abrir a interface; a validação nativa da tela de conexão ficou configurada no job Windows. Não há claim de teste em Windows real.
-- O workflow foi validado como YAML, mas ainda não executado no GitHub. Não foram criadas releases remotas.
+- O workflow foi validado como YAML e a primeira execução foi iniciada pela tag `v1.0.0`. A publicação dos artefatos depende da conclusão bem-sucedida dos jobs; consulte o status no GitHub Actions.
 
 Os arquivos gerados localmente estão em `release/windows/Brummie-Documents-1.0.0-Windows-x64.zip` e `release/android/Brummie-Documents-1.0.0-Android-TEST.apk`. São artefatos de avaliação, ignorados pelo Git.
