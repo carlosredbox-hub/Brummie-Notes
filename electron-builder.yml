@@ -4,6 +4,8 @@ asar: true
 npmRebuild: false
 files:
   - desktop/**/*
+  - dist/**/*
+  - src/assets/icon.png
   - package.json
   - "!node_modules/**/*"
 directories:

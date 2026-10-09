@@ -33,6 +33,13 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Prepare standalone offline preview
+        run: mkdir -p release/html && cp dist/index.html release/html/Brummie-Offline.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-html
+          path: release/html/*.html
+          if-no-files-found: error
   windows:
     needs: validate
     runs-on: windows-latest
@@ -43,6 +50,7 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
+      - run: npm run build
       - run: npx install-electron --no
       - run: npm run test:desktop
       - name: Build Windows installer (unsigned)
@@ -74,6 +82,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.11.1"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Bundle offline HTML in Android assets
+        run: mkdir -p android/app/src/main/assets && cp dist/index.html android/app/src/main/assets/index.html
       - name: Check signing configuration
         id: signing
         env:
@@ -149,18 +165,18 @@ jobs:
         run: |
           cd artifacts
           sha256sum * > SHA256SUMS.txt
-          printf '%s\n' 'Windows e Android usam o mesmo servidor HTTPS configurado no app e a mesma conta. O servidor não está incluído nos instaladores. Windows: instalador sem assinatura Authenticode.' > notes.md
+          printf '%s\n' 'Windows e Android funcionam offline. PDFs, modelos e cadastros são guardados localmente; backup JSON permite transferir entre dispositivos. Windows: instalador sem assinatura Authenticode.' > notes.md
           flags=()
           if [ "$SIGNED" != true ]; then
             flags+=(--prerelease)
             printf '\n%s\n' 'Android TEST: APK assinado com chave de debug temporária, somente para avaliação. A chave pode mudar entre builds; atualizar pode exigir desinstalação. Configure os quatro secrets Android para releases com assinatura estável.' >> notes.md
           fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk SHA256SUMS.txt --clobber
+            gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk ./*.html SHA256SUMS.txt --clobber
             if [ "$SIGNED" = true ]; then gh release edit "$RELEASE_TAG" --prerelease=false --notes-file notes.md; else gh release edit "$RELEASE_TAG" --prerelease --notes-file notes.md; fi
             if compgen -G '*.aab' >/dev/null; then gh release upload "$RELEASE_TAG" ./*.aab --clobber; fi
           else
-            assets=( ./*.exe ./*.zip ./*.apk SHA256SUMS.txt )
+            assets=( ./*.exe ./*.zip ./*.apk ./*.html SHA256SUMS.txt )
             if compgen -G '*.aab' >/dev/null; then assets+=( ./*.aab ); fi
             gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "Brummie Documents $RELEASE_TAG" --notes-file notes.md "${flags[@]}"
           fi

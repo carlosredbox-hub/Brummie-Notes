@@ -1,12 +1,12 @@
 {
   "name": "brummie-documents",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node server.js",
+    "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
-    "start": "node scripts/start.mjs",
+    "start": "vite preview --host 0.0.0.0 --port 3000",
     "test": "node --test tests/*.test.js",
     "desktop": "electron .",
     "build:windows": "electron-builder --win --x64",
@@ -15,10 +15,13 @@
   },
   "dependencies": {
     "express": "^5.1.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.468.0",
+    "pdfjs-dist": "^6.4.299",
     "pdfkit": "^0.17.2",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "vite-plugin-singlefile": "^2.3.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
@@ -28,6 +31,6 @@
     "vite": "^7.1.0"
   },
   "main": "desktop/main.cjs",
-  "description": "Documentos e operações para transporte executivo",
+  "description": "Documentos e opera\u00e7\u00f5es para transporte executivo",
   "author": "Brummie"
 }

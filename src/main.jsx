@@ -29,6 +29,17 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import "./style.css";
+import logo from "./assets/icon.png";
+import {
+  localApi,
+  documentPdf,
+  download,
+  importArchive,
+  originalPdf,
+  exportBackup,
+  restoreBackup,
+} from "./offline-store.js";
+import { readPdf, suggestions } from "./pdf-import.js";
 const TYPES = {
     invoice: "Invoice",
     fatura: "Fatura",
@@ -53,20 +64,7 @@ const amount = (v, c = "BRL") =>
   );
 const date = (v) =>
   v ? new Date(v + "T12:00:00").toLocaleDateString("pt-BR") : "—";
-async function api(url, method = "GET", data) {
-  const r = await fetch("/api" + url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: data ? JSON.stringify(data) : undefined,
-  });
-  const b = await r.json();
-  if (!r.ok) {
-    const error = new Error(b.error || "Não foi possível concluir.");
-    error.status = r.status;
-    throw error;
-  }
-  return b;
-}
+const api = localApi;
 function Field({ label, children, ...props }) {
   return (
     <label className="field">
@@ -131,108 +129,6 @@ function Modal({ title, onClose, children, wide = false }) {
     </div>
   );
 }
-function Auth({ onLogin }) {
-  const [register, setRegister] = useState(false),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  return (
-    <div className="auth">
-      <div className="auth-story">
-        <div className="brand">
-          brummie<span>DOCUMENTS</span>
-        </div>
-        <div>
-          <span className="eyebrow">MENOS PLANILHAS. MAIS VIAGENS.</span>
-          <h1>
-            Um atendimento
-            <br />
-            excepcional começa
-            <br />
-            nos detalhes.
-          </h1>
-          <p>
-            Da primeira proposta à confirmação do motorista.
-            <br />
-            Todos os seus documentos, em um só lugar.
-          </p>
-          <div className="auth-pills">
-            <span>
-              <ShieldCheck size={17} /> Espaço por empresa
-            </span>
-            <span>
-              <Globe size={17} /> Português & inglês
-            </span>
-          </div>
-        </div>
-        <small>Documentos claros. Operação conectada.</small>
-      </div>
-      <form
-        className="auth-form"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setBusy(true);
-          setError("");
-          try {
-            await api(
-              "/auth/" + (register ? "register" : "login"),
-              "POST",
-              Object.fromEntries(new FormData(e.target)),
-            );
-            await onLogin();
-          } catch (e) {
-            setError(e.message);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <span className="eyebrow">BEM-VINDO À BRUMMIE</span>
-        <h2>
-          {register ? "Crie seu espaço de trabalho" : "Bom ter você por aqui."}
-        </h2>
-        <p>
-          {register
-            ? "Configure sua empresa e comece a emitir documentos."
-            : "Entre para organizar sua próxima operação."}
-        </p>
-        {register && (
-          <>
-            <Field label="Seu nome" name="name" required />
-            <Field label="Nome da empresa" name="company" required />
-          </>
-        )}
-        <Field label="E-mail" type="email" name="email" required />
-        <Field
-          label="Senha"
-          type="password"
-          name="password"
-          minLength={10}
-          maxLength={256}
-          required
-          autoComplete={register ? "new-password" : "current-password"}
-        />
-        {register && <small>Mínimo de 10 caracteres.</small>}
-        {error && <div className="error">{error}</div>}
-        <button className="primary" disabled={busy}>
-          {busy ? "Aguarde…" : register ? "Criar conta" : "Entrar"}
-          <ArrowRight size={17} />
-        </button>
-        <p className="auth-switch">
-          {register ? "Já tem uma conta?" : "Primeiro acesso?"}{" "}
-          <button
-            type="button"
-            onClick={() => {
-              setRegister(!register);
-              setError("");
-            }}
-          >
-            {register ? "Entrar" : "Criar conta"}
-          </button>
-        </p>
-      </form>
-    </div>
-  );
-}
 function App() {
   const [state, setState] = useState(null),
     [loaded, setLoaded] = useState(false),
@@ -263,20 +159,6 @@ function App() {
   useEffect(() => {
     refresh();
   }, []);
-  useEffect(() => {
-    if (!state?.user?.id) return;
-    const update = () => {
-      if (!document.hidden) refresh(true);
-    };
-    const timer = setInterval(update, 10000);
-    document.addEventListener("visibilitychange", update);
-    window.addEventListener("online", update);
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", update);
-      window.removeEventListener("online", update);
-    };
-  }, [state?.user?.id]);
   const notify = (m) => {
     setToast(m);
     setTimeout(() => setToast(""), 4000);
@@ -287,7 +169,19 @@ function App() {
     notify("Salvo com sucesso.");
   };
   if (!loaded) return <div className="loading">Preparando seu espaço…</div>;
-  if (!state) return <Auth onLogin={refresh} />;
+  if (!state)
+    return (
+      <div className="empty">
+        <h2>Armazenamento local indisponível</h2>
+        <p>
+          Abra o HTML em Chrome/Edge ou no app. Seus documentos precisam de
+          acesso ao armazenamento do dispositivo.
+        </p>
+        <button className="primary" onClick={() => refresh()}>
+          Tentar novamente
+        </button>
+      </div>
+    );
   const docs = state.documents,
     records = state.records;
   const matches = (d) =>
@@ -313,7 +207,9 @@ function App() {
       : amount(0);
   const create = (type = "invoice") => setModal({ kind: "document", type });
   const titles = {
-    dashboard: "Visão geral",
+    dashboard: "Meu facilitador",
+    templates: "Meus modelos",
+    archives: "Biblioteca de PDFs",
     documents: "Documentos",
     client: "Clientes",
     driver: "Motoristas",
@@ -408,7 +304,8 @@ function App() {
     <div className="shell">
       <aside className={mobile ? "open" : ""}>
         <div className="brand">
-          brummie<span>DOCUMENTS</span>
+          <img className="brand-bird" src={logo} alt="Brummie Lines" />
+          brummie<span>OFFLINE STUDIO</span>
         </div>
         <button className="workspace" onClick={() => setPage("settings")}>
           <span className="workspace-logo">
@@ -440,6 +337,26 @@ function App() {
             </button>
           ))}
           <span className="nav-label">CADASTROS</span>
+          <button
+            className={page === "templates" ? "active" : ""}
+            onClick={() => {
+              setPage("templates");
+              setMobile(false);
+            }}
+          >
+            <Copy size={19} />
+            Meus modelos
+          </button>
+          <button
+            className={page === "archives" ? "active" : ""}
+            onClick={() => {
+              setPage("archives");
+              setMobile(false);
+            }}
+          >
+            <FileText size={19} />
+            Biblioteca de PDFs
+          </button>
           {NAV.slice(2, 5).map(([k, l, I]) => (
             <button
               key={k}
@@ -476,11 +393,11 @@ function App() {
           </span>
           <span>
             {state.user.name}
-            <small>Minha conta</small>
+            <small>Dados locais</small>
           </span>
           <button
             className="icon"
-            title="Sair"
+            title="Configurações locais"
             onClick={async () => {
               await api("/logout", "POST");
               setState(null);
@@ -505,8 +422,8 @@ function App() {
             <span className="system-status">
               <span />{" "}
               {connected
-                ? "Sincronizado com o servidor"
-                : "Sem conexão • dados não atualizados"}
+                ? "Offline • salvo neste dispositivo"
+                : "Armazenamento indisponível"}
             </span>
             <span className="avatar light">
               {state.user.name.slice(0, 2).toUpperCase()}
@@ -516,8 +433,8 @@ function App() {
         <div className="content">
           {!connected && (
             <div className="error" role="status">
-              Sem conexão com o servidor. Seus dados serão atualizados quando a
-              conexão voltar.
+              Armazenamento local indisponível. Confira o espaço do dispositivo
+              e exporte um backup.
             </div>
           )}
           <div className="page-head">
@@ -531,13 +448,181 @@ function App() {
                 {page === "dashboard"
                   ? `Olá, ${state.user.name.split(" ")[0]}.`
                   : titles[page]}
+                <div className="offline-tools">
+                  <button
+                    className="secondary"
+                    onClick={() => setModal({ kind: "import" })}
+                  >
+                    <Plus size={16} />
+                    Importar PDF anterior
+                  </button>
+                  <button
+                    className="secondary"
+                    onClick={async () => {
+                      try {
+                        await exportBackup();
+                        notify("Backup exportado.");
+                      } catch (e) {
+                        notify(e.message);
+                      }
+                    }}
+                  >
+                    <Download size={16} />
+                    Exportar backup
+                  </button>
+                  <label className="secondary restore-label">
+                    Restaurar backup
+                    <input
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        e.target.value = "";
+                        if (
+                          !file ||
+                          !confirm(
+                            "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
+                          )
+                        )
+                          return;
+                        try {
+                          await restoreBackup(file);
+                          await refresh();
+                          notify("Backup restaurado.");
+                        } catch (e) {
+                          notify(e.message);
+                        }
+                      }}
+                    />
+                  </label>
+                  <small>
+                    Sem login. Sem servidor. Seus arquivos ficam aqui.
+                  </small>
+                </div>
+                {page === "templates" && (
+                  <div className="record-grid">
+                    {records
+                      .filter((r) => r.kind === "template")
+                      .map((r) => (
+                        <article className="panel template-card" key={r.id}>
+                          <div className="tile green">
+                            <Copy />
+                          </div>
+                          <h3>{r.name}</h3>
+                          <p>
+                            {TYPES[r.content.type]} • {r.content.items.length}{" "}
+                            serviço(s)
+                          </p>
+                          <small>
+                            {r.content.client || "Cliente a definir"}
+                          </small>
+                          <button
+                            className="primary"
+                            onClick={() =>
+                              setModal({
+                                kind: "document",
+                                type: r.content.type,
+                                doc: r.content,
+                              })
+                            }
+                          >
+                            Usar modelo <ArrowRight size={16} />
+                          </button>
+                          <button
+                            className="icon"
+                            aria-label={"Excluir modelo " + r.name}
+                            onClick={async () => {
+                              if (confirm("Excluir este modelo?")) {
+                                await api("/records/" + r.id, "DELETE");
+                                await refresh();
+                              }
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </article>
+                      ))}
+                  </div>
+                )}
+                {page === "archives" && (
+                  <section className="panel">
+                    <div className="panel-head">
+                      <div>
+                        <h2>PDFs anteriores, guardados localmente</h2>
+                        <p>
+                          O original é preservado. Os modelos usam os dados que
+                          você revisou.
+                        </p>
+                      </div>
+                    </div>
+                    {records
+                      .filter((r) => r.kind === "archive")
+                      .map((r) => (
+                        <div className="archive-row" key={r.id}>
+                          <FileText size={24} />
+                          <div>
+                            <strong>{r.name}</strong>
+                            <small>
+                              {new Date(r.created).toLocaleDateString("pt-BR")}
+                            </small>
+                          </div>
+                          <button
+                            className="secondary"
+                            onClick={async () => {
+                              try {
+                                await originalPdf(r.id);
+                              } catch (e) {
+                                notify(e.message);
+                              }
+                            }}
+                          >
+                            Baixar original
+                          </button>
+                          <button
+                            className="primary"
+                            onClick={() => {
+                              const t = records.find(
+                                (t) =>
+                                  t.kind === "template" && t.sourceId === r.id,
+                              );
+                              if (t)
+                                setModal({
+                                  kind: "document",
+                                  type: t.content.type,
+                                  doc: t.content,
+                                });
+                              else notify("O modelo associado foi excluído.");
+                            }}
+                          >
+                            Reutilizar <Copy size={15} />
+                          </button>
+                        </div>
+                      ))}
+                    {!records.some((r) => r.kind === "archive") && (
+                      <div className="empty">
+                        <FileText size={32} />
+                        <h3>Seus PDFs também fazem parte da memória.</h3>
+                        <p>
+                          Importe um documento anterior para guardar o original
+                          e criar um modelo.
+                        </p>
+                        <button
+                          className="primary"
+                          onClick={() => setModal({ kind: "import" })}
+                        >
+                          Importar PDF
+                        </button>
+                      </div>
+                    )}
+                  </section>
+                )}
                 {page === "dashboard" && (
                   <span className="greeting-dot">.</span>
                 )}
               </h1>
               <p>
                 {page === "dashboard"
-                  ? "Uma visão completa dos seus documentos e próximos atendimentos."
+                  ? "Seus documentos anteriores são o ponto de partida do próximo."
                   : page === "documents"
                     ? "Do orçamento ao recibo. Tudo organizado, do seu jeito."
                     : page === "settings"
@@ -779,7 +864,7 @@ function App() {
           )}
           <footer className="page-footer">
             <span>
-              brummie <span>DOCUMENTS</span>
+              brummie <span>OFFLINE STUDIO</span>
             </span>
             <small>Feito para levar seu atendimento mais longe.</small>
           </footer>
@@ -790,6 +875,16 @@ function App() {
           <CheckCircle2 size={18} />
           {toast}
         </div>
+      )}
+      {modal?.kind === "import" && (
+        <ImportPdf
+          onClose={() => setModal(null)}
+          onSave={async (file, text, review) => {
+            await importArchive(file, text, review);
+            await done();
+            setPage("templates");
+          }}
+        />
       )}
       {modal?.kind === "record" && (
         <RecordForm
@@ -826,6 +921,19 @@ function App() {
           onCopy={() =>
             setModal({ kind: "document", type: modal.doc.type, doc: modal.doc })
           }
+          onTemplate={async (name) => {
+            if (!name?.trim()) return;
+            try {
+              await api("/records/template", "POST", {
+                name: name.trim(),
+                content: modal.doc,
+              });
+              await refresh();
+              notify("Modelo salvo para reutilizar.");
+            } catch (e) {
+              notify(e.message);
+            }
+          }}
           onStatus={async (status) => {
             try {
               await api("/documents/" + modal.doc.id, "PATCH", { status });
@@ -1009,6 +1117,7 @@ function DocForm({ initial, type, state, onClose, onSave }) {
             ...initial,
             date: today(),
             due: today(),
+            items: initial.items.map((i) => ({ ...i, date: today() })),
             status: initial.type === "recibo" ? "Pago" : "Emitido",
           }
         : {
@@ -1403,7 +1512,8 @@ function DocForm({ initial, type, state, onClose, onSave }) {
     </Modal>
   );
 }
-function Preview({ d, onClose, onCopy, onStatus }) {
+function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
+  const [modelName, setModelName] = useState(TYPES[d.type] + " • " + d.client);
   const en = d.language === "en",
     financial = !["voucher", "nota"].includes(d.type),
     c = d.company;
@@ -1425,16 +1535,43 @@ function Preview({ d, onClose, onCopy, onStatus }) {
         </select>
         <button className="secondary" onClick={onCopy}>
           <Copy size={15} />
-          Duplicar
+          Reutilizar
         </button>
-        <a className="primary" href={"/api/documents/" + d.id + "/pdf"}>
+        <input
+          aria-label="Nome para salvar modelo"
+          placeholder="Nome do modelo"
+          value={modelName}
+          onChange={(e) => setModelName(e.target.value)}
+        />
+        <button
+          className="secondary"
+          disabled={!modelName.trim()}
+          onClick={() => onTemplate(modelName)}
+        >
+          <Copy size={15} />
+          Salvar modelo
+        </button>
+        <button
+          className="primary"
+          onClick={async () => {
+            try {
+              download(
+                await documentPdf(d.id),
+                `${d.type}-${String(d.number).padStart(5, "0")}.pdf`,
+              );
+            } catch (e) {
+              alert(e.message);
+            }
+          }}
+        >
           <Download size={16} />
           Baixar PDF
-        </a>
+        </button>
       </div>
       <div className="paper-wrap">
         <article className="paper" style={{ "--doc-color": c.color }}>
           <header>
+            <img className="paper-logo" src={logo} alt="Brummie Lines" />
             <div className="paper-brand">
               {c.name}
               <small>PRIVATE TRANSPORT & EXPERIENCES</small>
@@ -1570,3 +1707,160 @@ function Preview({ d, onClose, onCopy, onStatus }) {
   );
 }
 createRoot(document.getElementById("root")).render(<App />);
+function ImportPdf({ onClose, onSave }) {
+  const [file, setFile] = useState(null),
+    [text, setText] = useState(""),
+    [d, setD] = useState(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  return (
+    <Modal title="Memorizar um PDF anterior" onClose={onClose} wide>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          try {
+            await onSave(file, text, d);
+          } catch (e) {
+            setError(e.message);
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="modal-body">
+          <p className="import-explanation">
+            Importe o original, revise os dados sugeridos e salve um modelo.
+            Seus arquivos não são enviados para nenhum servidor.
+          </p>
+          <Field label="PDF anterior (até 25 MB)">
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              required
+              onChange={async (e) => {
+                const f = e.target.files[0];
+                if (!f) return;
+                setBusy(true);
+                setError("");
+                try {
+                  const t = await readPdf(f),
+                    s = suggestions(t);
+                  setFile(f);
+                  setText(t);
+                  setD({
+                    type: s.type,
+                    client: s.client,
+                    language: "pt",
+                    currency: "BRL",
+                    date: today(),
+                    due: today(),
+                    email: "",
+                    status: "Rascunho",
+                    discount: 0,
+                    modelName: f.name.replace(/\.pdf$/i, ""),
+                    items: [
+                      {
+                        ...newItem(),
+                        description: s.description,
+                        price: s.price,
+                      },
+                    ],
+                    notes: "",
+                  });
+                } catch (e) {
+                  setError(e.message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            />
+          </Field>
+          {busy && <p>Lendo o PDF localmente…</p>}
+          {d && (
+            <>
+              <div className="form-grid">
+                <Field
+                  label="Nome do modelo"
+                  required
+                  value={d.modelName}
+                  onChange={(e) => setD({ ...d, modelName: e.target.value })}
+                />
+                <Field
+                  label="Cliente (revise)"
+                  required
+                  value={d.client}
+                  onChange={(e) => setD({ ...d, client: e.target.value })}
+                />
+                <Field label="Tipo">
+                  <select
+                    value={d.type}
+                    onChange={(e) => setD({ ...d, type: e.target.value })}
+                  >
+                    {["invoice", "fatura", "voucher", "nota", "orcamento"].map(
+                      (t) => (
+                        <option value={t} key={t}>
+                          {TYPES[t]}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </Field>
+                <Field
+                  label="Valor sugerido (revise)"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={d.items[0].price}
+                  onChange={(e) =>
+                    setD({
+                      ...d,
+                      items: [{ ...d.items[0], price: e.target.value }],
+                    })
+                  }
+                />
+              </div>
+              <Field
+                label="Serviço / descrição"
+                required
+                value={d.items[0].description}
+                onChange={(e) =>
+                  setD({
+                    ...d,
+                    items: [{ ...d.items[0], description: e.target.value }],
+                  })
+                }
+              />
+              <div className="import-warning">
+                A extração sugere dados; não reconstrói automaticamente todas as
+                linhas ou o layout. O maior valor encontrado é uma sugestão, que
+                deve ser conferida. PDFs digitalizados sem texto podem ser
+                guardados, mas exigem preenchimento manual.
+              </div>
+              <Field label="Texto extraído para conferir">
+                <textarea
+                  className="extracted-text"
+                  value={
+                    text ||
+                    "Nenhum texto extraído. Preencha os campos acima manualmente."
+                  }
+                  readOnly
+                />
+              </Field>
+            </>
+          )}
+          {error && <div className="error">{error}</div>}
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="secondary" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="primary" disabled={!d || busy}>
+            Guardar PDF e modelo <Check size={16} />
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}

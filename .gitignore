@@ -10,3 +10,5 @@ android/**/build/
 *.keystore
 *.jks
 android/local.properties
+android/app/src/main/assets/index.html
+offline/Brummie-Offline.html

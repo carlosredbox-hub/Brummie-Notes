@@ -1,35 +1,33 @@
-# Brummie Documents
+# Brummie Offline Studio
 
-App de documentos para transporte executivo, com cadastro de empresas independentes, clientes, motoristas e veículos. Emite invoices, faturas, orçamentos, vouchers, notas informativas e recibos em PDF. Interface responsiva em português e documentos em português/inglês.
+Facilitador local para transporte executivo. Gera invoices, faturas, orçamentos, vouchers, notas informativas e recibos em português ou inglês. Não conecta ao site Brummie, não exige conta e não precisa de servidor ou internet para funcionar.
 
-## Executar
-
-Requer Node.js 24 e a fonte `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` disponível na imagem preparada.
+## Testar antes de instalar
 
 ```sh
-cd /workspace/Brummie-Notes
-npm ci --cache /workspace/.npm-cache
-npm run dev
-```
-
-O servidor atende a porta 3000. Crie uma conta na tela inicial (nenhuma senha padrão), configure sua empresa, cadastre motorista/veículo com fotos JPG/PNG e gere documentos. Uma conta cria seu próprio espaço empresarial; não existe convite para equipe compartilhada nesta versão.
-
-```sh
+npm ci
 npm run build
-npm test
-npm start
 ```
 
-`PORT` configura a porta; `DB_PATH` configura a localização do SQLite, cujo padrão é `.data/brummie.sqlite`. O banco e fotos são locais, persistentes e ignorados pelo Git. Faça backup do SQLite e proteja o diretório de dados. Fotos fazem parte dos cadastros e são copiadas para os documentos emitidos. Dados da empresa e dos serviços ficam registrados na emissão; alterações futuras dos cadastros não reescrevem documentos anteriores.
+Abra `dist/index.html` em Chrome ou Edge. O arquivo único contém interface, ícone, gerador de PDF e leitor de PDFs. Não precisa de arquivos auxiliares. Use sempre o mesmo navegador e endereço/caminho para manter o espaço local; exporte backup antes de mover o HTML. Navegação privada ou limpeza de dados do navegador pode apagar seus registros.
 
-Para publicação use um host Node persistente, disco durável e HTTPS; configure `COOKIE_SECURE=true` atrás de HTTPS. A execução local não publica o app. Antes de oferecer como SaaS público, implementar recuperação/verificação de e-mail, convites e papéis de equipe, política de retenção, backups operacionais e gestão de sessão. Não há integração fiscal, envio automático de e-mail/WhatsApp, assinatura digital ou pagamentos.
+- **Meus modelos:** exemplos editáveis baseados nos documentos fornecidos e modelos que você salvar. Reutilizar preenche cliente, serviços, valores, motorista e veículo; atualiza as datas para hoje para revisão.
+- **Importar PDF anterior:** preserva o arquivo original na biblioteca e extrai texto localmente. Revise cliente, descrição e valor antes de salvar o modelo. A sugestão de preço usa o maior valor monetário encontrado; não reconstrói todas as linhas automaticamente. PDFs digitalizados precisam de preenchimento manual, sem OCR. Limite: 25 MB e 150 páginas, sem senha.
+- **Novo documento:** cadastros locais, itens, adicionais, descontos e emissão de PDF. Clientes utilizados ficam memorizados. Nota de atendimento permite nome, idiomas e foto do motorista, foto e placa do veículo. Não há emissão fiscal oficial.
+- **Exportar backup / Restaurar backup:** inclui documentos, modelos, cadastros, fotos e PDFs originais. A restauração substitui os dados locais após confirmação (máximo 150 MB). Guarde o backup em local privado.
 
-## Validação
+Dados ficam no IndexedDB do dispositivo. O armazenamento disponível depende do navegador e do espaço em disco. Windows e Android usam o mesmo app, mas cada dispositivo tem sua própria biblioteca: transfira um backup para levar os dados ao outro dispositivo. Não há sincronização automática offline.
 
-`npm test` verifica cálculos dos exemplos, validação de desconto e recibo, criação de conta, autorização, isolamento entre empresas, snapshots e geração de PDF. `tests/browser.mjs` é o smoke test visual e funcional, executável com Playwright e Chromium instalado no caminho indicado.
+## Desenvolvimento e validação
 
-Leia [referências e limites](docs/REFERENCIAS.md) para a análise dos anexos e o estado da pesquisa externa. Os anexos originais ficam fora do checkout. Não foram importados dados pessoais dos exemplos.
+Node.js 24. `npm run dev` inicia Vite na porta 3000 para desenvolvimento; `npm start` serve a compilação local. Esses comandos são opcionais para o HTML pronto. `npm run desktop` abre a versão Electron após o build.
 
-## Windows e Android
+```sh
+npm test
+npm run build
+npm run test:browser
+```
 
-As versões nativas usam o mesmo servidor HTTPS configurável e compartilham os dados da mesma conta. O GitHub Actions gera ambos os instaladores por tag. Veja [plataformas, assinatura e releases](docs/PLATAFORMAS.md). O endereço do servidor não vem embutido e o backend precisa ser hospedado separadamente.
+O teste de navegador roda com rede desativada e verifica emissão de PDF, persistência, reutilização, importação, preservação exata do PDF original, backup em outro contexto e layout móvel. Chromium/Playwright deve estar instalado. Testes legados de API ainda verificam o backend histórico em `server.js`; ele não é usado pelo app offline nem empacotado nos instaladores. Esses testes exigem a fonte DejaVuSans.
+
+Veja [plataformas e releases](docs/PLATAFORMAS.md) e [referências dos documentos](docs/REFERENCIAS.md). Os anexos originais e dados pessoais dos exemplos não fazem parte do aplicativo.
