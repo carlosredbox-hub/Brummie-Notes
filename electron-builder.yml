@@ -1,0 +1,23 @@
+appId: com.brummie.documents
+productName: Brummie Documents
+asar: true
+npmRebuild: false
+files:
+  - desktop/**/*
+  - package.json
+  - "!node_modules/**/*"
+directories:
+  output: release/windows
+win:
+  signAndEditExecutable: false
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+  artifactName: Brummie-Documents-${version}-Windows-${arch}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true

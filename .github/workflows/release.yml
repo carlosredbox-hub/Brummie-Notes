@@ -1,0 +1,166 @@
+name: Windows & Android releases
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Validate release version
+        id: version
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+        run: |
+          version="$(node scripts/release-version.mjs)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Install PDF font
+        run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+  windows:
+    needs: validate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npx install-electron --no
+      - run: npm run test:desktop
+      - name: Build Windows installer (unsigned)
+        run: npm run build:windows -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            release/windows/*.exe
+            release/windows/*.zip
+          if-no-files-found: error
+  android:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      signed: ${{ steps.signing.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: "13114758"
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Check signing configuration
+        id: signing
+        env:
+          STORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          count=0
+          for value in "$STORE" "$PASSWORD" "$ALIAS" "$KEY_PASSWORD"; do
+            if [ -n "$value" ]; then count=$((count+1)); fi
+          done
+          if [ "$count" -ne 0 ] && [ "$count" -ne 4 ]; then
+            echo 'Configure todos os quatro secrets de assinatura Android.' >&2
+            exit 1
+          fi
+          if [ "$count" -eq 4 ]; then
+            printf '%s' "$STORE" | base64 --decode > "$RUNNER_TEMP/brummie.jks"
+            echo 'signed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'signed=false' >> "$GITHUB_OUTPUT"
+            echo '::warning::APK de teste: configure assinatura estável antes de distribuir para produção.'
+          fi
+      - name: Build signed release or installable test APK
+        working-directory: android
+        env:
+          APP_VERSION: ${{ needs.validate.outputs.version }}
+          SIGNED: ${{ steps.signing.outputs.signed }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          if [ "$SIGNED" = true ]; then
+            export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/brummie.jks"
+            gradle --no-daemon :app:assembleRelease :app:bundleRelease -PappVersion="$APP_VERSION"
+            mkdir -p ../release/android
+            cp app/build/outputs/apk/release/app-release.apk "../release/android/Brummie-Documents-$APP_VERSION-Android.apk"
+            cp app/build/outputs/bundle/release/app-release.aab "../release/android/Brummie-Documents-$APP_VERSION-Android.aab"
+          else
+            gradle --no-daemon :app:assembleDebug -PappVersion="$APP_VERSION"
+            mkdir -p ../release/android
+            cp app/build/outputs/apk/debug/app-debug.apk "../release/android/Brummie-Documents-$APP_VERSION-Android-TEST.apk"
+          fi
+      - name: Remove temporary signing key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/brummie.jks"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: release/android/*
+          if-no-files-found: error
+  release:
+    needs: [validate, windows, android]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish both platforms together
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          SIGNED: ${{ needs.android.outputs.signed }}
+        shell: bash
+        run: |
+          cd artifacts
+          sha256sum * > SHA256SUMS.txt
+          printf '%s\n' 'Windows e Android usam o mesmo servidor HTTPS configurado no app e a mesma conta. O servidor não está incluído nos instaladores. Windows: instalador sem assinatura Authenticode.' > notes.md
+          flags=()
+          if [ "$SIGNED" != true ]; then
+            flags+=(--prerelease)
+            printf '\n%s\n' 'Android TEST: APK assinado com chave de debug temporária, somente para avaliação. A chave pode mudar entre builds; atualizar pode exigir desinstalação. Configure os quatro secrets Android para releases com assinatura estável.' >> notes.md
+          fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk SHA256SUMS.txt --clobber
+            if [ "$SIGNED" = true ]; then gh release edit "$RELEASE_TAG" --prerelease=false --notes-file notes.md; else gh release edit "$RELEASE_TAG" --prerelease --notes-file notes.md; fi
+            if compgen -G '*.aab' >/dev/null; then gh release upload "$RELEASE_TAG" ./*.aab --clobber; fi
+          else
+            assets=( ./*.exe ./*.zip ./*.apk SHA256SUMS.txt )
+            if compgen -G '*.aab' >/dev/null; then assets+=( ./*.aab ); fi
+            gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "Brummie Documents $RELEASE_TAG" --notes-file notes.md "${flags[@]}"
+          fi

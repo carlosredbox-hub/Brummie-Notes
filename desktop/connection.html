@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'"
+    />
+    <title>Conectar • Brummie</title>
+    <style>
+      body {
+        background: #f6f8f7;
+        color: #243c34;
+        font-family: system-ui;
+        margin: 0;
+        padding: 48px;
+      }
+      h1 {
+        margin: 0 0 28px;
+        font-size: 32px;
+      }
+      p {
+        line-height: 1.7;
+        color: #6e8275;
+        font-size: 14px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        margin: 25px 0 10px;
+      }
+      input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #d9e4d7;
+        border-radius: 6px;
+        font: inherit;
+      }
+      button {
+        margin-top: 18px;
+        padding: 13px 25px;
+        background: #28644f;
+        border: 0;
+        border-radius: 6px;
+        color: white;
+        font: inherit;
+        cursor: pointer;
+      }
+      #error {
+        color: #a94440;
+      }
+      small {
+        display: block;
+        color: #819388;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>brummie documents</h1>
+    <h2>Um servidor. Todos os dispositivos.</h2>
+    <p>
+      Informe o mesmo endereço no Windows e no Android. Entre com a mesma conta
+      para acessar seus documentos e cadastros.
+    </p>
+    <form id="form">
+      <label for="url">Endereço HTTPS do app</label
+      ><input
+        id="url"
+        type="url"
+        required
+        placeholder="https://app.suaempresa.com"
+      /><button>Conectar</button>
+      <p id="error" role="alert"></p>
+    </form>
+    <small>O servidor precisa estar publicado e acessível pela internet.</small>
+    <script src="connection.js"></script>
+  </body>
+</html>
