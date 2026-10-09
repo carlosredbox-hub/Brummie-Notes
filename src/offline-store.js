@@ -1,5 +1,6 @@
 import { validateDoc } from "../domain.js";
 import { makePdf } from "./offline-pdf.js";
+import { applyReferencePack } from "./reference-pack.js";
 const DB = "brummie-offline-v1";
 let connection;
 const id = () => crypto.randomUUID();
@@ -95,6 +96,7 @@ async function transaction(fn) {
     req.onsuccess = () => {
       try {
         const data = req.result || initial();
+        applyReferencePack(data, window.__BRUMMIE_REFERENCE_PACK__);
         result = fn(data);
         data.revision++;
         store.put(data, "data");

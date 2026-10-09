@@ -1,3 +1,4 @@
+import { reuseDocument } from "./reuse-document.js";
 import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -448,174 +449,6 @@ function App() {
                 {page === "dashboard"
                   ? `Olá, ${state.user.name.split(" ")[0]}.`
                   : titles[page]}
-                <div className="offline-tools">
-                  <button
-                    className="secondary"
-                    onClick={() => setModal({ kind: "import" })}
-                  >
-                    <Plus size={16} />
-                    Importar PDF anterior
-                  </button>
-                  <button
-                    className="secondary"
-                    onClick={async () => {
-                      try {
-                        await exportBackup();
-                        notify("Backup exportado.");
-                      } catch (e) {
-                        notify(e.message);
-                      }
-                    }}
-                  >
-                    <Download size={16} />
-                    Exportar backup
-                  </button>
-                  <label className="secondary restore-label">
-                    Restaurar backup
-                    <input
-                      type="file"
-                      accept="application/json,.json"
-                      onChange={async (e) => {
-                        const file = e.target.files[0];
-                        e.target.value = "";
-                        if (
-                          !file ||
-                          !confirm(
-                            "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
-                          )
-                        )
-                          return;
-                        try {
-                          await restoreBackup(file);
-                          await refresh();
-                          notify("Backup restaurado.");
-                        } catch (e) {
-                          notify(e.message);
-                        }
-                      }}
-                    />
-                  </label>
-                  <small>
-                    Sem login. Sem servidor. Seus arquivos ficam aqui.
-                  </small>
-                </div>
-                {page === "templates" && (
-                  <div className="record-grid">
-                    {records
-                      .filter((r) => r.kind === "template")
-                      .map((r) => (
-                        <article className="panel template-card" key={r.id}>
-                          <div className="tile green">
-                            <Copy />
-                          </div>
-                          <h3>{r.name}</h3>
-                          <p>
-                            {TYPES[r.content.type]} • {r.content.items.length}{" "}
-                            serviço(s)
-                          </p>
-                          <small>
-                            {r.content.client || "Cliente a definir"}
-                          </small>
-                          <button
-                            className="primary"
-                            onClick={() =>
-                              setModal({
-                                kind: "document",
-                                type: r.content.type,
-                                doc: r.content,
-                              })
-                            }
-                          >
-                            Usar modelo <ArrowRight size={16} />
-                          </button>
-                          <button
-                            className="icon"
-                            aria-label={"Excluir modelo " + r.name}
-                            onClick={async () => {
-                              if (confirm("Excluir este modelo?")) {
-                                await api("/records/" + r.id, "DELETE");
-                                await refresh();
-                              }
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </article>
-                      ))}
-                  </div>
-                )}
-                {page === "archives" && (
-                  <section className="panel">
-                    <div className="panel-head">
-                      <div>
-                        <h2>PDFs anteriores, guardados localmente</h2>
-                        <p>
-                          O original é preservado. Os modelos usam os dados que
-                          você revisou.
-                        </p>
-                      </div>
-                    </div>
-                    {records
-                      .filter((r) => r.kind === "archive")
-                      .map((r) => (
-                        <div className="archive-row" key={r.id}>
-                          <FileText size={24} />
-                          <div>
-                            <strong>{r.name}</strong>
-                            <small>
-                              {new Date(r.created).toLocaleDateString("pt-BR")}
-                            </small>
-                          </div>
-                          <button
-                            className="secondary"
-                            onClick={async () => {
-                              try {
-                                await originalPdf(r.id);
-                              } catch (e) {
-                                notify(e.message);
-                              }
-                            }}
-                          >
-                            Baixar original
-                          </button>
-                          <button
-                            className="primary"
-                            onClick={() => {
-                              const t = records.find(
-                                (t) =>
-                                  t.kind === "template" && t.sourceId === r.id,
-                              );
-                              if (t)
-                                setModal({
-                                  kind: "document",
-                                  type: t.content.type,
-                                  doc: t.content,
-                                });
-                              else notify("O modelo associado foi excluído.");
-                            }}
-                          >
-                            Reutilizar <Copy size={15} />
-                          </button>
-                        </div>
-                      ))}
-                    {!records.some((r) => r.kind === "archive") && (
-                      <div className="empty">
-                        <FileText size={32} />
-                        <h3>Seus PDFs também fazem parte da memória.</h3>
-                        <p>
-                          Importe um documento anterior para guardar o original
-                          e criar um modelo.
-                        </p>
-                        <button
-                          className="primary"
-                          onClick={() => setModal({ kind: "import" })}
-                        >
-                          Importar PDF
-                        </button>
-                      </div>
-                    )}
-                  </section>
-                )}
                 {page === "dashboard" && (
                   <span className="greeting-dot">.</span>
                 )}
@@ -646,6 +479,179 @@ function App() {
               </button>
             )}
           </div>
+          <div className="offline-tools">
+            <button
+              className="secondary"
+              onClick={() => setModal({ kind: "import" })}
+            >
+              <Plus size={16} />
+              Importar PDF anterior
+            </button>
+            <button
+              className="secondary"
+              onClick={async () => {
+                try {
+                  await exportBackup();
+                  notify("Backup exportado.");
+                } catch (e) {
+                  notify(e.message);
+                }
+              }}
+            >
+              <Download size={16} />
+              Exportar backup
+            </button>
+            <label className="secondary restore-label">
+              Restaurar backup
+              <input
+                type="file"
+                accept="application/json,.json"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  e.target.value = "";
+                  if (
+                    !file ||
+                    !confirm(
+                      "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
+                    )
+                  )
+                    return;
+                  try {
+                    await restoreBackup(file);
+                    await refresh();
+                    notify("Backup restaurado.");
+                  } catch (e) {
+                    notify(e.message);
+                  }
+                }}
+              />
+            </label>
+            <small>Sem login. Sem servidor. Seus arquivos ficam aqui.</small>
+          </div>
+          {page === "templates" && (
+            <div className="record-grid">
+              {records
+                .filter((r) => r.kind === "template")
+                .map((r) => (
+                  <article className="panel template-card" key={r.id}>
+                    <div className="tile green">
+                      <Copy />
+                    </div>
+                    <h3>{r.name}</h3>
+                    <p>
+                      {TYPES[r.content.type]} • {r.content.items.length}{" "}
+                      serviço(s)
+                    </p>
+                    <small>{r.content.client || "Cliente a definir"}</small>
+                    {r.content.referenceReview && (
+                      <p className="import-warning">
+                        {r.content.referenceReview}
+                      </p>
+                    )}
+                    <button
+                      className="primary"
+                      onClick={() =>
+                        setModal({
+                          kind: "document",
+                          type: r.content.type,
+                          doc: r.content,
+                        })
+                      }
+                    >
+                      Usar modelo <ArrowRight size={16} />
+                    </button>
+                    <button
+                      className="icon"
+                      aria-label={"Excluir modelo " + r.name}
+                      onClick={async () => {
+                        if (confirm("Excluir este modelo?")) {
+                          await api("/records/" + r.id, "DELETE");
+                          await refresh();
+                        }
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </article>
+                ))}
+            </div>
+          )}
+          {page === "archives" && (
+            <section className="panel">
+              <div className="panel-head">
+                <div>
+                  <h2>PDFs anteriores, guardados localmente</h2>
+                  <p>
+                    O original é preservado. Os modelos usam os dados que você
+                    revisou.
+                  </p>
+                </div>
+              </div>
+              {records
+                .filter((r) => r.kind === "archive")
+                .map((r) => (
+                  <div className="archive-row" key={r.id}>
+                    <FileText size={24} />
+                    <div>
+                      <strong>{r.name}</strong>
+                      <small>
+                        {new Date(r.created).toLocaleDateString("pt-BR")}
+                      </small>
+                    </div>
+                    <button
+                      className="secondary"
+                      onClick={async () => {
+                        try {
+                          await originalPdf(r.id);
+                        } catch (e) {
+                          notify(e.message);
+                        }
+                      }}
+                    >
+                      Baixar original
+                    </button>
+                    {records
+                      .filter(
+                        (t) =>
+                          t.kind === "template" &&
+                          (t.sourceId === r.id || t.sourceIds?.includes(r.id)),
+                      )
+                      .map((t) => (
+                        <button
+                          key={t.id}
+                          className="primary"
+                          onClick={() =>
+                            setModal({
+                              kind: "document",
+                              type: t.content.type,
+                              doc: t.content,
+                            })
+                          }
+                        >
+                          Usar: {t.name} <Copy size={15} />
+                        </button>
+                      ))}
+                  </div>
+                ))}
+              {!records.some((r) => r.kind === "archive") && (
+                <div className="empty">
+                  <FileText size={32} />
+                  <h3>Seus PDFs também fazem parte da memória.</h3>
+                  <p>
+                    Importe um documento anterior para guardar o original e
+                    criar um modelo.
+                  </p>
+                  <button
+                    className="primary"
+                    onClick={() => setModal({ kind: "import" })}
+                  >
+                    Importar PDF
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
           {page === "dashboard" && (
             <>
               <div className="stats">
@@ -1113,13 +1119,7 @@ const newItem = () => ({
 function DocForm({ initial, type, state, onClose, onSave }) {
   const [d, setD] = useState(
       initial
-        ? {
-            ...initial,
-            date: today(),
-            due: today(),
-            items: initial.items.map((i) => ({ ...i, date: today() })),
-            status: initial.type === "recibo" ? "Pago" : "Emitido",
-          }
+        ? reuseDocument(initial, today())
         : {
             type,
             language: "pt",
@@ -1178,6 +1178,12 @@ function DocForm({ initial, type, state, onClose, onSave }) {
         }}
       >
         <div className="modal-body">
+          {d.referenceReview && (
+            <p className="import-warning">
+              Referência anterior: {d.referenceReview} As datas dos serviços
+              foram reposicionadas a partir de hoje, preservando os intervalos.
+            </p>
+          )}
           <div className="form-section">
             <h3>
               <span>01</span> Documento & cliente

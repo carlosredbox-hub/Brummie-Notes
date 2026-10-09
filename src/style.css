@@ -1609,3 +1609,17 @@ aside {
     width: 45px;
   }
 }
+.archive-row {
+  flex-wrap: wrap;
+}
+.archive-row > div {
+  min-width: 180px;
+}
+.archive-row > button {
+  white-space: normal;
+  max-width: 100%;
+}
+.template-card .import-warning {
+  font-size: 11px;
+  line-height: 1.6;
+}
