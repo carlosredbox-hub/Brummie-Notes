@@ -33,6 +33,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - run: npm run test:preview
       - name: Prepare standalone offline preview
         run: mkdir -p release/html && cp dist/index.html release/html/Brummie-Offline.html
       - uses: actions/upload-artifact@v4

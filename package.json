@@ -11,7 +11,8 @@
     "desktop": "electron .",
     "build:windows": "electron-builder --win --x64",
     "test:browser": "node tests/browser.mjs",
-    "test:desktop": "node tests/desktop.smoke.mjs"
+    "test:desktop": "node tests/desktop.smoke.mjs",
+    "test:preview": "node tests/preview.browser.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",

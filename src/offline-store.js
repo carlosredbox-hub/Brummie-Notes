@@ -3,7 +3,16 @@ import { makePdf } from "./offline-pdf.js";
 import { applyReferencePack } from "./reference-pack.js";
 const DB = "brummie-offline-v1";
 let connection;
-const id = () => crypto.randomUUID();
+let sessionData;
+let storageUnavailable = false;
+const id = () => {
+  if (globalThis.crypto?.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
 const today = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 const item = (description, price, quantity = 1, extra = 0) => ({
@@ -73,21 +82,30 @@ function initial() {
 }
 async function database() {
   if (!connection)
-    connection = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB, 1);
-      req.onupgradeneeded = () => req.result.createObjectStore("workspace");
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () =>
-        reject(
-          new Error(
-            "Armazenamento local indisponível. Abra o HTML em Chrome/Edge ou no app.",
-          ),
-        );
+    connection = new Promise((resolve) => {
+      try {
+        const request = indexedDB.open(DB, 1);
+        request.onupgradeneeded = () =>
+          request.result.createObjectStore("workspace");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => resolve(null);
+      } catch {
+        resolve(null);
+      }
     });
   return connection;
 }
 async function transaction(fn) {
   const db = await database();
+  if (!db) {
+    storageUnavailable = true;
+    const data = structuredClone(sessionData || initial());
+    applyReferencePack(data, window.__BRUMMIE_REFERENCE_PACK__);
+    const result = fn(data);
+    data.revision++;
+    sessionData = data;
+    return result;
+  }
   return new Promise((resolve, reject) => {
     const tx = db.transaction("workspace", "readwrite"),
       store = tx.objectStore("workspace"),
@@ -120,6 +138,7 @@ export async function localApi(url, method = "GET", body) {
     if (url === "/state")
       return {
         ...data,
+        storageMode: storageUnavailable ? "session" : "persistent",
         documents: data.documents.map(({ pdf, ...d }) => d),
         records: data.records.map(({ source, ...r }) => r),
       };

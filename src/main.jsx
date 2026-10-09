@@ -104,6 +104,28 @@ function Photo({ value, onChange }) {
     </label>
   );
 }
+function LocalForm({ onSubmit, children, ...props }) {
+  return (
+    <form
+      {...props}
+      onSubmit={onSubmit}
+      onClick={(event) => {
+        const button = event.target.closest("button");
+        if (
+          !button ||
+          button.type !== "submit" ||
+          !event.currentTarget.contains(button)
+        )
+          return;
+        // This app saves locally; no browser form navigation is needed.
+        event.preventDefault();
+        if (event.currentTarget.reportValidity()) onSubmit(event);
+      }}
+    >
+      {children}
+    </form>
+  );
+}
 function Modal({ title, onClose, children, wide = false }) {
   return (
     <div
@@ -139,7 +161,8 @@ function App() {
     [filter, setFilter] = useState("Todos"),
     [toast, setToast] = useState(""),
     [mobile, setMobile] = useState(false),
-    [connected, setConnected] = useState(true);
+    [connected, setConnected] = useState(true),
+    [startupError, setStartupError] = useState("");
   const polling = useRef(false);
   async function refresh(quiet = false) {
     if (quiet && polling.current) return;
@@ -149,9 +172,13 @@ function App() {
       if (quiet) setState((current) => (current ? next : current));
       else setState(next);
       setConnected(true);
+      setStartupError("");
     } catch (error) {
       if (error.status === 401) setState(null);
       setConnected(false);
+      setStartupError(
+        error.message || "Não foi possível iniciar o aplicativo.",
+      );
     } finally {
       polling.current = false;
       setLoaded(true);
@@ -173,7 +200,8 @@ function App() {
   if (!state)
     return (
       <div className="empty">
-        <h2>Armazenamento local indisponível</h2>
+        <h2>Não foi possível iniciar o aplicativo</h2>
+        <p>{startupError}</p>
         <p>
           Abra o HTML em Chrome/Edge ou no app. Seus documentos precisam de
           acesso ao armazenamento do dispositivo.
@@ -423,7 +451,9 @@ function App() {
             <span className="system-status">
               <span />{" "}
               {connected
-                ? "Offline • salvo neste dispositivo"
+                ? state.storageMode === "session"
+                  ? "Prévia • memória temporária"
+                  : "Offline • salvo neste dispositivo"
                 : "Armazenamento indisponível"}
             </span>
             <span className="avatar light">
@@ -432,6 +462,14 @@ function App() {
           </div>
         </header>
         <div className="content">
+          {state.storageMode === "session" && (
+            <div className="import-warning" role="status">
+              Modo de prévia: este visualizador bloqueou o armazenamento
+              permanente. Você pode testar o app e gerar documentos. Exporte um
+              backup antes de fechar; as alterações desta sessão serão perdidas
+              ao recarregar.
+            </div>
+          )}
           {!connected && (
             <div className="error" role="status">
               Armazenamento local indisponível. Confira o espaço do dispositivo
@@ -981,7 +1019,7 @@ function SettingsForm({ company, onSave }) {
     />
   );
   return (
-    <form
+    <LocalForm
       className="panel form-panel"
       onSubmit={async (e) => {
         e.preventDefault();
@@ -1024,7 +1062,7 @@ function SettingsForm({ company, onSave }) {
         <Check size={17} />
         Salvar configurações
       </button>
-    </form>
+    </LocalForm>
   );
 }
 function RecordForm({ type, onClose, onSave }) {
@@ -1052,7 +1090,7 @@ function RecordForm({ type, onClose, onSave }) {
       }
       onClose={onClose}
     >
-      <form
+      <LocalForm
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
@@ -1099,7 +1137,7 @@ function RecordForm({ type, onClose, onSave }) {
             Salvar cadastro <Check size={16} />
           </button>
         </div>
-      </form>
+      </LocalForm>
     </Modal>
   );
 }
@@ -1164,7 +1202,7 @@ function DocForm({ initial, type, state, onClose, onSave }) {
   );
   return (
     <Modal title="Novo documento" onClose={onClose} wide>
-      <form
+      <LocalForm
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
@@ -1514,7 +1552,7 @@ function DocForm({ initial, type, state, onClose, onSave }) {
             <ArrowRight size={16} />
           </button>
         </div>
-      </form>
+      </LocalForm>
     </Modal>
   );
 }
@@ -1721,7 +1759,7 @@ function ImportPdf({ onClose, onSave }) {
     [busy, setBusy] = useState(false);
   return (
     <Modal title="Memorizar um PDF anterior" onClose={onClose} wide>
-      <form
+      <LocalForm
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
@@ -1866,7 +1904,7 @@ function ImportPdf({ onClose, onSave }) {
             Guardar PDF e modelo <Check size={16} />
           </button>
         </div>
-      </form>
+      </LocalForm>
     </Modal>
   );
 }
