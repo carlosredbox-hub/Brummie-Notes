@@ -2,6 +2,9 @@
 
 Facilitador local para transporte executivo. Gera invoices, faturas, orçamentos, vouchers, notas informativas e recibos em português ou inglês. Não conecta ao site Brummie, não exige conta e não precisa de servidor ou internet para funcionar.
 
+
+A [release v1.1.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0) contém Windows EXE/ZIP, Android APK de teste e [HTML offline](https://github.com/carlosredbox-hub/Brummie-Notes/releases/download/v1.1.0/Brummie-Offline.html). Todos os jobs de validação, Windows, Android e publicação passaram. Para levar sua biblioteca privada ao app, use Restaurar backup; os arquivos públicos incluem modelos genéricos, sem os PDFs pessoais.
+
 ## Testar antes de instalar
 
 ```sh

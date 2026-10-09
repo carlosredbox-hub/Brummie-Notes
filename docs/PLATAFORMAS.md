@@ -36,8 +36,8 @@ APK de teste em `android/app/build/outputs/apk/debug/`. O HTML gerado não é ve
 
 Para assinatura Android estável, configure os quatro secrets de Actions: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` e `ANDROID_KEY_PASSWORD`. Com todos, o CI gera APK/AAB assinado; sem eles, gera APK de teste com chave debug e marca a release como pré-release. Não há publicação na Play Store. Preserve a chave para atualizações e exporte backup antes de desinstalar.
 
-A release anterior **v1.0.1** usa o modelo com servidor e não contém esta mudança offline. A versão offline 1.1.0 está preparada para avaliação pelo HTML antes de gerar uma nova release.
+A release anterior **v1.0.1** usa o modelo com servidor e não contém esta mudança offline. A [versão offline 1.1.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0) foi publicada com Windows EXE/ZIP, Android TEST APK, HTML e SHA256SUMS. É uma pré-release por usar assinatura Android de teste. A biblioteca privada é transferida por backup local; os PDFs pessoais não estão nos assets públicos.
 
 ## Validação
 
-O fluxo offline foi testado no Chromium com a rede desativada, incluindo documentos, importação e transferência de backup. A compilação Android verifica o código nativo; comportamento do seletor de arquivos e armazenamento precisa ser conferido em um dispositivo real. O smoke Electron roda no job Windows; não é executável nesta máquina Linux sem display.
+O fluxo offline foi testado no Chromium com a rede desativada, incluindo documentos, importação e transferência de backup. A compilação Android verifica o código nativo; comportamento do seletor de arquivos e armazenamento precisa ser conferido em um dispositivo real. O smoke Electron passou no job Windows da release 1.1.0. Não foi executado nesta máquina Linux sem display; instalação em dispositivo físico permanece sem validação.
