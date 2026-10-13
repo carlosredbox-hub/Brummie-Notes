@@ -98,13 +98,19 @@ export function calculateOvertime(o) {
             : Number(l.extraHours);
       if (manual !== null && (!Number.isFinite(manual) || manual < 0))
         throw new Error("Horas extras manuais inválidas.");
+      const quantity = Number(l.quantity ?? 1);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000)
+        throw new Error(
+          "A quantidade de veículos deve ser um inteiro positivo.",
+        );
       const extraHours = manual ?? computed,
         rate = money((dailyRate * ratePct) / 100),
-        amount = money(rate * extraHours);
+        amount = money(rate * extraHours * quantity);
       total += amount;
       return {
         ...l,
         dailyRate,
+        quantity,
         computedHours: computed,
         extraHours,
         overridden: manual !== null && manual !== computed,
@@ -131,6 +137,7 @@ export function calculateStay(s) {
     if (
       !r.description?.trim() ||
       !Number.isFinite(quantity) ||
+      !Number.isInteger(quantity) ||
       quantity <= 0 ||
       !Number.isFinite(nightlyRate) ||
       nightlyRate < 0
@@ -144,7 +151,12 @@ export function calculateStay(s) {
   let paid = 0;
   const payments = (s.payments || []).map((p) => {
     const amount = Number(p.amount);
-    if (!Number.isFinite(amount) || amount < 0)
+    if (
+      !Number.isFinite(amount) ||
+      amount < 0 ||
+      (p.date && !validDate(p.date)) ||
+      (p.description !== undefined && typeof p.description !== "string")
+    )
       throw new Error("Revise os pagamentos.");
     paid += amount;
     return { ...p, amount };
@@ -204,7 +216,18 @@ export function calculateInternal(n) {
   });
   return { ...n, lines, total: money(total) };
 }
+const statuses = ["Rascunho", "Emitido", "Pago", "Cancelado"];
+function validateCommon(d) {
+  if (d.status !== undefined && !statuses.includes(d.status))
+    throw new Error("Status inválido.");
+  for (const k of ["date", "due"])
+    if (d[k] && !validDate(d[k]))
+      throw new Error("Informe emissão e validade válidas.");
+  if (d.date && d.due && d.due < d.date)
+    throw new Error("O vencimento não pode ser anterior à emissão.");
+}
 function validateExtras(d) {
+  validateCommon(d);
   if (d.brand !== undefined && !brandIds.includes(d.brand))
     throw new Error("Marca inválida.");
   if (d.showPrices !== undefined && typeof d.showPrices !== "boolean")
@@ -224,6 +247,8 @@ function validateGuia(d) {
 }
 export function validateDoc(d) {
   validateExtras(d);
+  if (d.type === "proposta" && d.proposal && !d.proposal.title?.trim())
+    throw new Error("Informe o título da proposta.");
   if (d.type === "guia") {
     if (!["pt", "en"].includes(d.language))
       throw new Error("Tipo, idioma ou moeda inválidos.");
@@ -257,7 +282,18 @@ export function validateDoc(d) {
       throw new Error("Tipo, idioma ou moeda inválidos.");
     if (!d.client?.trim()) throw new Error("Informe o cliente.");
     const overtime = calculateOvertime(d.overtime);
-    return { ...d, overtime, total: overtime.total };
+    const printed =
+      d.printedTotal === undefined || d.printedTotal === ""
+        ? null
+        : Number(d.printedTotal);
+    if (printed !== null && (!Number.isFinite(printed) || printed < 0))
+      throw new Error("Total impresso inválido.");
+    return {
+      ...d,
+      overtime,
+      total: overtime.total,
+      discrepancy: printed === null ? 0 : money(overtime.total - printed),
+    };
   }
   if (
     !types[d.type] ||

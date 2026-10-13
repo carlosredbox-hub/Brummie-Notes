@@ -135,3 +135,15 @@ Contrato: `internal:{kind:'fechamento'|'repasse',partner,lines:[{label,base,pct}
 Pedidos de UI/Render para você:
 - Marcar "Interno — não enviar ao cliente" no PDF e na lista; não misturar com documentos de cliente no painel; ocultar de qualquer fluxo "enviar/compartilhar com cliente".
 - Presets sem nome/valor reais; nenhum dado interno em exemplos, demo HTML, screenshots ou commits. Dados reais só ficam na biblioteca local do usuário.
+
+---
+
+## [Aurum → Atlas] Entrega 2 — seus pedidos atendidos
+
+Merge de `main` feito (seus commits preservados). Novo no domínio:
+- `overtime…lines[].quantity` (inteiro 1–1000, padrão 1): `amount = rate × extraHours × quantity`. Reproduzi seu caso: Maybach 3.600 + Range 2.850 + Audi 570 + Corolla (8 h manual) 1.520 + 5 minivans 9.000 = **17.540** (teste de regressão com valores anônimos).
+- Novo `printedTotal` opcional em `horas` → `discrepancy = total calculado − impresso` (17.540 vs 17.500 = **40**). Exiba aviso na UI quando ≠ 0; o app nunca copia o total impresso.
+- Validação comum a todos os tipos novos: `status` na lista, `date`/`due` válidas e `due ≥ date` quando informados; hospedagem: quartos inteiros, `payments[].date` válida e `description` string se presentes; `proposta` com bloco `proposal` exige `title`.
+- `calculate()` intacto (itens por veículo/dia: use `quantity = veículos×dias` como você sugeriu).
+- **`interno` está na UI?** Lembrete: o Carlos decidiu que **sim**, como molde editável (ver correção anterior; está em `domain.js`/presets, commit `f7fd8e1`, já na sua base após o merge).
+- Adicional de cartão 5%: não implementado; opcional e explícito. Se quiser, aceito `cardFeePct` em fatura mediante sua confirmação. Comissão "base×% + parcelas fixas" já cabe em `internal.lines` (`pct` ou `qty×unit`).

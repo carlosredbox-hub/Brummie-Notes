@@ -153,3 +153,86 @@ test("interno: base × % preserva centavos, sempre confidencial", () => {
     calculateInternal({ ...n, lines: [{ label: "A", base: 1, pct: 101 }] }),
   );
 });
+test("overtime: quantidade de veículos multiplica; status/datas/quartos/proposta validados", () => {
+  const r = calculateOvertime(
+    day([
+      {
+        vehicle: "Minivan",
+        quantity: 5,
+        dailyRate: 1900,
+        start: "10:00",
+        end: "22:00",
+      },
+    ]),
+  );
+  assert.equal(r.total, 1900); // 190 × 2 h × 5
+  assert.throws(() =>
+    calculateOvertime(
+      day([
+        {
+          vehicle: "M",
+          quantity: 1.5,
+          dailyRate: 1,
+          start: "10:00",
+          end: "22:00",
+        },
+      ]),
+    ),
+  );
+  const g = {
+    type: "guia",
+    language: "pt",
+    guide: { title: "G", address: "A", sections: guideSections },
+  };
+  assert.throws(() => validateDoc({ ...g, status: "x" }));
+  assert.throws(() => validateDoc({ ...g, date: "2026-02-30" }));
+  const stay = {
+    hotelName: "H",
+    checkIn: "2026-02-13",
+    checkOut: "2026-02-14",
+    rooms: [{ description: "Q", quantity: 1, nightlyRate: 1 }],
+  };
+  assert.throws(() =>
+    calculateStay({ ...stay, rooms: [{ ...stay.rooms[0], quantity: 1.5 }] }),
+  );
+  assert.throws(() =>
+    calculateStay({ ...stay, payments: [{ amount: 1, date: "ontem" }] }),
+  );
+  const inv = {
+    type: "proposta",
+    language: "pt",
+    currency: "BRL",
+    status: "Rascunho",
+    client: "C",
+    date: "2026-01-01",
+    due: "2026-01-02",
+    items: [{ description: "T", quantity: 1, price: 1 }],
+  };
+  assert.throws(() => validateDoc({ ...inv, proposal: { title: " " } }));
+  assert.ok(validateDoc({ ...inv, proposal: { title: "Evento" } }));
+});
+test("horas: total impresso divergente gera discrepancy sem copiar o erro", () => {
+  const L = (vehicle, dailyRate, extra = {}) => ({
+    vehicle,
+    dailyRate,
+    start: "11:00",
+    end: "23:30",
+    ...extra,
+  });
+  const r = validateDoc({
+    type: "horas",
+    language: "pt",
+    currency: "BRL",
+    client: "C",
+    printedTotal: 17500,
+    overtime: day([
+      L("Maybach", 12000),
+      L("Range", 9500),
+      L("Audi", 1900),
+      L("Corolla", 1900, { start: "06:30", extraHours: 8 }),
+      L("Minivan", 6000, { quantity: 5 }),
+    ]),
+  });
+  assert.equal(r.total, 17540);
+  assert.equal(r.discrepancy, 40);
+});
