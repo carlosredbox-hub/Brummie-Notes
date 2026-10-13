@@ -1,3 +1,4 @@
+import { themeFor, paintDocumentTheme } from "./document-themes.js";
 import linesLogo from "./assets/lines-logo.png";
 import estateLogo from "./assets/realestate-logo.png";
 import estateMark from "./assets/realestate-mark.png";
@@ -32,18 +33,43 @@ export async function imageBox(
     img.src = source;
     await img.decode();
     if (trim) {
-      const original = document.createElement('canvas');
-      original.width=img.width;original.height=img.height;
-      const context=original.getContext('2d');context.drawImage(img,0,0);
-      const pixels=context.getImageData(0,0,img.width,img.height).data;
-      let left=img.width,top=img.height,right=-1,bottom=-1;
-      for(let yy=0;yy<img.height;yy++) for(let xx=0;xx<img.width;xx++) {
-        if(pixels[(yy*img.width+xx)*4+3]>24) {left=Math.min(left,xx);top=Math.min(top,yy);right=Math.max(right,xx);bottom=Math.max(bottom,yy);}
-      }
-      if(right>=left && bottom>=top) {
-        const cropped=document.createElement('canvas');cropped.width=right-left+1;cropped.height=bottom-top+1;
-        cropped.getContext('2d').drawImage(img,left,top,cropped.width,cropped.height,0,0,cropped.width,cropped.height);
-        img=cropped;
+      const original = document.createElement("canvas");
+      original.width = img.width;
+      original.height = img.height;
+      const context = original.getContext("2d");
+      context.drawImage(img, 0, 0);
+      const pixels = context.getImageData(0, 0, img.width, img.height).data;
+      let left = img.width,
+        top = img.height,
+        right = -1,
+        bottom = -1;
+      for (let yy = 0; yy < img.height; yy++)
+        for (let xx = 0; xx < img.width; xx++) {
+          if (pixels[(yy * img.width + xx) * 4 + 3] > 24) {
+            left = Math.min(left, xx);
+            top = Math.min(top, yy);
+            right = Math.max(right, xx);
+            bottom = Math.max(bottom, yy);
+          }
+        }
+      if (right >= left && bottom >= top) {
+        const cropped = document.createElement("canvas");
+        cropped.width = right - left + 1;
+        cropped.height = bottom - top + 1;
+        cropped
+          .getContext("2d")
+          .drawImage(
+            img,
+            left,
+            top,
+            cropped.width,
+            cropped.height,
+            0,
+            0,
+            cropped.width,
+            cropped.height,
+          );
+        img = cropped;
       }
     }
     if (!crop && !radius) {
@@ -98,15 +124,22 @@ export class EditorialPdf {
     };
     this.pdf = new jsPDF({ compress: true });
     registerPdfFonts(this.pdf);
-    this.y = 22;
-    this.left = 15;
+    this.theme = themeFor(doc.theme || doc.company.documentTheme);
+    this.y = this.theme.top;
+    this.left = this.theme.left;
     this.right = 195;
     this.bottom = 269;
     this.color = /^#[a-f0-9]{6}$/i.test(doc.company.color || "")
       ? doc.company.color
       : "#0089cf";
+    this.color = this.theme.accent || this.color;
+    this.paintPage();
     this.en = doc.language === "en";
     this.covers = new Set();
+  }
+  paintPage() {
+    paintDocumentTheme(this.pdf, this.doc);
+    this.y = this.theme.top;
   }
   font(
     size = 10,
@@ -116,7 +149,7 @@ export class EditorialPdf {
     color = "#181818",
   ) {
     this.pdf.setFont(
-      serif ? "Cormorant" : "OpenSans",
+      serif ? this.theme.serif : "OpenSans",
       bold && italic
         ? "bolditalic"
         : bold
@@ -126,11 +159,17 @@ export class EditorialPdf {
             : "normal",
     );
     this.pdf.setFontSize(size);
-    this.pdf.setTextColor(color);
+    this.pdf.setTextColor(
+      ["#181818", "#666666", "#777777", "#929292"].includes(color)
+        ? color === "#181818"
+          ? this.theme.ink
+          : this.theme.muted
+        : color,
+    );
   }
   newPage() {
     this.pdf.addPage();
-    this.y = 22;
+    this.paintPage();
   }
   room(height) {
     if (this.y + height > this.bottom) this.newPage();
@@ -147,6 +186,7 @@ export class EditorialPdf {
       width = this.right - x,
       gap = 4,
       align = "left",
+      link,
     } = {},
   ) {
     this.font(size, bold, serif, italic, color);
@@ -155,12 +195,28 @@ export class EditorialPdf {
     for (const line of rows) {
       this.room(lineHeight + 1);
       this.font(size, bold, serif, italic, color);
-      this.pdf.text(
-        line,
-        align === "center" ? x + width / 2 : align === "right" ? x + width : x,
-        this.y,
-        { align },
-      );
+      const position =
+        align === "center" ? x + width / 2 : align === "right" ? x + width : x;
+      if (link) {
+        this.pdf.textWithLink(line, position, this.y, { url: link, align });
+        this.pdf.setDrawColor(color || "#181818");
+        this.pdf.line(
+          x,
+          this.y + 1,
+          x + Math.min(width, this.pdf.getTextWidth(line)),
+          this.y + 1,
+        );
+      } else
+        this.pdf.text(
+          line,
+          align === "center"
+            ? x + width / 2
+            : align === "right"
+              ? x + width
+              : x,
+          this.y,
+          { align },
+        );
       this.y += lineHeight;
     }
     this.y += gap;
@@ -169,6 +225,13 @@ export class EditorialPdf {
     this.text(title, { size: 25, serif: true, align: "center", gap: 6 });
     if (subtitle)
       this.text(subtitle, { size: 9, bold: true, align: "center", gap: 9 });
+    if (this.doc.clientTaxId || this.doc.clientAddress)
+      this.text(
+        [this.doc.clientTaxId, this.doc.clientAddress]
+          .filter(Boolean)
+          .join(" • "),
+        { size: 8, align: "center", gap: 7 },
+      );
   }
   section(title) {
     this.room(20);
@@ -183,9 +246,10 @@ export class EditorialPdf {
     details = [],
     height = 59,
   }) {
-    const photoWidth = image ? 80 : 0,
-      textX = image ? 101 : this.left,
-      width = this.right - textX;
+    const photoWidth = image ? (this.theme.sidebar ? 48 : 80) : 0,
+      onRight = this.doc.visualLayout?.imagePosition === "right",
+      textX = image && !onRight ? this.left + photoWidth + 6 : this.left,
+      width = this.right - this.left - (image ? photoWidth + 6 : 0);
     this.font(9);
     const count = this.pdf.splitTextToSize(
       String(description || ""),
@@ -219,11 +283,11 @@ export class EditorialPdf {
       await imageBox(
         this.pdf,
         image,
-        this.left,
+        onRight ? this.right - photoWidth : this.left,
         rowStart - 3,
         photoWidth,
         Math.min(56, rowHeight - 5),
-        { crop: true, radius: 4 },
+        { crop: this.doc.visualLayout?.imageFit !== "contain", radius: 4 },
       );
     if (eyebrow)
       this.text(eyebrow, { x: textX, width, size: 8, bold: true, gap: 3 });
@@ -239,6 +303,7 @@ export class EditorialPdf {
         italic: detail.italic,
         color: detail.color,
         gap: 4,
+        link: detail.link,
       });
     // A long card may continue across pages; text() handles each line without clipping.
     if (this.y >= rowStart)
@@ -252,13 +317,35 @@ export class EditorialPdf {
     const c = this.doc.company,
       total = this.pdf.getNumberOfPages();
     for (let i = 1; i <= total; i++) {
-      if (this.covers.has(i)) continue;
       this.pdf.setPage(i);
-      this.font(7, true);
-      const left = this.pdf
-        .splitTextToSize(c.address || c.name, 70)
-        .slice(0, 3);
-      this.pdf.text(left, 15, 282);
+      if (this.theme.header) {
+        this.pdf.setFillColor("#0d1c39");
+        this.pdf.rect(0, 276, 210, 21, "F");
+      }
+      const footerText = (value, x, width, align = "left") => {
+        let size = 7,
+          rows;
+        do {
+          this.font(
+            size,
+            true,
+            false,
+            false,
+            this.theme.header ? "#ffffff" : this.theme.ink,
+          );
+          rows = this.pdf.splitTextToSize(value, width);
+          if (rows.length * size * 0.41 <= 15) break;
+          size -= 0.25;
+        } while (size > 3);
+        this.pdf.text(rows, x, 280, { align });
+      };
+      footerText(
+        [c.name, c.taxId && `CPF/CNPJ: ${c.taxId}`, c.address]
+          .filter(Boolean)
+          .join("\n"),
+        this.left,
+        this.theme.sidebar ? 55 : 72,
+      );
       await imageBox(
         this.pdf,
         c.footerLogo ||
@@ -271,19 +358,24 @@ export class EditorialPdf {
               ? estateMark
               : linesMark
             : c.logo),
-        94,
+        this.theme.sidebar ? 12 : 94,
         278,
         22,
         13,
       );
-      this.font(7, true);
-      this.pdf.text(
-        this.pdf
-          .splitTextToSize([c.website, c.phone].filter(Boolean).join("\n"), 65)
-          .slice(0, 3),
+      footerText(
+        [
+          c.website,
+          c.email,
+          c.phone,
+          this.doc.email &&
+            `${this.en ? "Client" : "Cliente"}: ${this.doc.email}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
         195,
-        282,
-        { align: "right" },
+        this.theme.sidebar ? 65 : 72,
+        "right",
       );
       if (this.doc.confidential) {
         this.font(7, true, false, false, "#9b392e");
@@ -291,13 +383,62 @@ export class EditorialPdf {
           align: "center",
         });
       }
-      if (total > 2) {
-        this.font(6, false, false, false, "#929292");
-        this.pdf.text(String(i), 200, 292, { align: "right" });
+      this.font(
+        6,
+        false,
+        false,
+        false,
+        this.theme.header ? "#ffffff" : this.theme.muted,
+      );
+      this.pdf.text(
+        `${this.doc.examplePreview ? "EXEMPLO • " : ""}BRM-${String(this.doc.number).padStart(5, "0")}`,
+        105,
+        295,
+        { align: "center" },
+      );
+      this.pdf.text(`${i}/${total}`, 195, 295, { align: "right" });
+    }
+  }
+  async sidebar() {
+    if (!this.theme.sidebar) return;
+    const d = this.doc,
+      pdf = this.pdf;
+    for (let p = 1; p <= pdf.getNumberOfPages(); p++) {
+      pdf.setPage(p);
+      await imageBox(pdf, d.company.logo, 6, 6, 40, 18, { trim: true });
+      this.font(11, true, false, false, "#ffffff");
+      pdf.text(pdf.splitTextToSize(d.company.name, 39), 7, 34);
+      const fields = [
+        ["DOCUMENTO", `BRM-${String(d.number).padStart(5, "0")}`],
+        ["EMISSÃO", d.date],
+        ["VALIDADE", d.due],
+        ["STATUS", d.status],
+      ];
+      let y = 55;
+      for (const [label, value] of fields) {
+        this.font(6, false, false, false, "#aeb8c0");
+        pdf.text(label, 7, y);
+        this.font(9, true, false, false, "#ffffff");
+        pdf.text(String(value || ""), 7, y + 6);
+        y += 23;
+      }
+      if (
+        d.showPrices !== false &&
+        !["nota", "voucher", "guia"].includes(d.type) &&
+        !d.selection &&
+        !d.commercial
+      ) {
+        pdf.setFillColor(this.theme.accent);
+        pdf.roundedRect(6, 224, 40, 24, 2, 2, "F");
+        this.font(6, false, false, false, "#ffffff");
+        pdf.text("TOTAL", 9, 231);
+        this.font(11, true, false, false, "#ffffff");
+        pdf.text(moneyFor(d)(d.total), 9, 240);
       }
     }
   }
   async finish() {
+    await this.sidebar();
     await this.footer();
     return this.pdf.output("blob");
   }

@@ -1,7 +1,10 @@
+import { applyFreeElements } from "./free-pdf-elements.js";
+import { makeCommercialPdf } from "./commercial-pdf.js";
+import { isCommercial } from "./commercial.jsx";
 import { addDocumentCover } from "./pdf-cover.js";
 import { makeConciergePdf } from "./concierge-pdf.js";
 import { EditorialPdf, imageBox, moneyFor, dateFor } from "./pdf-design.js";
-export const PDF_RENDER_VERSION = 3;
+export const PDF_RENDER_VERSION = 7;
 const names = {
   invoice: ["INVOICE", "INVOICE"],
   fatura: ["FATURA", "STATEMENT"],
@@ -11,6 +14,10 @@ const names = {
   recibo: ["RECIBO", "PAYMENT RECEIPT"],
 };
 export async function makePdf(d) {
+  return applyFreeElements(await makeBasePdf(d), d.freeElements);
+}
+async function makeBasePdf(d) {
+  if (isCommercial(d)) return makeCommercialPdf(d);
   if (["guia", "hospedagem", "proposta", "horas", "interno"].includes(d.type))
     return makeConciergePdf(d);
   const design = new EditorialPdf(d),
@@ -20,9 +27,12 @@ export async function makePdf(d) {
     date = dateFor(d);
   const financial =
     !["nota", "voucher"].includes(d.type) && d.showPrices !== false;
-  if (await addDocumentCover(pdf, design.doc)) design.covers.add(1);
+  if (await addDocumentCover(pdf, design.doc)) {
+    design.covers.add(1);
+    design.paintPage();
+  }
   if (!d.cover?.enabled) {
-    await imageBox(pdf, c.logo, 70, 12, 70, 30, {trim:true});
+    await imageBox(pdf, c.logo, 70, 12, 70, 30, { trim: true });
     design.y = 51;
   }
   design.heading(

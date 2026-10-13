@@ -8,7 +8,10 @@ export async function makeConciergePdf(d) {
     c = design.doc.company,
     money = moneyFor(d),
     date = dateFor(d);
-  if (await addDocumentCover(pdf, design.doc)) design.covers.add(1);
+  if (await addDocumentCover(pdf, design.doc)) {
+    design.covers.add(1);
+    design.paintPage();
+  }
   if (d.status === "Cancelado")
     design.text(en ? "CANCELLED" : "CANCELADO", {
       bold: true,
@@ -16,26 +19,73 @@ export async function makeConciergePdf(d) {
       align: "center",
     });
   if (isSelection(d)) {
+    if (d.clientTaxId || d.clientAddress)
+      design.text(
+        [d.clientTaxId, d.clientAddress].filter(Boolean).join(" • "),
+        { size: 8 },
+      );
     for (const option of d.proposal.options) {
       const details = [];
-      if (d.showPrices !== false)
+      if (option.period)
         details.push({
-          text: `${en ? "Total price per stay" : "Preço total da estadia"}: ${money(option.total)}`,
+          text: `${en ? "Period" : "Período"}: ${option.period}`,
           bold: true,
         });
-      details.push({
-        text: `(${option.rooms} ${en ? "rooms" : "quartos"} • ${option.nights} ${en ? "nights" : "noites"})`,
-        bold: true,
-      });
+      if (d.showPrices !== false)
+        details.push({
+          text:
+            option.total === null
+              ? en
+                ? "Price on request"
+                : "Valor sob consulta"
+              : `${en ? "Total price per stay" : "Valor total"}: ${money(option.total)}`,
+          bold: true,
+        });
+      if (!option.suites && !option.period)
+        details.push({
+          text: `(${option.rooms} ${en ? "rooms" : "quartos"} • ${option.nights} ${en ? "nights" : "noites"})`,
+          bold: true,
+        });
       if (option.inclusions)
         details.push({ text: option.inclusions, bold: true });
+      if (option.link)
+        details.push({
+          text: `Link: ${option.propertyCode || option.title}`,
+          link: option.link,
+          bold: true,
+        });
+      const property = !!(
+        option.propertyCode ||
+        option.suites ||
+        option.period
+      );
+      if (property && option.city) {
+        design.room(76);
+        design.font(19, false, true);
+        pdf.text(
+          option.city.toUpperCase(),
+          design.doc.visualLayout?.imagePosition === "right"
+            ? design.right - (design.theme.sidebar ? 24 : 40)
+            : design.left + (design.theme.sidebar ? 24 : 40),
+          design.y,
+          { align: "center" },
+        );
+        design.y += 9;
+      }
       await design.card({
         image: option.image,
-        eyebrow: option.city?.toUpperCase(),
-        title: option.title,
-        description: option.description,
+        eyebrow: property ? "" : option.city?.toUpperCase(),
+        title: [option.propertyCode, option.title].filter(Boolean).join(" — "),
+        description: [
+          option.suites
+            ? `${option.suites} ${en ? "suites" : "suítes"}${option.bathrooms ? ` • ${option.bathrooms} ${en ? "bathrooms" : "banheiros"}` : ""}`
+            : "",
+          option.description,
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
         details,
-        height: 58,
+        height: 56,
       });
     }
     if (d.proposal.paymentTerms) {
@@ -44,7 +94,14 @@ export async function makeConciergePdf(d) {
     }
   } else if (d.type === "guia") {
     const g = d.guide;
-    design.heading("HOME GUIDE", g.title);
+    design.heading(
+      d.category === "itinerary"
+        ? en
+          ? "TRAVEL ITINERARY"
+          : "ROTEIRO DE VIAGEM"
+        : "HOME GUIDE",
+      g.title,
+    );
     if (g.propertyCode || g.address)
       design.text([g.propertyCode, g.address].filter(Boolean).join(" • "), {
         size: 10,
@@ -53,10 +110,18 @@ export async function makeConciergePdf(d) {
       });
     if (g.coverImage) {
       design.room(80);
-      await imageBox(pdf, g.coverImage, 15, design.y, 180, 72, {
-        crop: true,
-        radius: 4,
-      });
+      await imageBox(
+        pdf,
+        g.coverImage,
+        design.left,
+        design.y,
+        design.right - design.left,
+        72,
+        {
+          crop: true,
+          radius: 4,
+        },
+      );
       design.y += 83;
     }
     if (g.accessInstructions) {
@@ -68,12 +133,12 @@ export async function makeConciergePdf(d) {
       const top = design.y;
       design.section("Wi-Fi");
       design.text(`${en ? "Network" : "Rede"}: ${g.wifi.ssid}`, {
-        width: 125,
+        width: design.right - design.left - 55,
         bold: true,
       });
       if (g.wifi.encryption !== "nopass")
         design.text(`${en ? "Password" : "Senha"}: ${g.wifi.password}`, {
-          width: 125,
+          width: design.right - design.left - 55,
         });
       const qr = await wifiQr(g.wifi);
       if (qr) {
@@ -120,19 +185,27 @@ export async function makeConciergePdf(d) {
       s.requester && `${en ? "Requested by" : "Solicitante"}: ${s.requester}`,
     ])
       if (value) design.text(value, { size: 9 });
-    design.room(29);
-    pdf.setFillColor("#f7f4ed");
-    pdf.roundedRect(15, design.y - 2, 180, 23, 3, 3, "F");
+    design.room(design.theme.sidebar ? 40 : 29);
+    pdf.setFillColor(design.theme.panel);
+    pdf.roundedRect(
+      design.left,
+      design.y - 2,
+      design.right - design.left,
+      design.theme.sidebar ? 34 : 23,
+      3,
+      3,
+      "F",
+    );
     const top = design.y;
     design.text(`CHECK-IN  ${date(s.checkIn)} ${s.checkInTime || ""}`, {
-      x: 21,
-      width: 95,
+      x: design.left + 6,
+      width: design.theme.sidebar ? 65 : 95,
       bold: true,
       gap: 4,
     });
     design.text(`CHECK-OUT  ${date(s.checkOut)} ${s.checkOutTime || ""}`, {
-      x: 21,
-      width: 95,
+      x: design.left + 6,
+      width: design.theme.sidebar ? 65 : 95,
       bold: true,
       gap: 8,
     });
@@ -258,17 +331,24 @@ export async function makeConciergePdf(d) {
     for (const day of d.overtime.days) {
       design.section(date(day.date));
       for (const line of day.lines) {
-        design.room(27);
-        design.text(`${line.vehicle}  × ${line.quantity || 1}`, { bold: true });
-        design.text(
-          `${line.start} → ${line.end} • ${line.extraHours} ${en ? "extra hours" : "horas extras"}${line.overridden ? (en ? " • Reviewed manual exception" : " • Exceção manual revisada") : ""}`,
-          { size: 9 },
-        );
+        const details = [
+          {
+            text: `${line.start} → ${line.end} • ${line.extraHours} ${en ? "extra hours" : "horas extras"}${line.overridden ? (en ? " • Reviewed manual exception" : " • Exceção manual revisada") : ""}`,
+            bold: true,
+          },
+        ];
         if (d.showPrices !== false)
-          design.text(
-            `${money(line.rate)} × ${line.extraHours} × ${line.quantity || 1} = ${money(line.amount)}`,
-            { bold: true, color: design.color },
-          );
+          details.push({
+            text: `${money(line.rate)} × ${line.extraHours} × ${line.quantity || 1} = ${money(line.amount)}`,
+            bold: true,
+            color: design.color,
+          });
+        await design.card({
+          image: line.image,
+          title: `${line.vehicle} × ${line.quantity || 1}`,
+          details,
+          height: line.image ? 56 : 27,
+        });
       }
     }
     if (d.showPrices !== false) {
@@ -293,14 +373,20 @@ export async function makeConciergePdf(d) {
       align: "center",
     });
     for (const line of d.internal.lines) {
-      design.room(30);
-      design.section(line.label);
-      design.text(
-        line.pct !== undefined
-          ? `${money(line.base)} × ${line.pct}% = ${money(line.amount)}`
-          : `${line.qty} × ${money(line.unit)} = ${money(line.amount)}`,
-        { bold: true },
-      );
+      await design.card({
+        image: line.image,
+        title: line.label,
+        details: [
+          {
+            text:
+              line.pct !== undefined
+                ? `${money(line.base)} × ${line.pct}% = ${money(line.amount)}`
+                : `${line.qty} × ${money(line.unit)} = ${money(line.amount)}`,
+            bold: true,
+          },
+        ],
+        height: line.image ? 56 : 30,
+      });
     }
     design.section("TOTAL INTERNO");
     design.text(money(d.internal.total), {

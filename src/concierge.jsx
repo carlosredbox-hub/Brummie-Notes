@@ -1,3 +1,9 @@
+import { EditorPreview } from "./editor-preview.jsx";
+import {
+  CommercialEditor,
+  commercialDefault,
+  isCommercial,
+} from "./commercial.jsx";
 import {
   PropertySelectionEditor,
   emptyPropertyOption,
@@ -287,6 +293,8 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
               {d.type !== "interno" &&
                 field("Cliente / titular", "client", true)}
               {field("E-mail do cliente", "email", false, "email")}
+              {field("CPF/CNPJ do cliente", "clientTaxId")}
+              {field("Endereço do cliente", "clientAddress")}
               {field("Data de emissão", "date", true, "date")}
               {field("Validade", "due", true, "date")}
             </div>
@@ -657,6 +665,8 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                         proposal: {
                           ...current.proposal,
                           layout,
+                          commercial:
+                            current.proposal.commercial || commercialDefault(),
                           options: current.proposal.options?.length
                             ? current.proposal.options
                             : [emptyPropertyOption()],
@@ -666,6 +676,9 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                   >
                     <option value="experience">
                       Experiência / serviços selecionados
+                    </option>
+                    <option value="commercial">
+                      Proposta comercial · tabela e catálogo em paisagem
                     </option>
                     <option value="property-selection">
                       Property Selection · alternativas de hospedagem
@@ -693,7 +706,13 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                 {area("Programação / horários", "proposal", "schedule")}
                 {area("Condições de pagamento", "proposal", "paymentTerms")}
               </div>
-              {isSelection(d) ? (
+              {isCommercial(d) ? (
+                <CommercialEditor
+                  value={p.commercial || commercialDefault()}
+                  onChange={(v) => patch("proposal", "commercial", v)}
+                  ui={ui}
+                />
+              ) : isSelection(d) ? (
                 <PropertySelectionEditor
                   options={p.options || []}
                   onChange={(value) => patch("proposal", "options", value)}
@@ -1204,7 +1223,7 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
               onChange={(e) => set("notes", e.target.value)}
             />
           </Field>
-          {d.type !== "guia" && !isSelection(d) && (
+          {d.type !== "guia" && !isSelection(d) && !isCommercial(d) && (
             <div className="editor-summary">
               {new Intl.NumberFormat("pt-BR", {
                 style: "currency",
@@ -1230,6 +1249,7 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
               {error}
             </div>
           )}
+          <EditorPreview draft={d} company={state.company} onChange={setD} />
         </div>
         <div className="modal-actions">
           <span>Conteúdo reutilizável · PDF pronto para o cliente</span>

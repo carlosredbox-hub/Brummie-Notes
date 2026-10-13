@@ -65,7 +65,7 @@ try {
     .getByText("Seus documentos anteriores são o ponto de partida do próximo.")
     .waitFor();
   await page
-    .getByRole("button", { name: "Guias & experiências", exact: true })
+    .getByRole("button", { name: "Criar documentos", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Criar Home Guide", exact: true })
@@ -147,7 +147,7 @@ try {
     })
     .waitFor();
   await page
-    .getByRole("button", { name: "Guias & experiências", exact: true })
+    .getByRole("button", { name: "Criar documentos", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Criar Proposta de experiência", exact: true })

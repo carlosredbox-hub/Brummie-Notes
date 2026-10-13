@@ -31,7 +31,7 @@ fs.mkdirSync("test-results/editorial", { recursive: true });
 try {
   await page.goto("https://editorial.test/");
   await page
-    .getByRole("button", { name: "Guias & experiências", exact: true })
+    .getByRole("button", { name: "Criar documentos", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Criar seleção de hospedagem", exact: true })
@@ -174,7 +174,7 @@ try {
     .getByRole("button", { name: /[1-9]\d* fotos disponíveis/ })
     .waitFor();
   await page
-    .getByRole("button", { name: "Guias & experiências", exact: true })
+    .getByRole("button", { name: "Criar documentos", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Criar seleção de hospedagem", exact: true })

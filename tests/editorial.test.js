@@ -54,3 +54,19 @@ test("property option validation rejects incomplete, negative and fractional cou
     }),
   );
 });
+
+test("unknown property prices stay unknown and links are validated", () => {
+  assert.equal(
+    calculateOption({
+      ...selection.proposal.options[0],
+      priceMode: "onrequest",
+    }).total,
+    null,
+  );
+  assert.throws(() =>
+    calculateOption({
+      ...selection.proposal.options[0],
+      link: "javascript:alert(1)",
+    }),
+  );
+});

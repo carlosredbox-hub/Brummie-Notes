@@ -66,3 +66,12 @@ test("reuse preserves itinerary intervals while updating emission date", () => {
   assert.equal(source.items[0].date, "2026-10-17");
   assert.equal(copy.status, "Emitido");
 });
+
+test("reference contacts fill missing emails and retain per-brand spelling without overwriting custom data", () => {
+  const data = {records:[], company:{email:"custom@example.com",brandProfiles:{lines:{phone:"custom phone"}}}};
+  applyReferencePack(data,{schema:1,id:"contacts",records:[],company:{email:"source@example.com",brandProfiles:{lines:{email:"lines@example.com",phone:"source phone"},luxury:{email:"luxury@example.com"}}}});
+  assert.equal(data.company.email,"custom@example.com");
+  assert.equal(data.company.brandProfiles.lines.phone,"custom phone");
+  assert.equal(data.company.brandProfiles.lines.email,"lines@example.com");
+  assert.equal(data.company.brandProfiles.luxury.email,"luxury@example.com");
+});

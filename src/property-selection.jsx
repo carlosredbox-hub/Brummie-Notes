@@ -68,6 +68,40 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
             </div>
             <div className="form-grid four">
               <Field
+                label={`Código do imóvel ${index + 1}`}
+                value={option.propertyCode || ""}
+                onChange={(e) => patch(index, "propertyCode", e.target.value)}
+              />
+              <Field
+                label={`Suítes da opção ${index + 1}`}
+                type="number"
+                min="0"
+                step="1"
+                value={option.suites || ""}
+                onChange={(e) => patch(index, "suites", e.target.value)}
+              />
+              <Field
+                label={`Banheiros da opção ${index + 1}`}
+                type="number"
+                min="0"
+                step="0.1"
+                value={option.bathrooms || ""}
+                onChange={(e) => patch(index, "bathrooms", e.target.value)}
+              />
+              <Field
+                label={`Período da opção ${index + 1}`}
+                value={option.period || ""}
+                onChange={(e) => patch(index, "period", e.target.value)}
+              />
+            </div>
+            <Field
+              label={`Link do imóvel ${index + 1}`}
+              type="url"
+              value={option.link || ""}
+              onChange={(e) => patch(index, "link", e.target.value)}
+            />
+            <div className="form-grid four">
+              <Field
                 label={`Quartos da opção ${index + 1}`}
                 type="number"
                 min="1"
@@ -91,32 +125,39 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
                   onChange={(e) => patch(index, "priceMode", e.target.value)}
                 >
                   <option value="nightly">Por quarto e por noite</option>
+                  <option value="onrequest">
+                    Sob consulta / valor não informado
+                  </option>
                   <option value="total">Total informado para a estadia</option>
                 </select>
               </Field>
-              <Field
-                label={
-                  option.priceMode === "total"
-                    ? `Total da opção ${index + 1}`
-                    : `Diária da opção ${index + 1}`
-                }
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                value={
-                  option.priceMode === "total"
-                    ? option.totalPrice
-                    : option.nightlyRate
-                }
-                onChange={(e) =>
-                  patch(
-                    index,
-                    option.priceMode === "total" ? "totalPrice" : "nightlyRate",
-                    e.target.value,
-                  )
-                }
-              />
+              {option.priceMode !== "onrequest" && (
+                <Field
+                  label={
+                    option.priceMode === "total"
+                      ? `Total da opção ${index + 1}`
+                      : `Diária da opção ${index + 1}`
+                  }
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={
+                    option.priceMode === "total"
+                      ? option.totalPrice
+                      : option.nightlyRate
+                  }
+                  onChange={(e) =>
+                    patch(
+                      index,
+                      option.priceMode === "total"
+                        ? "totalPrice"
+                        : "nightlyRate",
+                      e.target.value,
+                    )
+                  }
+                />
+              )}
             </div>
             <Field label={`Inclusões da opção ${index + 1}`}>
               <textarea
@@ -129,7 +170,9 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
             <div className="property-option-total">
               <strong>
                 {total === null
-                  ? "Preencha os dados da opção"
+                  ? option.priceMode === "onrequest"
+                    ? "Valor sob consulta"
+                    : "Preencha os dados da opção"
                   : new Intl.NumberFormat("pt-BR", {
                       style: "currency",
                       currency,

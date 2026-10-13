@@ -43,6 +43,9 @@ try {
   await page
     .getByRole("button", { name: "Novo documento", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Criar Invoice", exact: true })
+    .click();
   await page.getByLabel("Nome do cliente / Empresa").fill("Cliente offline");
   await page.getByLabel("Preço unitário").fill("400");
   await page.getByLabel("Origem", { exact: true }).fill("Aeroporto GIG");

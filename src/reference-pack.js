@@ -35,9 +35,19 @@ export function applyReferencePack(data, pack) {
   });
   const existing = new Set(data.records.map((r) => r.id));
   data.records.push(...records.filter((r) => !existing.has(r.id)));
-  for (const key of ["address", "phone", "website"]) {
+  for (const key of ["address", "phone", "website", "email"]) {
     if (!data.company[key] && pack.company?.[key])
       data.company[key] = pack.company[key];
+  }
+  for (const brand of ["lines", "luxury", "realestate"]) {
+    const incoming = pack.company?.brandProfiles?.[brand];
+    if (!incoming) continue;
+    data.company.brandProfiles ||= {};
+    const current = (data.company.brandProfiles[brand] ||= {});
+    for (const key of ["name", "address", "phone", "website", "email"]) {
+      if (!current[key] && typeof incoming[key] === "string" && incoming[key])
+        current[key] = incoming[key];
+    }
   }
   data.importedReferencePacks = [
     ...(data.importedReferencePacks || []),

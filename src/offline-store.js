@@ -1,3 +1,4 @@
+import { documentThemes } from "./document-themes.js";
 import { validateDoc } from "./editorial-document.js";
 import { makePdf, PDF_RENDER_VERSION } from "./offline-pdf.js";
 import { applyReferencePack } from "./reference-pack.js";
@@ -217,6 +218,14 @@ export async function localApi(url, method = "GET", body) {
     if (url.startsWith("/documents/") && method === "PATCH") {
       const d = data.documents.find((d) => d.id === url.split("/")[2]);
       if (!d) throw new Error("Documento não encontrado.");
+      if (body.theme !== undefined) {
+        if (body.theme !== "default" && !documentThemes[body.theme])
+          throw new Error("Tema inválido.");
+        if (body.theme === "default") delete d.theme;
+        else d.theme = body.theme;
+        delete d.pdf;
+        return { ok: true };
+      }
       validateDoc({ ...d, status: body.status });
       d.status = body.status;
       delete d.pdf;
@@ -226,11 +235,19 @@ export async function localApi(url, method = "GET", body) {
   });
 }
 export async function documentPdf(docId) {
-  let doc = await transaction((data) =>
-    data.documents.find((d) => d.id === docId),
-  );
+  let doc = await transaction((data) => {
+    const d = data.documents.find((d) => d.id === docId);
+    return d
+      ? { ...d, theme: d.theme || data.company.documentTheme || "basic" }
+      : null;
+  });
   if (!doc) throw new Error("Documento não encontrado.");
-  if (doc.pdf && doc.pdfRenderVersion === PDF_RENDER_VERSION) return doc.pdf;
+  if (
+    doc.pdf &&
+    doc.pdfRenderVersion === PDF_RENDER_VERSION &&
+    doc.pdfTheme === doc.theme
+  )
+    return doc.pdf;
   const attachments = await transaction((data) =>
     (doc.attachments || []).map((a) => ({
       ...a,
@@ -244,6 +261,7 @@ export async function documentPdf(docId) {
     if (current?.status === doc.status) {
       current.pdf = blob;
       current.pdfRenderVersion = PDF_RENDER_VERSION;
+      current.pdfTheme = doc.theme;
     }
   });
   return blob;
@@ -403,4 +421,15 @@ export async function restoreBackup(file) {
     Object.assign(d, restored);
     return { ok: true };
   });
+}
+
+export async function draftDocumentPdf(doc) {
+  const attachments = await transaction((data) =>
+    (doc.attachments || []).map((a) => ({
+      ...a,
+      source: data.records.find((r) => r.id === a.id && r.kind === "archive")
+        ?.source,
+    })),
+  );
+  return appendOriginalPdfs(await makePdf(doc), attachments);
 }

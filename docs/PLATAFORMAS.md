@@ -25,7 +25,7 @@ npm run build
 mkdir -p android/app/src/main/assets
 cp dist/index.html android/app/src/main/assets/index.html
 cd android
-gradle :app:assembleDebug -PappVersion=1.1.0
+gradle :app:assembleDebug -PappVersion=1.4.0
 ```
 
 APK de teste em `android/app/build/outputs/apk/debug/`. O HTML gerado não é versionado; o workflow o compila para cada plataforma. Não há autoatualização. Alterações na interface exigem novo instalador.

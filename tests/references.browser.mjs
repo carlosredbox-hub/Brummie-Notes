@@ -1,4 +1,4 @@
-import { validateDoc } from "../domain.js";
+import { validateDoc } from "../src/editorial-document.js";
 import { chromium } from "@playwright/test";
 import fs from "node:fs";
 import assert from "node:assert/strict";
@@ -103,7 +103,13 @@ try {
   await page.getByRole("button", { name: "Meus modelos", exact: true }).click();
   const templates = pack.records.filter((r) => r.kind === "template");
   for (const t of templates) {
-    const concierge = ["guia", "hospedagem", "proposta", "horas", "interno"].includes(t.content.type);
+    const concierge = [
+      "guia",
+      "hospedagem",
+      "proposta",
+      "horas",
+      "interno",
+    ].includes(t.content.type);
     const card = page.locator(".template-card").filter({
       has: page.getByRole("heading", { name: t.name, exact: true }),
     });
@@ -111,7 +117,11 @@ try {
       .getByRole("button", { name: "Usar modelo", exact: true })
       .click();
     assert.equal(
-      await page.getByLabel(concierge ? "Cliente / titular" : "Nome do cliente / Empresa").inputValue(),
+      await page
+        .getByLabel(
+          concierge ? "Cliente / titular" : "Nome do cliente / Empresa",
+        )
+        .inputValue(),
       t.content.client,
     );
     const expected = validateDoc(t.content).total;
@@ -119,18 +129,18 @@ try {
       .getByLabel("Preço unitário")
       .evaluateAll((elements) => elements.map((element) => element.value));
     if (!concierge) {
-    assert.equal(prices.length, t.content.items.length);
-    assert.deepEqual(
-      prices.map(Number),
-      t.content.items.map((i) => i.price),
-    );
-    const dates = await page
-      .getByLabel("Data", { exact: true })
-      .evaluateAll((elements) => elements.map((element) => element.value));
-    if (dates.length) {
-      const span = (d) => Date.parse(d[d.length - 1]) - Date.parse(d[0]);
-      assert.equal(span(dates), span(t.content.items.map((i) => i.date)));
-    }
+      assert.equal(prices.length, t.content.items.length);
+      assert.deepEqual(
+        prices.map(Number),
+        t.content.items.map((i) => i.price),
+      );
+      const dates = await page
+        .getByLabel("Data", { exact: true })
+        .evaluateAll((elements) => elements.map((element) => element.value));
+      if (dates.length) {
+        const span = (d) => Date.parse(d[d.length - 1]) - Date.parse(d[0]);
+        assert.equal(span(dates), span(t.content.items.map((i) => i.date)));
+      }
     }
     await page
       .getByRole("button", { name: "Gerar documento", exact: true })
@@ -204,7 +214,9 @@ try {
     .click();
   assert.equal(
     await second.locator(".template-card").count(),
-    stored.records.filter((r) => r.kind === "template" && !r.content?.confidential).length,
+    stored.records.filter(
+      (r) => r.kind === "template" && !r.content?.confidential,
+    ).length,
   );
   assert.equal(
     backup.documents.length,

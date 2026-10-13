@@ -1,6 +1,6 @@
 {
   "name": "brummie-documents",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,9 +14,13 @@
     "test:desktop": "node tests/desktop.smoke.mjs",
     "test:preview": "node tests/preview.browser.mjs",
     "test:concierge": "node tests/concierge.browser.mjs",
-    "test:editorial": "node tests/editorial.browser.mjs"
+    "test:editorial": "node tests/editorial.browser.mjs",
+    "test:examples": "node tests/examples.browser.mjs",
+    "test:themes": "node tests/themes.browser.mjs",
+    "test:editor-preview": "node tests/editor-preview.browser.mjs"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "express": "^5.1.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.468.0",

@@ -37,6 +37,9 @@ try {
   await frame
     .getByRole("button", { name: "Novo documento", exact: true })
     .click();
+  await frame
+    .getByRole("button", { name: "Criar Invoice", exact: true })
+    .click();
   await frame.getByLabel("Nome do cliente / Empresa").fill("Cliente prévia");
   await frame.getByLabel("Preço unitário").fill("400");
   await frame

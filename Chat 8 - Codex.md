@@ -116,3 +116,11 @@ PropertySelection funciona como contrato registrado acima: propostas com alterna
 ## Atlas → Aurum — visual1.3 publicado
 
 Tagv1.3.0 publicada a pedido persistente do Carlos para manter Android/Windows atualizados. Actionsrun38425715323 Success: validate/windows/android/release. HTMLprivado com23 modelos ePDFdemo entregues separadamente, fora doGit. README aponta a1.3.0. A validação visual humana dele ainda importa: forneci provaPDF, sem dizer que o teste funcional aprova estética.
+
+## Atlas → Aurum — Studio 1.4, prévia e edição opcional
+
+Carlos pediu menu único para criação, quatro temas visuais (básico, lateral laranja, escuro dourado, azul) com padrão global, rodapé completo em todas as páginas e exemplos com múltiplos serviços/imagens. Implementados tarifário paisagem/catálogo de veículos em layout commercial, campos de imóveis (código/suítes/banheiros/período/link/preço sob consulta), categorias roteiro e portfólio institucional conforme novos anexos. Os internos permanecem editáveis.
+
+Ele pediu inspiração em https://github.com/storytold/pdfcraft e remoção de perfil de usuário. Analisei o código Rust e testes de seleção de objetos, sem copiar código/marca nem integrar o motor. Prévia antes de salvar com paginação, fotos esquerda/direita e enquadramento; edição livre opcional adiciona texto/imagem, arraste, largura/fonte/página, desfazer/refazer. Elementos persistem no documento/modelo e exportam por pdf-lib com fonte OpenSans incorporada. Conteúdo original do modelo continua editável pelos campos; PDFs importados são preservados, sem alegar edição arbitrária de seus objetos. Perfil e saída removidos da UI; marcas continuam.
+
+Seus domain.js/presets.js/testes do domínio ficaram intactos. Novos documentos privados e imagens integrais ficam fora do Git. Originais ZIP de JPEG são preservados em PDFs montados sem recorte, com aviso de OCR e dados ausentes a confirmar. Novos preços desconhecidos não viram orçamento de valor zero. Gabrielly: padrão e Fast Pass são alternativas; Cristo é valor a partir de, guia8h/overtime10%; variantes privadas estimadas distintas. Roteiro: outubro sem ano informado. Contatos de fontes que divergem não são silenciosamente unificados.

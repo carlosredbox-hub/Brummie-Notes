@@ -1,3 +1,10 @@
+import { EditorPreview } from "./editor-preview.jsx";
+import { documentThemes } from "./document-themes.js";
+import { commercialDefault, isCommercial } from "./commercial.jsx";
+import { DocumentLauncher } from "./document-launcher.jsx";
+import { exampleDocument } from "./document-examples.js";
+import { makePdf } from "./offline-pdf.js";
+import { makeGuideHtml } from "./guide-html.js";
 import { rememberPdfPhotos } from "./offline-store.js";
 const PhotoLibraryContext = React.createContext([]);
 import { PdfPreview } from "./pdf-preview.jsx";
@@ -265,7 +272,85 @@ function App() {
           .map(([c, v]) => amount(v[k], c))
           .join(" · ")
       : amount(0);
-  const create = (type = "invoice") => setModal({ kind: "document", type });
+  const create = (type) => {
+    if (!type) {
+      setPage("concierge");
+      setMobile(false);
+      return;
+    }
+    if (["itinerary", "portfolio"].includes(type)) {
+      const base = conciergeDefault(type === "itinerary" ? "guia" : "proposta");
+      const itinerary = type === "itinerary";
+      setModal({
+        kind: "document",
+        type: base.type,
+        doc: {
+          ...base,
+          category: type,
+          showPrices: false,
+          cover: {
+            ...base.cover,
+            title: itinerary ? "ROTEIRO DE VIAGEM" : "BRUMMIE EXPERIENCE",
+          },
+          ...(itinerary
+            ? {
+                guide: {
+                  ...base.guide,
+                  title: "Roteiro personalizado",
+                  sections: [1, 2, 3].map((n) => ({
+                    title: `Dia ${n}`,
+                    text: "",
+                    image: "",
+                  })),
+                },
+              }
+            : {
+                proposal: {
+                  ...base.proposal,
+                  title: "Portfólio de experiências",
+                },
+              }),
+        },
+      });
+      return;
+    }
+    if (type === "commercial") {
+      const d = conciergeDefault("proposta");
+      setModal({
+        kind: "document",
+        type: "proposta",
+        doc: {
+          ...d,
+          proposal: {
+            ...d.proposal,
+            title: "Proposta comercial",
+            layout: "commercial",
+            commercial: commercialDefault(),
+          },
+        },
+      });
+      return;
+    }
+    if (type === "selection") {
+      const d = conciergeDefault("proposta");
+      setModal({
+        kind: "document",
+        type: "proposta",
+        doc: {
+          ...d,
+          brand: "realestate",
+          language: "en",
+          cover: { ...d.cover, title: "PROPERTY SELECTION" },
+          proposal: {
+            ...d.proposal,
+            title: "Property Selection",
+            layout: "property-selection",
+            options: [emptyPropertyOption()],
+          },
+        },
+      });
+    } else setModal({ kind: "document", type });
+  };
   const titles = {
     dashboard: "Meu facilitador",
     templates: "Meus modelos",
@@ -275,7 +360,7 @@ function App() {
     driver: "Motoristas",
     vehicle: "Frota",
     settings: "Configurações",
-    concierge: "Estúdio de documentos",
+    concierge: "Criar documentos",
     internal: "Documentos internos",
   };
   const table = (
@@ -425,7 +510,7 @@ function App() {
               }}
             >
               <FileText size={19} />
-              Guias & experiências
+              Criar documentos
             </button>
             <button
               className={page === "internal" ? "active" : ""}
@@ -475,25 +560,6 @@ function App() {
             <p>Envie a ficha do motorista e do veículo junto à confirmação.</p>
             <button onClick={() => create("nota")}>
               Criar nota de atendimento <ArrowUpRight size={15} />
-            </button>
-          </div>
-          <div className="profile">
-            <span className="avatar">
-              {state.user.name.slice(0, 2).toUpperCase()}
-            </span>
-            <span>
-              {state.user.name}
-              <small>Dados locais</small>
-            </span>
-            <button
-              className="icon"
-              title="Configurações locais"
-              onClick={async () => {
-                await api("/logout", "POST");
-                setState(null);
-              }}
-            >
-              <LogOut size={17} />
             </button>
           </div>
         </aside>
@@ -798,83 +864,18 @@ function App() {
             )}
 
             {page === "concierge" && (
-              <section className="concierge-gallery">
-                <div>
-                  <span className="eyebrow">
-                    BRUMMIE LINES · REAL ESTATE · LUXURY ESTATE
-                  </span>
-                  <h2>Do conteúdo ao documento, sem redesenhar.</h2>
-                  <p>
-                    Escolha um formato, preencha as informações e salve como
-                    modelo. O app cuida da composição e dos cálculos.
-                  </p>
-                </div>
-                <div className="record-grid">
-                  <article className="panel template-card">
-                    <FileText size={26} />
-                    <h3>Property Selection</h3>
-                    <p>
-                      Capa Real Estate, fotos dos quartos, descrições e preços
-                      independentes por alternativa.
-                    </p>
-                    <button
-                      className="primary"
-                      onClick={() =>
-                        setModal({
-                          kind: "document",
-                          type: "proposta",
-                          doc: {
-                            ...conciergeDefault("proposta"),
-                            brand: "realestate",
-                            language: "en",
-                            cover: {
-                              enabled: true,
-                              title: "PROPERTY SELECTION",
-                              place: "",
-                              dateLabel: "",
-                            },
-                            proposal: {
-                              ...conciergeDefault("proposta").proposal,
-                              title: "Property Selection",
-                              layout: "property-selection",
-                              options: [emptyPropertyOption()],
-                            },
-                          },
-                        })
-                      }
-                    >
-                      Criar seleção de hospedagem
-                    </button>
-                  </article>
-                  {Object.entries(conciergeTypes)
-                    .filter(([type]) => type !== "interno")
-                    .map(([type, label]) => (
-                      <article key={type} className="panel template-card">
-                        <FileText size={26} />
-                        <h3>{label}</h3>
-                        <p>
-                          {
-                            {
-                              guia: "Seções do imóvel, fotos, QR Wi-Fi e versão para celular.",
-                              hospedagem:
-                                "Quartos, diárias, hóspedes, pagamentos e saldo.",
-                              proposta:
-                                "Experiências selecionadas, programação, valores e anexos.",
-                              horas:
-                                "Jornadas, tarifa, cálculo automático e exceção manual.",
-                            }[type]
-                          }
-                        </p>
-                        <button
-                          className="primary"
-                          onClick={() => create(type)}
-                        >
-                          Criar {label}
-                        </button>
-                      </article>
-                    ))}
-                </div>
-              </section>
+              <DocumentLauncher
+                onCreate={create}
+                onExample={(kind) =>
+                  setModal({
+                    kind: "preview",
+                    doc: {
+                      ...exampleDocument(kind),
+                      theme: state.company.documentTheme || "basic",
+                    },
+                  })
+                }
+              />
             )}
             {page === "dashboard" && (
               <>
@@ -1203,7 +1204,8 @@ function App() {
               state,
               onClose: () => setModal(null),
               onSave: async (d) => {
-                const saved = await api("/documents", "POST", d);
+                const { examplePreview, company, ...draft } = d;
+                const saved = await api("/documents", "POST", draft);
                 await refresh();
                 const full = await api("/state");
                 setModal({
@@ -1225,6 +1227,22 @@ function App() {
                 doc: modal.doc,
               })
             }
+            globalTheme={state.company.documentTheme || "basic"}
+            onTheme={async (theme) => {
+              if (modal.doc.examplePreview) {
+                setModal({ ...modal, doc: { ...modal.doc, theme } });
+                return;
+              }
+              await api("/documents/" + modal.doc.id, "PATCH", { theme });
+              await refresh();
+              setModal({
+                ...modal,
+                doc: {
+                  ...modal.doc,
+                  theme: theme === "default" ? undefined : theme,
+                },
+              });
+            }}
             onTemplate={async (name) => {
               if (!name?.trim()) return;
               try {
@@ -1239,6 +1257,10 @@ function App() {
               }
             }}
             onStatus={async (status) => {
+              if (modal.doc.examplePreview) {
+                setModal({ ...modal, doc: { ...modal.doc, status } });
+                return;
+              }
               try {
                 await api("/documents/" + modal.doc.id, "PATCH", { status });
                 await refresh();
@@ -1295,10 +1317,32 @@ function SettingsForm({ company, onSave }) {
         }
       }}
     >
+      <section className="theme-settings">
+        <h2>Tema padrão dos documentos</h2>
+        <p>
+          Aplica-se aos PDFs existentes e novos que usam o padrão global. Os
+          dados e cálculos não são alterados.
+        </p>
+        <div className="theme-options">
+          {Object.entries(documentThemes).map(([id, t]) => (
+            <label key={id} className={`theme-option theme-${id}`}>
+              <input
+                type="radio"
+                name="document-theme"
+                aria-label={t.label}
+                checked={(c.documentTheme || "basic") === id}
+                onChange={() => setC({ ...c, documentTheme: id })}
+              />
+              <span>{t.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
       <h2>Identidade da empresa</h2>
       <p>Os dados ficam registrados em cada documento no momento da emissão.</p>
       <div className="form-grid">
         {f("name", "Nome da empresa")}
+        {f("taxId", "CPF/CNPJ da empresa")}
         {f("email", "E-mail", "email")}
         {f("phone", "Telefone")}
         {f("website", "Website")}
@@ -1319,6 +1363,9 @@ function SettingsForm({ company, onSave }) {
                 ["Nome da marca", "name", "text"],
                 ["Cor da marca", "color", "color"],
                 ["Website da marca", "website", "text"],
+                ["E-mail da marca", "email", "email"],
+                ["Telefone da marca", "phone", "text"],
+                ["Endereço da marca", "address", "text"],
               ].map(([label, key, type]) => (
                 <Field
                   key={key}
@@ -1632,7 +1679,14 @@ function DocForm({ initial, type, state, onClose, onSave }) {
                 value=""
                 onChange={(e) => {
                   const r = state.records.find((r) => r.id === e.target.value);
-                  if (r) setD({ ...d, client: r.name, email: r.email || "" });
+                  if (r)
+                    setD({
+                      ...d,
+                      client: r.name,
+                      email: r.email || "",
+                      clientTaxId: r.taxId || "",
+                      clientAddress: r.address || "",
+                    });
                 }}
               >
                 <option value="">Selecionar cliente (opcional)</option>
@@ -1648,6 +1702,8 @@ function DocForm({ initial, type, state, onClose, onSave }) {
             <div className="form-grid">
               {f("client", "Nome do cliente / Empresa")}
               {f("email", "E-mail do cliente", "email")}
+              {f("clientTaxId", "CPF/CNPJ do cliente")}
+              {f("clientAddress", "Endereço do cliente")}
               {f("date", "Data de emissão", "date")}
               {f(
                 "due",
@@ -1974,6 +2030,7 @@ function DocForm({ initial, type, state, onClose, onSave }) {
             </select>
           </Field>
           {error && <div className="error">{error}</div>}
+          <EditorPreview draft={d} company={state.company} onChange={setD} />
         </div>
         <div className="modal-actions">
           <span>
@@ -1992,13 +2049,48 @@ function DocForm({ initial, type, state, onClose, onSave }) {
     </Modal>
   );
 }
-function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
+function Preview({
+  d,
+  onClose,
+  onCopy,
+  onStatus,
+  onTemplate,
+  onTheme,
+  globalTheme,
+}) {
   const [modelName, setModelName] = useState(TYPES[d.type] + " • " + d.client);
   const en = d.language === "en",
     financial = !["voucher", "nota"].includes(d.type) && d.showPrices !== false,
     c = d.company;
   return (
     <Modal title="Seu documento está pronto" onClose={onClose} wide>
+      {d.examplePreview && (
+        <p className="example-notice">
+          Exemplo completo com dados fictícios. Não altera seus documentos,
+          clientes ou configurações. Use Reutilizar para editar.
+        </p>
+      )}
+      <div className="theme-switcher">
+        <span>Tema visual</span>
+        <select
+          aria-label="Tema deste documento"
+          value={d.theme || "default"}
+          onChange={(e) => onTheme(e.target.value)}
+        >
+          <option value="default">
+            Padrão global ·{" "}
+            {
+              (documentThemes[globalTheme || "basic"] || documentThemes.basic)
+                .label
+            }
+          </option>
+          {Object.entries(documentThemes).map(([id, t]) => (
+            <option key={id} value={id}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="preview-toolbar">
         <span className={"badge " + d.status}>{d.status}</span>
         <select
@@ -2036,7 +2128,12 @@ function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
           onClick={async () => {
             try {
               download(
-                await documentPdf(d.id),
+                d.examplePreview
+                  ? await makePdf({
+                      ...d,
+                      theme: d.theme || globalTheme || "basic",
+                    })
+                  : await documentPdf(d.id),
                 `${d.type}-${String(d.number).padStart(5, "0")}.pdf`,
               );
             } catch (e) {
@@ -2053,7 +2150,12 @@ function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
           className="secondary guide-download"
           onClick={async () => {
             try {
-              download(await documentGuideHtml(d.id), `Guia-${d.number}.html`);
+              download(
+                d.examplePreview
+                  ? await makeGuideHtml(d)
+                  : await documentGuideHtml(d.id),
+                `Guia-${d.number}.html`,
+              );
             } catch (e) {
               alert(e.message);
             }
@@ -2062,7 +2164,13 @@ function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
           Baixar guia para celular (HTML)
         </button>
       )}
-      <PdfPreview document={d} />
+      {!d.examplePreview && !d.company.email && (
+        <p className="example-notice">
+          E-mail da empresa não informado. Preencha em Configurações e reutilize
+          o documento para incluir esse contato no rodapé.
+        </p>
+      )}
+      <PdfPreview document={{ ...d, globalTheme }} />
     </Modal>
   );
 }

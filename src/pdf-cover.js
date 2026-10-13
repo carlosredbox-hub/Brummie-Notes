@@ -1,21 +1,44 @@
+import { themeFor } from "./document-themes.js";
 import { imageBox } from "./pdf-design.js";
 export async function addDocumentCover(pdf, d) {
   if (!d.cover?.enabled || d.confidential) return false;
-  const c = d.company;
-  pdf.setFillColor("#fdfbf6");
-  pdf.rect(0, 0, 210, 91, "F");
-  if (!(await imageBox(pdf, c.logo, 26, 12, 158, 67, {trim:true}))) {
-    pdf.setFont("Cormorant", "bold");
+  const c = d.company,
+    t = themeFor(d.theme || c.documentTheme),
+    left = t.sidebar ? 52 : 0,
+    width = 210 - left,
+    center = left + width / 2;
+  pdf.setFillColor(
+    (d.theme || c.documentTheme) === "basic" || !(d.theme || c.documentTheme)
+      ? "#fdfbf6"
+      : t.paper,
+  );
+  pdf.rect(left, 0, width, 91, "F");
+  if (t.header) {
+    pdf.setFillColor(t.header);
+    pdf.rect(left, 0, width, 91, "F");
+    pdf.setFillColor("#ffffff");
+    pdf.roundedRect(left + width * 0.1, 17, width * 0.8, 57, 3, 3, "F");
+  }
+  if ((d.theme || c.documentTheme) === "gold") {
+    pdf.setFillColor("#ffffff");
+    pdf.roundedRect(left + width * 0.15, 23, width * 0.7, 40, 3, 3, "F");
+  }
+  if (
+    !(await imageBox(pdf, c.logo, left + width * 0.125, 12, width * 0.75, 67, {
+      trim: true,
+    }))
+  ) {
+    pdf.setFont(t.serif, "bold");
     pdf.setFontSize(30);
-    pdf.setTextColor("#151515");
-    pdf.text(c.name, 105, 52, { align: "center" });
+    pdf.setTextColor(t.ink);
+    pdf.text(c.name, center, 52, { align: "center" });
   }
   await imageBox(
     pdf,
     d.cover.image || d.guide?.coverImage || c.coverImage,
-    0,
+    left,
     91,
-    210,
+    width,
     115,
     { crop: true },
   );
@@ -34,8 +57,8 @@ export async function addDocumentCover(pdf, d) {
         : "EXPERIENCE SELECTION",
     horas: "EXTRA HOURS",
   };
-  pdf.setFont("Cormorant", "normal");
-  pdf.setTextColor("#111111");
+  pdf.setFont(t.serif, "normal");
+  pdf.setTextColor(t.ink);
   pdf.setFontSize(26);
   const title =
     d.cover.title ||
@@ -49,16 +72,19 @@ export async function addDocumentCover(pdf, d) {
     width = 177,
     style = "normal",
   ) => {
-    pdf.setFont("Cormorant", style);
+    pdf.setFont(t.serif, style);
     let size = maxSize,
       rows;
     do {
       pdf.setFontSize(size);
-      rows = pdf.splitTextToSize(String(value || ""), width);
+      rows = pdf.splitTextToSize(
+        String(value || ""),
+        Math.min(width, 210 - left - 22),
+      );
       if (rows.length * size * 0.41 <= height) break;
       size--;
     } while (size > 8);
-    pdf.text(rows, 105, y - ((rows.length - 1) * size * 0.41) / 2, {
+    pdf.text(rows, center, y - ((rows.length - 1) * size * 0.41) / 2, {
       align: "center",
     });
   };
@@ -88,7 +114,7 @@ export async function addDocumentCover(pdf, d) {
         : `${format(values[0])} — ${format(values.at(-1))}`
       : format(d.date);
   }
-  pdf.setFont("Cormorant", "bold");
+  pdf.setFont(t.serif, "bold");
   pdf.setFontSize(16);
   centered(
     [d.cover.place, label].filter(Boolean).join(" • "),
@@ -98,14 +124,14 @@ export async function addDocumentCover(pdf, d) {
     180,
     "bold",
   );
-  pdf.setFont("Cormorant", "bolditalic");
+  pdf.setFont(t.serif, "bolditalic");
   pdf.setFontSize(21);
-  centered(d.client, 21, 277, 19, 178, "bolditalic");
+  centered(d.client, 21, 268, 14, 178, "bolditalic");
   if (d.status === "Cancelado") {
     pdf.setFont("OpenSans", "bold");
     pdf.setFontSize(9);
     pdf.setTextColor("#a33d30");
-    pdf.text(d.language === "en" ? "CANCELLED" : "CANCELADO", 105, 289, {
+    pdf.text(d.language === "en" ? "CANCELLED" : "CANCELADO", center, 289, {
       align: "center",
     });
   }

@@ -63,6 +63,7 @@ try {
   await page
     .getByRole("button", { name: "Novo documento", exact: true })
     .click();
+  await page.getByRole("button", {name:"Criar Invoice",exact:true}).click();
   await page
     .getByLabel("Nome do cliente / Empresa")
     .fill("Empresa Exemplo • demonstração");
@@ -140,7 +141,7 @@ try {
     .getByRole("button", { name: "Biblioteca de PDFs", exact: true })
     .click();
   await shot("06-biblioteca");
-  await page.getByRole("button", { name: "Guias & experiências", exact: true }).click();
+  await page.getByRole("button", { name: "Criar documentos", exact: true }).click();
   await shot("07-concierge");
   if (errors.length) throw new Error(errors.join("\n"));
   console.log(

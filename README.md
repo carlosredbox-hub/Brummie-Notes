@@ -6,7 +6,7 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
-[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.3.0)
+[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.0)
 
 ![Visão geral: documentos recentes, valores e atalhos para emitir](docs/screenshots/01-dashboard.png)
 
@@ -17,13 +17,23 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 - **Apresente o atendimento.** Envie uma nota com os dados do motorista bilíngue e do veículo; os cadastros também aceitam fotos.
 - **Trabalhe offline.** Dados ficam no dispositivo. Backup permite levar a biblioteca para outro computador ou celular.
 
-## Revisão visual no Studio 1.3
+## Criar, conferir e ajustar
+
+Uma única tela **Criar documentos** reúne 15 formatos, cada um com **Criar** e **Exemplo completo**. Os exemplos são fictícios, incluem vários serviços/fotos e não alteram a biblioteca.
+
+Escolha **Básico**, **Lateral escura + laranja**, **Escuro + dourado** ou **Clássico azul**. Configurações define o padrão de todos os documentos; cada documento pode ter uma escolha própria. Fotos, textos, valores, links e contatos continuam presentes.
+
+Antes de salvar, **Visualizar antes de finalizar** mostra as páginas do próprio PDF. Ajuste o lado das fotos e o enquadramento, atualize a prévia e, se desejar, abra **Edição visual livre**: adicione texto/imagem, arraste, redimensione, desfaça/refaça e salve os ajustes no documento/modelo. [Detalhes e referência PdfCraft](docs/visual-editor.md). Perfil de usuário removido; funcionamento local sem conta.
+
+![Edição visual opcional sobre a página do PDF](docs/screenshots/09-visual-editor.png)
+
+## Revisão visual no Studio 1.4
 
 Guias de hospedagem com QR de Wi-Fi e exportação HTML, vouchers de hotel com quartos/diárias/pagamentos, propostas de experiências e relatórios de horas extras agora têm editores próprios. Brummie Lines e Real Estate usam perfis de identidade editáveis e capas opcionais. PDFs originais podem ser anexados ao documento.
 
 **Documentos internos** ficam em uma área própria, como moldes editáveis de fechamento e repasse, com aviso de confidencialidade. Não aparecem no painel de clientes. Adicional de cartão opcional, desligado por padrão, aparece separado no documento quando selecionado.
 
-**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML e os instaladores da release v1.3.0 incluem a revisão visual. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
+**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML e os instaladores da release v1.4.0 incluem a revisão visual. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
 
 ![Guias, hospedagem, experiências e horas extras](docs/screenshots/07-concierge.png)
 
@@ -63,7 +73,7 @@ _Screenshots reais do app, com dados fictícios de demonstração. A imagem móv
 
 ## Escolha como testar
 
-O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.3.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.3.0) também inclui Windows EXE/ZIP e Android APK de teste. Os jobs de validação, Windows, Android e publicação passaram.
+O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.4.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.0) também inclui Windows EXE/ZIP e Android APK de teste. O workflow valida e gera os pacotes Windows e Android; acompanhe a execução da versão na aba Actions.
 
 Cada dispositivo guarda sua própria biblioteca. Transfira dados por backup; não há sincronização automática. A restauração substitui os dados existentes após confirmação. A distribuição pública inclui modelos genéricos; sua biblioteca privada é carregada por backup. Os documentos são informativos, sem integração fiscal oficial.
 
@@ -107,4 +117,4 @@ npm run build
 node scripts/capture-screenshots.mjs
 ```
 
-A captura usa um navegador isolado, rede desativada e dados fictícios; não altera a biblioteca do usuário. O HTML público de demonstração está em `docs/demo/Brummie-Offline.html`. Os instaladores publicados correspondem à release 1.1.0; o HTML de demonstração acompanha a versão atual da branch main.
+A captura usa um navegador isolado, rede desativada e dados fictícios; não altera a biblioteca do usuário. O HTML público de demonstração está em `docs/demo/Brummie-Offline.html`. O HTML de demonstração acompanha a branch main; os instaladores são gerados a partir da tag da release.
