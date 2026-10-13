@@ -1,6 +1,6 @@
 {
   "name": "brummie-documents",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
     "test:browser": "node tests/browser.mjs",
     "test:desktop": "node tests/desktop.smoke.mjs",
     "test:preview": "node tests/preview.browser.mjs",
-    "test:concierge": "node tests/concierge.browser.mjs"
+    "test:concierge": "node tests/concierge.browser.mjs",
+    "test:editorial": "node tests/editorial.browser.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",

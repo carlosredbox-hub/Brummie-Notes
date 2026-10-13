@@ -1,3 +1,4 @@
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { chromium } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
 import fs from "node:fs";
@@ -40,6 +41,21 @@ const save = async (name) => {
   return PDFDocument.load(
     fs.readFileSync(`test-results/concierge/${name}.pdf`),
   );
+};
+const pdfText = async (name) => {
+  const task = getDocument({
+    data: new Uint8Array(fs.readFileSync(`test-results/concierge/${name}.pdf`)),
+    isEvalSupported: false,
+  });
+  const doc = await task.promise;
+  let text = "";
+  for (let p = 1; p <= doc.numPages; p++)
+    text +=
+      (await (await doc.getPage(p)).getTextContent()).items
+        .map((i) => i.str)
+        .join(" ") + " ";
+  await task.destroy();
+  return text.replace(/\s+/g, " ");
 };
 const close = () =>
   page.getByRole("button", { name: "Fechar", exact: true }).click();
@@ -108,7 +124,7 @@ try {
     .click();
   await ready();
   await save("hospedagem");
-  await page.getByText("Saldo: R$ 2.000,00", { exact: false }).waitFor();
+  assert.match(await pdfText("hospedagem"), /Saldo: R\$ 2\.000,00/);
   await close();
   // Import the generated guide as a genuine original attachment, then merge without changing pages.
   await page
@@ -172,10 +188,8 @@ try {
     .click();
   await ready();
   await save("horas");
-  await page
-    .locator(".concierge-paper")
-    .getByText("exceção manual", { exact: false })
-    .waitFor();
+  assert.match(await pdfText("horas"), /Exceção manual revisada/);
+  assert.match(await pdfText("horas"), /3\.040,00/);
   await close();
   await page
     .getByRole("button", { name: "Documentos internos", exact: true })
@@ -194,6 +208,8 @@ try {
     .click();
   await ready();
   await save("interno");
+  assert.match(await pdfText("interno"), /INTERNO.*NÃO ENVIAR AO CLIENTE/);
+  assert.match(await pdfText("interno"), /100,00/);
   await close();
   await page.getByRole("button", { name: "Visão geral", exact: true }).click();
   assert.equal(

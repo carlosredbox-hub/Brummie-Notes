@@ -1,3 +1,8 @@
+import {
+  PropertySelectionEditor,
+  emptyPropertyOption,
+} from "./property-selection.jsx";
+import { isSelection } from "./editorial-document.js";
 import React, { useState, useEffect } from "react";
 import { brandProfiles, conciergeTypes } from "./document-branding.js";
 import { reuseDocument } from "./reuse-document.js";
@@ -216,7 +221,15 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
     (r) => r.kind === "archive" && (d.type === "interno" || !r.confidential),
   );
   return (
-    <Modal title={`Novo ${conciergeTypes[d.type]}`} onClose={onClose} wide>
+    <Modal
+      title={
+        isSelection(d)
+          ? "Nova seleção de hospedagem"
+          : `Novo ${conciergeTypes[d.type]}`
+      }
+      onClose={onClose}
+      wide
+    >
       <LocalForm
         onSubmit={async (e) => {
           e.preventDefault();
@@ -466,6 +479,12 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                     "time",
                   )}
                 </div>
+                <Field label="Foto do hotel">
+                  <Photo
+                    value={s.coverImage}
+                    onChange={(value) => patch("stay", "coverImage", value)}
+                  />
+                </Field>
                 {area("Hóspedes / composição", "stay", "guests")}
                 <div className="editor-summary">{nights} diária(s)</div>
               </div>
@@ -493,6 +512,42 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                         </Field>
                       ))}
                     </div>
+                    <Field label={`Foto do quarto ${i + 1}`}>
+                      <Photo
+                        value={r.image}
+                        onChange={(value) =>
+                          listPatch("stay", "rooms", i, "image", value)
+                        }
+                      />
+                    </Field>
+                    <Field label={`Detalhes do quarto ${i + 1}`}>
+                      <textarea
+                        rows={4}
+                        value={r.details || ""}
+                        onChange={(e) =>
+                          listPatch(
+                            "stay",
+                            "rooms",
+                            i,
+                            "details",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label={`Inclusões do quarto ${i + 1}`}
+                      value={r.inclusions || ""}
+                      onChange={(e) =>
+                        listPatch(
+                          "stay",
+                          "rooms",
+                          i,
+                          "inclusions",
+                          e.target.value,
+                        )
+                      }
+                    />
                     <button
                       type="button"
                       className="text-button"
@@ -585,7 +640,38 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
           {d.type === "proposta" && (
             <>
               <div className="form-section">
-                <h3>02 · Sua experiência</h3>
+                <h3>02 · Composição da proposta</h3>
+                <Field label="Formato visual da proposta">
+                  <select
+                    value={p.layout || "experience"}
+                    onChange={(e) => {
+                      const layout = e.target.value;
+                      setD((current) => ({
+                        ...current,
+                        brand:
+                          layout === "property-selection"
+                            ? "realestate"
+                            : current.brand,
+                        cardFeePct: 0,
+                        discount: 0,
+                        proposal: {
+                          ...current.proposal,
+                          layout,
+                          options: current.proposal.options?.length
+                            ? current.proposal.options
+                            : [emptyPropertyOption()],
+                        },
+                      }));
+                    }}
+                  >
+                    <option value="experience">
+                      Experiência / serviços selecionados
+                    </option>
+                    <option value="property-selection">
+                      Property Selection · alternativas de hospedagem
+                    </option>
+                  </select>
+                </Field>
                 <div className="form-grid">
                   {nested("Título da proposta", "proposal", "title", true)}
                   {nested("Local da experiência", "proposal", "venue")}
@@ -607,63 +693,118 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                 {area("Programação / horários", "proposal", "schedule")}
                 {area("Condições de pagamento", "proposal", "paymentTerms")}
               </div>
-              <div className="form-section">
-                <h3>03 · Itens selecionados para esta proposta</h3>
-                <p>
-                  Inclua os serviços escolhidos. Salve modelos separados para
-                  opções alternativas, para evitar somá-las no mesmo total.
-                </p>
-                {d.items.map((r, i) => (
-                  <div className="concierge-block" key={i}>
-                    <div className="form-grid">
-                      {[
-                        ["Serviço", "description", "text"],
-                        ["Quantidade", "quantity", "number"],
-                        ["Preço", "price", "number"],
-                        ["Adicional", "extra", "number"],
-                      ].map(([label, key, t]) => (
-                        <Field label={`${label} ${i + 1}`} key={key}>
-                          <input
-                            required
-                            type={t}
-                            min={key === "quantity" ? 0.01 : 0}
-                            step="0.01"
-                            value={r[key]}
-                            onChange={(e) =>
-                              set(
-                                "items",
-                                d.items.map((x, n) =>
-                                  n === i ? { ...x, [key]: e.target.value } : x,
-                                ),
-                              )
-                            }
-                          />
-                        </Field>
-                      ))}
+              {isSelection(d) ? (
+                <PropertySelectionEditor
+                  options={p.options || []}
+                  onChange={(value) => patch("proposal", "options", value)}
+                  currency={d.currency}
+                  ui={ui}
+                />
+              ) : (
+                <div className="form-section">
+                  <h3>03 · Itens selecionados para esta proposta</h3>
+                  <p>
+                    Inclua os serviços escolhidos. Salve modelos separados para
+                    opções alternativas, para evitar somá-las no mesmo total.
+                  </p>
+                  {d.items.map((r, i) => (
+                    <div className="concierge-block" key={i}>
+                      <div className="form-grid">
+                        {[
+                          ["Serviço", "description", "text"],
+                          ["Quantidade", "quantity", "number"],
+                          ["Preço", "price", "number"],
+                          ["Adicional", "extra", "number"],
+                        ].map(([label, key, t]) => (
+                          <Field label={`${label} ${i + 1}`} key={key}>
+                            <input
+                              required
+                              type={t}
+                              min={key === "quantity" ? 0.01 : 0}
+                              step="0.01"
+                              value={r[key]}
+                              onChange={(e) =>
+                                set(
+                                  "items",
+                                  d.items.map((x, n) =>
+                                    n === i
+                                      ? { ...x, [key]: e.target.value }
+                                      : x,
+                                  ),
+                                )
+                              }
+                            />
+                          </Field>
+                        ))}
+                      </div>
+                      <Field label={`Foto do item ${i + 1}`}>
+                        <Photo
+                          value={r.image}
+                          onChange={(value) =>
+                            set(
+                              "items",
+                              d.items.map((x, n) =>
+                                n === i ? { ...x, image: value } : x,
+                              ),
+                            )
+                          }
+                        />
+                      </Field>
+                      <Field label={`Descrição detalhada do item ${i + 1}`}>
+                        <textarea
+                          rows={4}
+                          value={r.details || ""}
+                          onChange={(e) =>
+                            set(
+                              "items",
+                              d.items.map((x, n) =>
+                                n === i ? { ...x, details: e.target.value } : x,
+                              ),
+                            )
+                          }
+                        />
+                      </Field>
+                      <button
+                        type="button"
+                        className="text-button"
+                        onClick={() =>
+                          set(
+                            "items",
+                            d.items.filter((_, n) => n !== i),
+                          )
+                        }
+                      >
+                        Remover item
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className="text-button"
-                      onClick={() =>
-                        set(
-                          "items",
-                          d.items.filter((_, n) => n !== i),
-                        )
+                  ))}
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => set("items", [...d.items, item()])}
+                  >
+                    Adicionar item da proposta
+                  </button>
+                  {field("Desconto", "discount", false, "number")}
+                  <label className="attachment-choice">
+                    <input
+                      type="checkbox"
+                      checked={Number(d.cardFeePct || 0) > 0}
+                      onChange={(e) =>
+                        set("cardFeePct", e.target.checked ? 5 : 0)
                       }
-                    >
-                      Remover item
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => set("items", [...d.items, item()])}
-                >
-                  Adicionar item da proposta
-                </button>
-                {field("Desconto", "discount", false, "number")}
-              </div>
+                    />
+                    Aplicar adicional de cartão
+                  </label>
+                  {Number(d.cardFeePct || 0) > 0 &&
+                    field(
+                      "Adicional de cartão (%)",
+                      "cardFeePct",
+                      false,
+                      "number",
+                    )}
+                </div>
+              )}
             </>
           )}
           {d.type === "horas" && (
@@ -1001,9 +1142,16 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
               />
               Incluir capa com foto e identidade da marca
             </label>
+            <Field label="Foto principal da capa">
+              <Photo
+                value={d.cover.image}
+                onChange={(value) => patch("cover", "image", value)}
+              />
+            </Field>
             <div className="form-grid">
               {nested("Título da capa (opcional)", "cover", "title")}
               {nested("Cidade / local da capa", "cover", "place")}
+              {nested("Período na capa (opcional)", "cover", "dateLabel")}
             </div>
             {d.type !== "guia" && (
               <label className="attachment-choice">
@@ -1056,12 +1204,25 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
               onChange={(e) => set("notes", e.target.value)}
             />
           </Field>
-          {d.type !== "guia" && (
+          {d.type !== "guia" && !isSelection(d) && (
             <div className="editor-summary">
               {new Intl.NumberFormat("pt-BR", {
                 style: "currency",
                 currency: d.currency,
-              }).format(Number.isFinite(total) ? total : 0)}
+              }).format(
+                Number.isFinite(total)
+                  ? Math.round(
+                      (total +
+                        Math.round(
+                          ((total * Number(d.cardFeePct || 0)) / 100 +
+                            Number.EPSILON) *
+                            100,
+                        ) /
+                          100) *
+                        100,
+                    ) / 100
+                  : 0,
+              )}
             </div>
           )}
           {error && (
@@ -1081,284 +1242,5 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
         </div>
       </LocalForm>
     </Modal>
-  );
-}
-
-export function ConciergePaper({ d }) {
-  const en = d.language === "en",
-    c = d.company;
-  const [qr, setQr] = useState(null);
-  useEffect(() => {
-    let live = true;
-    if (d.type === "guia") wifiQr(d.guide.wifi).then((q) => live && setQr(q));
-    return () => {
-      live = false;
-    };
-  }, [d.id]);
-  const money = (n) =>
-    new Intl.NumberFormat(en ? "en-US" : "pt-BR", {
-      style: "currency",
-      currency: d.currency,
-    }).format(n || 0);
-  const g = d.guide,
-    s = d.stay,
-    p = d.proposal,
-    o = d.overtime;
-  return (
-    <article
-      className="paper concierge-paper"
-      style={{ "--doc-color": c.color }}
-    >
-      <header className="concierge-paper-head">
-        <div>
-          <small>{c.name}</small>
-          <h1>
-            {d.cover?.title ||
-              (d.type === "guia"
-                ? g.title
-                : d.type === "hospedagem"
-                  ? s.hotelName
-                  : d.type === "proposta"
-                    ? p.title
-                    : en
-                      ? "Extra hours"
-                      : "Horas extras")}
-          </h1>
-          <p>{d.cover?.place || g?.address || s?.hotelAddress || p?.venue}</p>
-        </div>
-        {c.logo && <img src={c.logo} alt={c.name} />}
-      </header>
-      {d.type === "interno" && (
-        <div className="import-warning">INTERNO — NÃO ENVIAR AO CLIENTE</div>
-      )}
-      <div className="concierge-paper-meta">
-        <span>{d.client}</span>
-        <span>
-          {d.date} · {String(d.number).padStart(5, "0")}
-        </span>
-      </div>
-      {d.type === "guia" && (
-        <>
-          {g.propertyCode && <p>{g.propertyCode}</p>}
-          {g.coverImage && (
-            <img className="concierge-cover" src={g.coverImage} alt="" />
-          )}
-          {g.accessInstructions && (
-            <section>
-              <h2>{en ? "Arrival & access" : "Chegada & acesso"}</h2>
-              <p>{g.accessInstructions}</p>
-            </section>
-          )}
-          {qr && (
-            <section>
-              <h2>Wi-Fi</h2>
-              <p>{g.wifi.ssid}</p>
-              {g.wifi.encryption !== "nopass" && (
-                <p>
-                  {en ? "Password" : "Senha"}: {g.wifi.password}
-                </p>
-              )}
-              <img className="wifi-qr" src={qr} alt="QR Wi-Fi" />
-            </section>
-          )}
-          {g.sections.map((section, i) => (
-            <section key={section.id || i}>
-              <h2>{section.title}</h2>
-              {section.image && (
-                <img className="concierge-cover" src={section.image} alt="" />
-              )}
-              <p>{section.text}</p>
-            </section>
-          ))}
-        </>
-      )}
-      {d.type === "hospedagem" && (
-        <>
-          <section>
-            <h2>{en ? "Your stay" : "Sua estadia"}</h2>
-            <p>
-              {s.checkIn} {s.checkInTime} → {s.checkOut} {s.checkOutTime}
-            </p>
-            <p>
-              {s.nights} {en ? "nights" : "diárias"}
-            </p>
-            <p>{s.guests}</p>
-            <p>
-              {s.requester} {s.hotelTaxId}
-            </p>
-          </section>
-          <section>
-            <h2>{en ? "Rooms" : "Quartos"}</h2>
-            {s.rooms.map((r, i) => (
-              <p key={i}>
-                {r.description} · {r.quantity} × {s.nights}{" "}
-                {en ? "nights" : "diárias"}
-                {d.showPrices !== false && (
-                  <>
-                    {" "}
-                    × {money(r.nightlyRate)} ={" "}
-                    <strong>{money(r.amount)}</strong>
-                  </>
-                )}
-              </p>
-            ))}
-            {d.showPrices !== false && (
-              <>
-                <h2>{money(s.total)}</h2>
-                <p>
-                  {en ? "Payments" : "Pagamentos"}: {money(s.paid)} ·{" "}
-                  {en ? "Balance" : "Saldo"}: {money(s.balance)}
-                </p>
-                {s.payments.map((payment, i) => (
-                  <p key={i}>
-                    {payment.description} · {payment.date} ·{" "}
-                    {money(payment.amount)}
-                  </p>
-                ))}
-              </>
-            )}
-          </section>
-          {s.terms && (
-            <section>
-              <h2>{en ? "Terms" : "Condições"}</h2>
-              <p>{s.terms}</p>
-            </section>
-          )}
-        </>
-      )}
-      {d.type === "proposta" && (
-        <>
-          {p.coverImage && (
-            <img className="concierge-cover" src={p.coverImage} alt="" />
-          )}
-          <section>
-            <h2>{en ? "Your proposal" : "Sua proposta"}</h2>
-            {d.items.map((item, i) => (
-              <p key={i}>
-                {item.description} · {item.quantity} {item.unit}
-                {d.showPrices !== false && <> · {money(item.total)}</>}
-              </p>
-            ))}
-            {d.showPrices !== false && <h2>{money(d.total)}</h2>}
-          </section>
-          {[
-            ["O que está incluído", p.inclusions],
-            ["Programação", p.schedule],
-            ["Condições de pagamento", p.paymentTerms],
-          ]
-            .filter(([, v]) => v)
-            .map(([title, value]) => (
-              <section key={title}>
-                <h2>{title}</h2>
-                <p>{value}</p>
-              </section>
-            ))}
-        </>
-      )}
-      {d.discrepancy !== 0 && d.type === "horas" && (
-        <div className="import-warning">
-          Diferença entre total calculado e total do original:{" "}
-          {money(d.discrepancy)}. Revise antes de enviar.
-        </div>
-      )}
-      {d.type === "horas" &&
-        o.days.map((day, di) => (
-          <section key={di}>
-            <h2>{day.date}</h2>
-            {day.lines.map((line, li) => (
-              <div className="overtime-summary" key={li}>
-                <h3>{line.vehicle}</h3>
-                <p>
-                  {line.start} → {line.end} · {line.extraHours}{" "}
-                  {en ? "extra hours" : "horas extras"}
-                  {line.overridden && " · exceção manual"}
-                </p>
-                {d.showPrices !== false && (
-                  <strong>{money(line.amount)}</strong>
-                )}
-              </div>
-            ))}
-          </section>
-        ))}
-      {d.type === "horas" && d.showPrices !== false && (
-        <h2>{money(d.total)}</h2>
-      )}
-      {d.type === "interno" && (
-        <section>
-          <h2>{d.internal.partner}</h2>
-          {d.internal.lines.map((line, i) => (
-            <p key={i}>
-              {line.label} ·{" "}
-              {line.pct !== undefined
-                ? `${money(line.base)} × ${line.pct}%`
-                : `${line.qty} × ${money(line.unit)}`}{" "}
-              = <strong>{money(line.amount)}</strong>
-            </p>
-          ))}
-          <h2>{money(d.internal.total)}</h2>
-        </section>
-      )}
-      {d.notes && (
-        <section>
-          <h2>{en ? "Additional information" : "Observações"}</h2>
-          <p>{d.notes}</p>
-        </section>
-      )}
-      {d.attachments?.length > 0 && (
-        <section>
-          <h2>{en ? "Original attachments" : "Originais anexados"}</h2>
-          {d.attachments.map((a) => (
-            <p key={a.id}>{a.name}</p>
-          ))}
-        </section>
-      )}
-      <footer>
-        {[c.address, c.phone, c.website].filter(Boolean).join(" · ")}
-        <p>
-          {en
-            ? "Informational document. Not a tax invoice."
-            : "Documento informativo. Não substitui nota fiscal."}
-        </p>
-      </footer>
-    </article>
-  );
-}
-
-export function DocumentCoverPreview({ d }) {
-  if (!d.cover?.enabled || d.confidential) return null;
-  const c = d.company,
-    image = d.cover.image || d.guide?.coverImage || c.coverImage;
-  const title =
-    d.cover.title ||
-    d.guide?.title ||
-    d.proposal?.title ||
-    conciergeTypes[d.type] ||
-    {
-      invoice: "Invoice",
-      fatura: "Fatura",
-      voucher: "Voucher de confirmação",
-      nota: "Nota de atendimento",
-      orcamento: "Orçamento",
-      recibo: "Recibo",
-    }[d.type];
-  const dateLabel =
-    d.cover.dateLabel ||
-    (d.stay
-      ? `${d.stay.checkIn} — ${d.stay.checkOut}`
-      : d.proposal?.eventDate || d.date);
-  return (
-    <article className="document-cover" style={{ "--doc-color": c.color }}>
-      <header>
-        {c.logo ? <img src={c.logo} alt={c.name} /> : <h2>{c.name}</h2>}
-      </header>
-      {image && (
-        <img className="document-cover-photo" src={image} alt="Foto de capa" />
-      )}
-      <div>
-        <h1>{title}</h1>
-        <p>{[d.cover.place, dateLabel].filter(Boolean).join(" • ")}</p>
-        <h2>{d.client}</h2>
-      </div>
-    </article>
   );
 }

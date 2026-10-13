@@ -15,7 +15,7 @@ export function documentCompany(company, brand = "lines") {
       configured.logo ||
       (brand === "lines"
         ? company.logo || (company.name === "Brummie Lines" ? linesLogo : "")
-        : brand === "realestate"
+        : brand === "realestate" || brand === "luxury"
           ? estateLogo
           : ""),
     coverImage:

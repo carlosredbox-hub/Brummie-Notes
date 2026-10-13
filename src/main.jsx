@@ -1,8 +1,11 @@
-import {
-  ConciergeForm,
-  ConciergePaper,
-  DocumentCoverPreview,
-} from "./concierge.jsx";
+import { rememberPdfPhotos } from "./offline-store.js";
+const PhotoLibraryContext = React.createContext([]);
+import { PdfPreview } from "./pdf-preview.jsx";
+import { isSelection } from "./editorial-document.js";
+import { conciergeDefault } from "./concierge.jsx";
+import { emptyPropertyOption } from "./property-selection.jsx";
+import { cardFeeTypes } from "../domain.js";
+import { ConciergeForm } from "./concierge.jsx";
 import { brandProfiles, conciergeTypes } from "./document-branding.js";
 import { types as domainTypes } from "../domain.js";
 import { reuseDocument } from "./reuse-document.js";
@@ -81,30 +84,50 @@ function Field({ label, children, ...props }) {
   );
 }
 function Photo({ value, onChange, "aria-label": label }) {
+  const photos = React.useContext(PhotoLibraryContext);
   return (
-    <label className="upload">
-      {value ? <img src={value} /> : <Car size={24} />}
-      <span>
-        {value ? "Trocar foto" : "Adicionar foto"}
-        <small>JPG ou PNG • até 2 MB</small>
-      </span>
-      <input
-        aria-label={label || "Adicionar foto"}
-        type="file"
-        accept="image/png,image/jpeg"
-        onChange={(e) => {
-          const f = e.target.files[0];
-          if (!f) return;
-          if (f.size > 2 * 1024 * 1024)
-            return alert("Use uma foto de até 2 MB.");
-          if (!["image/png", "image/jpeg"].includes(f.type))
-            return alert("Use JPG ou PNG.");
-          const r = new FileReader();
-          r.onload = () => onChange(r.result);
-          r.readAsDataURL(f);
-        }}
-      />
-    </label>
+    <div className="photo-with-library">
+      <label className="upload">
+        {value ? <img src={value} /> : <Car size={24} />}
+        <span>
+          {value ? "Trocar foto" : "Adicionar foto"}
+          <small>JPG ou PNG • até 2 MB</small>
+        </span>
+        <input
+          aria-label={label || "Adicionar foto"}
+          type="file"
+          accept="image/png,image/jpeg"
+          onChange={(e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            if (f.size > 2 * 1024 * 1024)
+              return alert("Use uma foto de até 2 MB.");
+            if (!["image/png", "image/jpeg"].includes(f.type))
+              return alert("Use JPG ou PNG.");
+            const r = new FileReader();
+            r.onload = () => onChange(r.result);
+            r.readAsDataURL(f);
+          }}
+        />
+      </label>
+      {photos.length > 0 && (
+        <details className="reference-photo-picker">
+          <summary>Usar foto de PDF anterior</summary>
+          <div>
+            {photos.map((photo, index) => (
+              <button
+                type="button"
+                key={index}
+                title={photo.name}
+                onClick={() => onChange(photo.dataUrl)}
+              >
+                <img src={photo.dataUrl} alt={photo.name} />
+              </button>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
   );
 }
 function LocalForm({ onSubmit, children, ...props }) {
@@ -302,10 +325,12 @@ function App() {
                 </td>
                 <td>{date(d.date)}</td>
                 <td className="money">
-                  {["nota", "voucher", "guia"].includes(d.type) ||
-                  d.showPrices === false
-                    ? "—"
-                    : amount(d.total, d.currency)}
+                  {isSelection(d)
+                    ? "Alternativas"
+                    : ["nota", "voucher", "guia"].includes(d.type) ||
+                        d.showPrices === false
+                      ? "—"
+                      : amount(d.total, d.currency)}
                 </td>
                 <td>
                   <span className={"badge " + d.status}>
@@ -347,656 +372,322 @@ function App() {
     </div>
   );
   return (
-    <div className="shell">
-      <aside className={mobile ? "open" : ""}>
-        <div className="brand">
-          <img className="brand-bird" src={logo} alt="Brummie Lines" />
-          brummie<span>OFFLINE STUDIO</span>
-        </div>
-        <button className="workspace" onClick={() => setPage("settings")}>
-          <span className="workspace-logo">
-            {state.company.name.slice(0, 1)}
-          </span>
-          <span>
-            {state.company.name}
-            <small>Espaço de trabalho</small>
-          </span>
-          <ChevronDown size={15} />
-        </button>
-        <span className="nav-label">PRINCIPAL</span>
-        <nav>
-          {NAV.slice(0, 2).map(([k, l, I]) => (
+    <PhotoLibraryContext.Provider
+      value={state.records
+        .filter((r) => r.kind === "archive" && !r.confidential)
+        .flatMap((r) =>
+          (r.photos || []).map((photo, index) => ({
+            ...photo,
+            name: `${r.name} · p${photo.page} · ${index + 1}`,
+          })),
+        )}
+    >
+      <div className="shell">
+        <aside className={mobile ? "open" : ""}>
+          <div className="brand">
+            <img className="brand-bird" src={logo} alt="Brummie Lines" />
+            brummie<span>OFFLINE STUDIO</span>
+          </div>
+          <button className="workspace" onClick={() => setPage("settings")}>
+            <span className="workspace-logo">
+              {state.company.name.slice(0, 1)}
+            </span>
+            <span>
+              {state.company.name}
+              <small>Espaço de trabalho</small>
+            </span>
+            <ChevronDown size={15} />
+          </button>
+          <span className="nav-label">PRINCIPAL</span>
+          <nav>
+            {NAV.slice(0, 2).map(([k, l, I]) => (
+              <button
+                key={k}
+                className={page === k ? "active" : ""}
+                onClick={() => {
+                  setPage(k);
+                  setSearch("");
+                  setMobile(false);
+                }}
+              >
+                <I size={19} />
+                {l}
+                {k === "documents" && (
+                  <span className="nav-count">{docs.length}</span>
+                )}
+              </button>
+            ))}
             <button
-              key={k}
-              className={page === k ? "active" : ""}
+              className={page === "concierge" ? "active" : ""}
               onClick={() => {
-                setPage(k);
+                setPage("concierge");
+                setMobile(false);
+              }}
+            >
+              <FileText size={19} />
+              Guias & experiências
+            </button>
+            <button
+              className={page === "internal" ? "active" : ""}
+              onClick={() => {
+                setPage("internal");
+                setFilter("Todos");
                 setSearch("");
                 setMobile(false);
               }}
             >
-              <I size={19} />
-              {l}
-              {k === "documents" && (
-                <span className="nav-count">{docs.length}</span>
-              )}
+              <ShieldCheck size={19} />
+              Documentos internos
             </button>
-          ))}
-          <button
-            className={page === "concierge" ? "active" : ""}
-            onClick={() => {
-              setPage("concierge");
-              setMobile(false);
-            }}
-          >
-            <FileText size={19} />
-            Guias & experiências
-          </button>
-          <button
-            className={page === "internal" ? "active" : ""}
-            onClick={() => {
-              setPage("internal");
-              setFilter("Todos");
-              setSearch("");
-              setMobile(false);
-            }}
-          >
-            <ShieldCheck size={19} />
-            Documentos internos
-          </button>
-          <span className="nav-label">MODELOS E REFERÊNCIAS</span>
-          <button
-            className={page === "templates" ? "active" : ""}
-            onClick={() => {
-              setPage("templates");
-              setMobile(false);
-            }}
-          >
-            <Copy size={19} />
-            Meus modelos
-          </button>
-          <button
-            className={page === "archives" ? "active" : ""}
-            onClick={() => {
-              setPage("archives");
-              setMobile(false);
-            }}
-          >
-            <FileText size={19} />
-            Biblioteca de PDFs
-          </button>
-          <span className="nav-label">ESPAÇO DE TRABALHO</span>
-          <button
-            className={page === "settings" ? "active" : ""}
-            onClick={() => setPage("settings")}
-          >
-            <Settings size={19} />
-            Configurações
-          </button>
-        </nav>
-        <div className="sidebar-note">
-          <span className="note-symbol">✦</span>
-          <h4>Detalhes que fazem a diferença.</h4>
-          <p>Envie a ficha do motorista e do veículo junto à confirmação.</p>
-          <button onClick={() => create("nota")}>
-            Criar nota de atendimento <ArrowUpRight size={15} />
-          </button>
-        </div>
-        <div className="profile">
-          <span className="avatar">
-            {state.user.name.slice(0, 2).toUpperCase()}
-          </span>
-          <span>
-            {state.user.name}
-            <small>Dados locais</small>
-          </span>
-          <button
-            className="icon"
-            title="Configurações locais"
-            onClick={async () => {
-              await api("/logout", "POST");
-              setState(null);
-            }}
-          >
-            <LogOut size={17} />
-          </button>
-        </div>
-      </aside>
-      <main>
-        <header className="topbar">
-          <button
-            className="icon mobile-menu"
-            onClick={() => setMobile(!mobile)}
-          >
-            <Menu />
-          </button>
-          <div className="breadcrumb">
-            Espaço de trabalho <span>/</span> <strong>{titles[page]}</strong>
-          </div>
-          <div className="top-right">
-            <span className="system-status">
-              <span />{" "}
-              {connected
-                ? state.storageMode === "session"
-                  ? "Prévia • memória temporária"
-                  : "Offline • salvo neste dispositivo"
-                : "Armazenamento indisponível"}
-            </span>
-            <span className="avatar light">
-              {state.user.name.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-        </header>
-        <div className="content">
-          {state.storageMode === "session" && (
-            <div className="import-warning" role="status">
-              Modo de prévia: este visualizador bloqueou o armazenamento
-              permanente. Você pode testar o app e gerar documentos. Exporte um
-              backup antes de fechar; as alterações desta sessão serão perdidas
-              ao recarregar.
-            </div>
-          )}
-          {!connected && (
-            <div className="error" role="status">
-              Armazenamento local indisponível. Confira o espaço do dispositivo
-              e exporte um backup.
-            </div>
-          )}
-          <div className="page-head">
-            <div>
-              <div className="eyebrow">
-                {page === "dashboard"
-                  ? "SEU DIA, BEM ORGANIZADO"
-                  : "DOCUMENTOS & OPERAÇÕES"}
-              </div>
-              <h1>
-                {page === "dashboard"
-                  ? `Olá, ${state.user.name.split(" ")[0]}.`
-                  : titles[page]}
-                {page === "dashboard" && (
-                  <span className="greeting-dot">.</span>
-                )}
-              </h1>
-              <p>
-                {page === "dashboard"
-                  ? "Seus documentos anteriores são o ponto de partida do próximo."
-                  : page === "documents"
-                    ? "Do orçamento ao recibo. Tudo organizado, do seu jeito."
-                    : page === "settings"
-                      ? "A identidade da sua empresa em cada documento."
-                      : "Cadastros reutilizáveis para agilizar cada atendimento."}
-              </p>
-            </div>
-            {page !== "settings" && page !== "internal" && (
-              <button
-                className="primary"
-                onClick={() =>
-                  ["client", "driver", "vehicle"].includes(page)
-                    ? setModal({ kind: "record", type: page })
-                    : create()
-                }
-              >
-                <Plus size={18} />
-                {["client", "driver", "vehicle"].includes(page)
-                  ? "Novo cadastro"
-                  : "Novo documento"}
-              </button>
-            )}
-          </div>
-          <div className="offline-tools">
+            <span className="nav-label">MODELOS E REFERÊNCIAS</span>
             <button
-              className="secondary"
-              onClick={() => setModal({ kind: "import" })}
-            >
-              <Plus size={16} />
-              Importar PDF anterior
-            </button>
-            <button
-              className="secondary"
-              onClick={async () => {
-                try {
-                  await exportBackup();
-                  notify("Backup exportado.");
-                } catch (e) {
-                  notify(e.message);
-                }
+              className={page === "templates" ? "active" : ""}
+              onClick={() => {
+                setPage("templates");
+                setMobile(false);
               }}
             >
-              <Download size={16} />
-              Exportar backup
+              <Copy size={19} />
+              Meus modelos
             </button>
-            <label className="secondary restore-label">
-              Restaurar backup
-              <input
-                type="file"
-                accept="application/json,.json"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  e.target.value = "";
-                  if (
-                    !file ||
-                    !confirm(
-                      "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
-                    )
-                  )
-                    return;
-                  try {
-                    await restoreBackup(file);
-                    await refresh();
-                    notify("Backup restaurado.");
-                  } catch (e) {
-                    notify(e.message);
-                  }
-                }}
-              />
-            </label>
-            <label className="secondary library-import-label">
-              Adicionar biblioteca
-              <input
-                type="file"
-                accept="application/json,.json"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  e.target.value = "";
-                  if (!file) return;
-                  try {
-                    await importReferenceLibrary(file);
-                    await refresh();
-                    notify(
-                      "Biblioteca adicionada sem substituir seus documentos.",
-                    );
-                  } catch (e) {
-                    notify(e.message);
-                  }
-                }}
-              />
-            </label>
-            <small>Sem login. Sem servidor. Seus arquivos ficam aqui.</small>
+            <button
+              className={page === "archives" ? "active" : ""}
+              onClick={() => {
+                setPage("archives");
+                setMobile(false);
+              }}
+            >
+              <FileText size={19} />
+              Biblioteca de PDFs
+            </button>
+            <span className="nav-label">ESPAÇO DE TRABALHO</span>
+            <button
+              className={page === "settings" ? "active" : ""}
+              onClick={() => setPage("settings")}
+            >
+              <Settings size={19} />
+              Configurações
+            </button>
+          </nav>
+          <div className="sidebar-note">
+            <span className="note-symbol">✦</span>
+            <h4>Detalhes que fazem a diferença.</h4>
+            <p>Envie a ficha do motorista e do veículo junto à confirmação.</p>
+            <button onClick={() => create("nota")}>
+              Criar nota de atendimento <ArrowUpRight size={15} />
+            </button>
           </div>
-          {page === "templates" && (
-            <div className="record-grid">
-              {records
-                .filter(
-                  (r) => r.kind === "template" && r.content.type !== "interno",
-                )
-                .map((r) => (
-                  <article className="panel template-card" key={r.id}>
-                    <div className="tile green">
-                      <Copy />
-                    </div>
-                    <h3>{r.name}</h3>
-                    <p>
-                      {TYPES[r.content.type]} • {(r.content.items || []).length}{" "}
-                      serviço(s)
-                    </p>
-                    <small>{r.content.client || "Cliente a definir"}</small>
-                    {r.content.referenceReview && (
-                      <p className="import-warning">
-                        {r.content.referenceReview}
-                      </p>
-                    )}
-                    <button
-                      className="primary"
-                      onClick={() =>
-                        setModal({
-                          kind: "document",
-                          type: r.content.type,
-                          doc: r.content,
-                        })
-                      }
-                    >
-                      Usar modelo <ArrowRight size={16} />
-                    </button>
-                    <button
-                      className="icon"
-                      aria-label={"Excluir modelo " + r.name}
-                      onClick={async () => {
-                        if (confirm("Excluir este modelo?")) {
-                          await api("/records/" + r.id, "DELETE");
-                          await refresh();
-                        }
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </article>
-                ))}
+          <div className="profile">
+            <span className="avatar">
+              {state.user.name.slice(0, 2).toUpperCase()}
+            </span>
+            <span>
+              {state.user.name}
+              <small>Dados locais</small>
+            </span>
+            <button
+              className="icon"
+              title="Configurações locais"
+              onClick={async () => {
+                await api("/logout", "POST");
+                setState(null);
+              }}
+            >
+              <LogOut size={17} />
+            </button>
+          </div>
+        </aside>
+        <main>
+          <header className="topbar">
+            <button
+              className="icon mobile-menu"
+              onClick={() => setMobile(!mobile)}
+            >
+              <Menu />
+            </button>
+            <div className="breadcrumb">
+              Espaço de trabalho <span>/</span> <strong>{titles[page]}</strong>
             </div>
-          )}
-          {page === "archives" && (
-            <section className="panel">
-              <div className="panel-head">
-                <div>
-                  <h2>PDFs anteriores, guardados localmente</h2>
-                  <p>
-                    O original é preservado. Os modelos usam os dados que você
-                    revisou.
-                  </p>
-                </div>
+            <div className="top-right">
+              <span className="system-status">
+                <span />{" "}
+                {connected
+                  ? state.storageMode === "session"
+                    ? "Prévia • memória temporária"
+                    : "Offline • salvo neste dispositivo"
+                  : "Armazenamento indisponível"}
+              </span>
+              <span className="avatar light">
+                {state.user.name.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          </header>
+          <div className="content">
+            {state.storageMode === "session" && (
+              <div className="import-warning" role="status">
+                Modo de prévia: este visualizador bloqueou o armazenamento
+                permanente. Você pode testar o app e gerar documentos. Exporte
+                um backup antes de fechar; as alterações desta sessão serão
+                perdidas ao recarregar.
               </div>
-              {records
-                .filter((r) => r.kind === "archive" && !r.confidential)
-                .map((r) => (
-                  <div className="archive-row" key={r.id}>
-                    <FileText size={24} />
-                    <div>
-                      <strong>{r.name}</strong>
-                      <small>
-                        {new Date(r.created).toLocaleDateString("pt-BR")}
-                      </small>
-                    </div>
-                    <button
-                      className="secondary"
-                      onClick={async () => {
-                        try {
-                          await originalPdf(r.id);
-                        } catch (e) {
-                          notify(e.message);
-                        }
-                      }}
-                    >
-                      Baixar original
-                    </button>
-                    {records
-                      .filter(
-                        (t) =>
-                          t.kind === "template" &&
-                          (t.sourceId === r.id || t.sourceIds?.includes(r.id)),
-                      )
-                      .map((t) => (
-                        <button
-                          key={t.id}
-                          className="primary"
-                          onClick={() =>
-                            setModal({
-                              kind: "document",
-                              type: t.content.type,
-                              doc: t.content,
-                            })
-                          }
-                        >
-                          Usar: {t.name} <Copy size={15} />
-                        </button>
-                      ))}
-                  </div>
-                ))}
-              {!records.some((r) => r.kind === "archive") && (
-                <div className="empty">
-                  <FileText size={32} />
-                  <h3>Seus PDFs também fazem parte da memória.</h3>
-                  <p>
-                    Importe um documento anterior para guardar o original e
-                    criar um modelo.
-                  </p>
-                  <button
-                    className="primary"
-                    onClick={() => setModal({ kind: "import" })}
-                  >
-                    Importar PDF
-                  </button>
-                </div>
-              )}
-            </section>
-          )}
-
-          {page === "concierge" && (
-            <section className="concierge-gallery">
+            )}
+            {!connected && (
+              <div className="error" role="status">
+                Armazenamento local indisponível. Confira o espaço do
+                dispositivo e exporte um backup.
+              </div>
+            )}
+            <div className="page-head">
               <div>
-                <span className="eyebrow">
-                  BRUMMIE LINES · REAL ESTATE · LUXURY ESTATE
-                </span>
-                <h2>Do conteúdo ao documento, sem redesenhar.</h2>
+                <div className="eyebrow">
+                  {page === "dashboard"
+                    ? "SEU DIA, BEM ORGANIZADO"
+                    : "DOCUMENTOS & OPERAÇÕES"}
+                </div>
+                <h1>
+                  {page === "dashboard"
+                    ? `Olá, ${state.user.name.split(" ")[0]}.`
+                    : titles[page]}
+                  {page === "dashboard" && (
+                    <span className="greeting-dot">.</span>
+                  )}
+                </h1>
                 <p>
-                  Escolha um formato, preencha as informações e salve como
-                  modelo. O app cuida da composição e dos cálculos.
+                  {page === "dashboard"
+                    ? "Seus documentos anteriores são o ponto de partida do próximo."
+                    : page === "documents"
+                      ? "Do orçamento ao recibo. Tudo organizado, do seu jeito."
+                      : page === "settings"
+                        ? "A identidade da sua empresa em cada documento."
+                        : "Cadastros reutilizáveis para agilizar cada atendimento."}
                 </p>
               </div>
-              <div className="record-grid">
-                {Object.entries(conciergeTypes)
-                  .filter(([type]) => type !== "interno")
-                  .map(([type, label]) => (
-                    <article key={type} className="panel template-card">
-                      <FileText size={26} />
-                      <h3>{label}</h3>
-                      <p>
-                        {
-                          {
-                            guia: "Seções do imóvel, fotos, QR Wi-Fi e versão para celular.",
-                            hospedagem:
-                              "Quartos, diárias, hóspedes, pagamentos e saldo.",
-                            proposta:
-                              "Experiências selecionadas, programação, valores e anexos.",
-                            horas:
-                              "Jornadas, tarifa, cálculo automático e exceção manual.",
-                          }[type]
-                        }
-                      </p>
-                      <button className="primary" onClick={() => create(type)}>
-                        Criar {label}
-                      </button>
-                    </article>
-                  ))}
-              </div>
-            </section>
-          )}
-          {page === "dashboard" && (
-            <>
-              <div className="stats">
-                <Stat
-                  label="DOCUMENTOS EMITIDOS"
-                  value={docs.filter((d) => d.status !== "Rascunho").length}
-                  sub="No seu espaço de trabalho"
-                  icon={FileText}
-                  color="green"
-                />
-                <Stat
-                  label="A RECEBER"
-                  value={sum("pending")}
-                  sub="Invoices e faturas em aberto"
-                  icon={Clock}
-                  color="orange"
-                />
-                <Stat
-                  label="RECEBIDO"
-                  value={sum("paid")}
-                  sub="Pagamentos confirmados"
-                  icon={Receipt}
-                  color="blue"
-                />
-                <Stat
-                  label="CLIENTES CADASTRADOS"
-                  value={records.filter((r) => r.kind === "client").length}
-                  sub="Relacionamentos que continuam"
-                  icon={Users}
-                  color="purple"
-                />
-              </div>
-              <section className="quick-section">
-                <div className="section-title">
-                  <h2>O que vamos preparar hoje?</h2>
-                  <span>ESCOLHA UM DOCUMENTO</span>
-                </div>
-                <div className="quick-grid">
-                  {[
-                    [
-                      "invoice",
-                      "Invoice & fatura",
-                      "Cobranças claras, em qualquer idioma.",
-                      FileText,
-                      "green",
-                    ],
-                    [
-                      "voucher",
-                      "Voucher de confirmação",
-                      "Todos os detalhes de uma boa viagem.",
-                      Plane,
-                      "blue",
-                    ],
-                    [
-                      "orcamento",
-                      "Orçamento",
-                      "Uma proposta à altura do seu serviço.",
-                      Receipt,
-                      "orange",
-                    ],
-                    [
-                      "nota",
-                      "Nota de atendimento",
-                      "Motorista, veículo e tranquilidade.",
-                      UserRound,
-                      "purple",
-                    ],
-                  ].map(([t, l, s, I, c]) => (
-                    <button
-                      className="quick-card"
-                      onClick={() => create(t)}
-                      key={t}
-                    >
-                      <div className={"tile " + c}>
-                        <I size={22} />
-                      </div>
-                      <ArrowUpRight className="quick-arrow" size={18} />
-                      <h3>{l}</h3>
-                      <p>{s}</p>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            </>
-          )}
-          {page === "internal" && (
-            <section className="panel">
-              <div className="panel-head">
-                <div>
-                  <h2>Interno — não enviar ao cliente</h2>
-                  <p>
-                    Fechamentos e repasses editáveis. Não entram nos valores a
-                    receber dos documentos de cliente.
-                  </p>
-                </div>
-                <button className="primary" onClick={() => create("interno")}>
-                  Novo demonstrativo interno
+              {page !== "settings" && page !== "internal" && (
+                <button
+                  className="primary"
+                  onClick={() =>
+                    ["client", "driver", "vehicle"].includes(page)
+                      ? setModal({ kind: "record", type: page })
+                      : create()
+                  }
+                >
+                  <Plus size={18} />
+                  {["client", "driver", "vehicle"].includes(page)
+                    ? "Novo cadastro"
+                    : "Novo documento"}
                 </button>
-              </div>
-              {table}
+              )}
+            </div>
+            <div className="offline-tools">
+              <button
+                className="secondary"
+                onClick={() => setModal({ kind: "import" })}
+              >
+                <Plus size={16} />
+                Importar PDF anterior
+              </button>
+              <button
+                className="secondary"
+                onClick={async () => {
+                  try {
+                    await exportBackup();
+                    notify("Backup exportado.");
+                  } catch (e) {
+                    notify(e.message);
+                  }
+                }}
+              >
+                <Download size={16} />
+                Exportar backup
+              </button>
+              <label className="secondary restore-label">
+                Restaurar backup
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    e.target.value = "";
+                    if (
+                      !file ||
+                      !confirm(
+                        "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
+                      )
+                    )
+                      return;
+                    try {
+                      await restoreBackup(file);
+                      await refresh();
+                      notify("Backup restaurado.");
+                    } catch (e) {
+                      notify(e.message);
+                    }
+                  }}
+                />
+              </label>
+              <label className="secondary library-import-label">
+                Adicionar biblioteca
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    try {
+                      await importReferenceLibrary(file);
+                      await refresh();
+                      notify(
+                        "Biblioteca adicionada sem substituir seus documentos.",
+                      );
+                    } catch (e) {
+                      notify(e.message);
+                    }
+                  }}
+                />
+              </label>
+              <small>Sem login. Sem servidor. Seus arquivos ficam aqui.</small>
+            </div>
+            {page === "templates" && (
               <div className="record-grid">
                 {records
                   .filter(
                     (r) =>
-                      r.kind === "template" && r.content.type === "interno",
+                      r.kind === "template" && r.content.type !== "interno",
                   )
                   .map((r) => (
-                    <article key={r.id} className="template-card panel">
+                    <article className="panel template-card" key={r.id}>
+                      <div className="tile green">
+                        <Copy />
+                      </div>
                       <h3>{r.name}</h3>
+                      <p>
+                        {TYPES[r.content.type]} •{" "}
+                        {(r.content.items || []).length} serviço(s)
+                      </p>
+                      <small>{r.content.client || "Cliente a definir"}</small>
+                      {r.content.referenceReview && (
+                        <p className="import-warning">
+                          {r.content.referenceReview}
+                        </p>
+                      )}
                       <button
-                        className="secondary"
+                        className="primary"
                         onClick={() =>
                           setModal({
                             kind: "document",
-                            type: "interno",
+                            type: r.content.type,
                             doc: r.content,
                           })
                         }
                       >
-                        Usar modelo interno
+                        Usar modelo <ArrowRight size={16} />
                       </button>
-                    </article>
-                  ))}
-              </div>
-            </section>
-          )}
-          {["dashboard", "documents"].includes(page) && (
-            <section className="panel">
-              <div className="panel-head">
-                <div>
-                  <h2>
-                    {page === "dashboard"
-                      ? "Documentos recentes"
-                      : "Todos os documentos"}{" "}
-                    <span className="count">{docs.length}</span>
-                  </h2>
-                  <p>Acompanhe cada etapa do seu atendimento.</p>
-                </div>
-                {page === "dashboard" ? (
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      setPage("documents");
-                      setFilter("Todos");
-                    }}
-                  >
-                    Ver todos <ArrowRight size={15} />
-                  </button>
-                ) : (
-                  <label className="search">
-                    <Search size={17} />
-                    <input
-                      placeholder="Buscar cliente ou documento"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </label>
-                )}
-              </div>
-              <div className="tabs">
-                {[
-                  ["Todos", "Todos"],
-                  ["invoice", "Invoices"],
-                  ["fatura", "Faturas"],
-                  ["voucher", "Vouchers"],
-                  ["orcamento", "Orçamentos"],
-                  ["nota", "Notas"],
-                  ["recibo", "Recibos"],
-                ].map(([k, l]) => (
-                  <button
-                    className={filter === k ? "selected" : ""}
-                    key={k}
-                    onClick={() => setFilter(k)}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-              {table}
-            </section>
-          )}
-          {["client", "driver", "vehicle"].includes(page) && (
-            <div className="record-grid">
-              {records
-                .filter((r) => r.kind === page)
-                .map((r) => (
-                  <article className="record-card" key={r.id}>
-                    {r.photo ? (
-                      <img className="record-photo" src={r.photo} />
-                    ) : (
-                      <div className="record-placeholder">
-                        {page === "vehicle" ? (
-                          <Car size={32} />
-                        ) : (
-                          <UserRound size={32} />
-                        )}
-                      </div>
-                    )}
-                    <div>
-                      <h3>{r.name}</h3>
-                      <p>
-                        {r.languages ||
-                          r.category ||
-                          r.email ||
-                          "Cadastro de cliente"}
-                      </p>
-                      <span className="badge Emitido">
-                        {r.plate || r.phone || r.document || "Ativo"}
-                      </span>
                       <button
-                        className="icon delete"
-                        aria-label={"Excluir " + r.name}
+                        className="icon"
+                        aria-label={"Excluir modelo " + r.name}
                         onClick={async () => {
-                          if (
-                            confirm(
-                              "Excluir este cadastro? Documentos já emitidos serão preservados.",
-                            )
-                          ) {
+                          if (confirm("Excluir este modelo?")) {
                             await api("/records/" + r.id, "DELETE");
                             await refresh();
                           }
@@ -1004,140 +695,562 @@ function App() {
                       >
                         <Trash2 size={16} />
                       </button>
+                    </article>
+                  ))}
+              </div>
+            )}
+            {page === "archives" && (
+              <section className="panel">
+                <div className="panel-head">
+                  <div>
+                    <h2>PDFs anteriores, guardados localmente</h2>
+                    <p>
+                      O original é preservado. Os modelos usam os dados que você
+                      revisou.
+                    </p>
+                  </div>
+                </div>
+                {records
+                  .filter((r) => r.kind === "archive" && !r.confidential)
+                  .map((r) => (
+                    <div className="archive-row" key={r.id}>
+                      <FileText size={24} />
+                      <div>
+                        <strong>{r.name}</strong>
+                        <small>
+                          {new Date(r.created).toLocaleDateString("pt-BR")}
+                        </small>
+                      </div>
+                      <button
+                        className="secondary"
+                        onClick={async () => {
+                          try {
+                            await originalPdf(r.id);
+                          } catch (e) {
+                            notify(e.message);
+                          }
+                        }}
+                      >
+                        Baixar original
+                      </button>
+                      <button
+                        className="secondary"
+                        onClick={async () => {
+                          try {
+                            notify("Extraindo fotos localmente…");
+                            const count = await rememberPdfPhotos(r.id);
+                            await refresh();
+                            notify(
+                              count
+                                ? `${count} fotos disponíveis nos editores.`
+                                : "Nenhuma foto adequada encontrada. Você pode adicionar JPG/PNG.",
+                            );
+                          } catch (e) {
+                            notify(e.message);
+                          }
+                        }}
+                      >
+                        {r.photos
+                          ? `${r.photos.length} fotos disponíveis`
+                          : "Extrair fotos deste PDF"}
+                      </button>
+                      {records
+                        .filter(
+                          (t) =>
+                            t.kind === "template" &&
+                            (t.sourceId === r.id ||
+                              t.sourceIds?.includes(r.id)),
+                        )
+                        .map((t) => (
+                          <button
+                            key={t.id}
+                            className="primary"
+                            onClick={() =>
+                              setModal({
+                                kind: "document",
+                                type: t.content.type,
+                                doc: t.content,
+                              })
+                            }
+                          >
+                            Usar: {t.name} <Copy size={15} />
+                          </button>
+                        ))}
                     </div>
-                  </article>
-                ))}
-              {!records.filter((r) => r.kind === page).length && (
-                <div className="empty panel">
-                  <Users size={32} />
-                  <h3>Vamos começar seu cadastro?</h3>
+                  ))}
+                {!records.some((r) => r.kind === "archive") && (
+                  <div className="empty">
+                    <FileText size={32} />
+                    <h3>Seus PDFs também fazem parte da memória.</h3>
+                    <p>
+                      Importe um documento anterior para guardar o original e
+                      criar um modelo.
+                    </p>
+                    <button
+                      className="primary"
+                      onClick={() => setModal({ kind: "import" })}
+                    >
+                      Importar PDF
+                    </button>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {page === "concierge" && (
+              <section className="concierge-gallery">
+                <div>
+                  <span className="eyebrow">
+                    BRUMMIE LINES · REAL ESTATE · LUXURY ESTATE
+                  </span>
+                  <h2>Do conteúdo ao documento, sem redesenhar.</h2>
                   <p>
-                    Salve os dados uma vez e reutilize em todos os documentos.
+                    Escolha um formato, preencha as informações e salve como
+                    modelo. O app cuida da composição e dos cálculos.
                   </p>
-                  <button
-                    className="primary"
-                    onClick={() => setModal({ kind: "record", type: page })}
-                  >
-                    <Plus size={16} /> Novo cadastro
+                </div>
+                <div className="record-grid">
+                  <article className="panel template-card">
+                    <FileText size={26} />
+                    <h3>Property Selection</h3>
+                    <p>
+                      Capa Real Estate, fotos dos quartos, descrições e preços
+                      independentes por alternativa.
+                    </p>
+                    <button
+                      className="primary"
+                      onClick={() =>
+                        setModal({
+                          kind: "document",
+                          type: "proposta",
+                          doc: {
+                            ...conciergeDefault("proposta"),
+                            brand: "realestate",
+                            language: "en",
+                            cover: {
+                              enabled: true,
+                              title: "PROPERTY SELECTION",
+                              place: "",
+                              dateLabel: "",
+                            },
+                            proposal: {
+                              ...conciergeDefault("proposta").proposal,
+                              title: "Property Selection",
+                              layout: "property-selection",
+                              options: [emptyPropertyOption()],
+                            },
+                          },
+                        })
+                      }
+                    >
+                      Criar seleção de hospedagem
+                    </button>
+                  </article>
+                  {Object.entries(conciergeTypes)
+                    .filter(([type]) => type !== "interno")
+                    .map(([type, label]) => (
+                      <article key={type} className="panel template-card">
+                        <FileText size={26} />
+                        <h3>{label}</h3>
+                        <p>
+                          {
+                            {
+                              guia: "Seções do imóvel, fotos, QR Wi-Fi e versão para celular.",
+                              hospedagem:
+                                "Quartos, diárias, hóspedes, pagamentos e saldo.",
+                              proposta:
+                                "Experiências selecionadas, programação, valores e anexos.",
+                              horas:
+                                "Jornadas, tarifa, cálculo automático e exceção manual.",
+                            }[type]
+                          }
+                        </p>
+                        <button
+                          className="primary"
+                          onClick={() => create(type)}
+                        >
+                          Criar {label}
+                        </button>
+                      </article>
+                    ))}
+                </div>
+              </section>
+            )}
+            {page === "dashboard" && (
+              <>
+                <div className="stats">
+                  <Stat
+                    label="DOCUMENTOS EMITIDOS"
+                    value={docs.filter((d) => d.status !== "Rascunho").length}
+                    sub="No seu espaço de trabalho"
+                    icon={FileText}
+                    color="green"
+                  />
+                  <Stat
+                    label="A RECEBER"
+                    value={sum("pending")}
+                    sub="Invoices e faturas em aberto"
+                    icon={Clock}
+                    color="orange"
+                  />
+                  <Stat
+                    label="RECEBIDO"
+                    value={sum("paid")}
+                    sub="Pagamentos confirmados"
+                    icon={Receipt}
+                    color="blue"
+                  />
+                  <Stat
+                    label="CLIENTES CADASTRADOS"
+                    value={records.filter((r) => r.kind === "client").length}
+                    sub="Relacionamentos que continuam"
+                    icon={Users}
+                    color="purple"
+                  />
+                </div>
+                <section className="quick-section">
+                  <div className="section-title">
+                    <h2>O que vamos preparar hoje?</h2>
+                    <span>ESCOLHA UM DOCUMENTO</span>
+                  </div>
+                  <div className="quick-grid">
+                    {[
+                      [
+                        "invoice",
+                        "Invoice & fatura",
+                        "Cobranças claras, em qualquer idioma.",
+                        FileText,
+                        "green",
+                      ],
+                      [
+                        "voucher",
+                        "Voucher de confirmação",
+                        "Todos os detalhes de uma boa viagem.",
+                        Plane,
+                        "blue",
+                      ],
+                      [
+                        "orcamento",
+                        "Orçamento",
+                        "Uma proposta à altura do seu serviço.",
+                        Receipt,
+                        "orange",
+                      ],
+                      [
+                        "nota",
+                        "Nota de atendimento",
+                        "Motorista, veículo e tranquilidade.",
+                        UserRound,
+                        "purple",
+                      ],
+                    ].map(([t, l, s, I, c]) => (
+                      <button
+                        className="quick-card"
+                        onClick={() => create(t)}
+                        key={t}
+                      >
+                        <div className={"tile " + c}>
+                          <I size={22} />
+                        </div>
+                        <ArrowUpRight className="quick-arrow" size={18} />
+                        <h3>{l}</h3>
+                        <p>{s}</p>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+            {page === "internal" && (
+              <section className="panel">
+                <div className="panel-head">
+                  <div>
+                    <h2>Interno — não enviar ao cliente</h2>
+                    <p>
+                      Fechamentos e repasses editáveis. Não entram nos valores a
+                      receber dos documentos de cliente.
+                    </p>
+                  </div>
+                  <button className="primary" onClick={() => create("interno")}>
+                    Novo demonstrativo interno
                   </button>
                 </div>
-              )}
-            </div>
-          )}
-          {page === "settings" && (
-            <>
-              <section className="settings-records">
-                <h3>Informações reutilizáveis nos documentos</h3>
-                <p>Clientes, motoristas e veículos para preencher suas notas rapidamente.</p>
-                <div className="settings-record-actions">
-                  {NAV.slice(2, 5).map(([key, label, Icon]) => (
-                    <button key={key} className="secondary" onClick={() => { setPage(key); setSearch(""); }}>
-                      <Icon size={18} />{label}
+                {table}
+                <div className="record-grid">
+                  {records
+                    .filter(
+                      (r) =>
+                        r.kind === "template" && r.content.type === "interno",
+                    )
+                    .map((r) => (
+                      <article key={r.id} className="template-card panel">
+                        <h3>{r.name}</h3>
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            setModal({
+                              kind: "document",
+                              type: "interno",
+                              doc: r.content,
+                            })
+                          }
+                        >
+                          Usar modelo interno
+                        </button>
+                      </article>
+                    ))}
+                </div>
+              </section>
+            )}
+            {["dashboard", "documents"].includes(page) && (
+              <section className="panel">
+                <div className="panel-head">
+                  <div>
+                    <h2>
+                      {page === "dashboard"
+                        ? "Documentos recentes"
+                        : "Todos os documentos"}{" "}
+                      <span className="count">{docs.length}</span>
+                    </h2>
+                    <p>Acompanhe cada etapa do seu atendimento.</p>
+                  </div>
+                  {page === "dashboard" ? (
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        setPage("documents");
+                        setFilter("Todos");
+                      }}
+                    >
+                      Ver todos <ArrowRight size={15} />
+                    </button>
+                  ) : (
+                    <label className="search">
+                      <Search size={17} />
+                      <input
+                        placeholder="Buscar cliente ou documento"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div className="tabs">
+                  {[
+                    ["Todos", "Todos"],
+                    ["invoice", "Invoices"],
+                    ["fatura", "Faturas"],
+                    ["voucher", "Vouchers"],
+                    ["orcamento", "Orçamentos"],
+                    ["nota", "Notas"],
+                    ["recibo", "Recibos"],
+                  ].map(([k, l]) => (
+                    <button
+                      className={filter === k ? "selected" : ""}
+                      key={k}
+                      onClick={() => setFilter(k)}
+                    >
+                      {l}
                     </button>
                   ))}
                 </div>
+                {table}
               </section>
-            <SettingsForm
-              company={state.company}
-              onSave={async (c) => {
-                await api("/company", "PUT", c);
-                await refresh();
-                notify(
-                  "Configurações salvas. Novos documentos usarão estes dados.",
-                );
-              }}
-            />
-            </>
-          )}
-          <footer className="page-footer">
-            <span>
-              brummie <span>OFFLINE STUDIO</span>
-            </span>
-            <small>Feito para levar seu atendimento mais longe.</small>
-          </footer>
-        </div>
-      </main>
-      {toast && (
-        <div className="toast">
-          <CheckCircle2 size={18} />
-          {toast}
-        </div>
-      )}
-      {modal?.kind === "import" && (
-        <ImportPdf
-          onClose={() => setModal(null)}
-          onSave={async (file, text, review) => {
-            await importArchive(file, text, review);
-            await refresh();
-            setModal(null);
-            setPage("templates");
-            notify("PDF e modelo guardados localmente.");
-          }}
-        />
-      )}
-      {modal?.kind === "record" && (
-        <RecordForm
-          type={modal.type}
-          onClose={() => setModal(null)}
-          onSave={async (d) => {
-            await api("/records/" + modal.type, "POST", d);
-            await done();
-          }}
-        />
-      )}
-      {modal?.kind === "document" &&
-        React.createElement(
-          conciergeTypes[modal.type] ? ConciergeForm : DocForm,
-          {
-            ui: { Modal, Field, Photo, LocalForm },
-            initial: modal.doc,
-            type: modal.type,
-            state,
-            onClose: () => setModal(null),
-            onSave: async (d) => {
-              const saved = await api("/documents", "POST", d);
-              await refresh();
-              const full = await api("/state");
-              setModal({
-                kind: "preview",
-                doc: full.documents.find((x) => x.id === saved.id),
-              });
-              notify("Documento criado. Seu PDF está pronto.");
-            },
-          },
+            )}
+            {["client", "driver", "vehicle"].includes(page) && (
+              <div className="record-grid">
+                {records
+                  .filter((r) => r.kind === page)
+                  .map((r) => (
+                    <article className="record-card" key={r.id}>
+                      {r.photo ? (
+                        <img className="record-photo" src={r.photo} />
+                      ) : (
+                        <div className="record-placeholder">
+                          {page === "vehicle" ? (
+                            <Car size={32} />
+                          ) : (
+                            <UserRound size={32} />
+                          )}
+                        </div>
+                      )}
+                      <div>
+                        <h3>{r.name}</h3>
+                        <p>
+                          {r.languages ||
+                            r.category ||
+                            r.email ||
+                            "Cadastro de cliente"}
+                        </p>
+                        <span className="badge Emitido">
+                          {r.plate || r.phone || r.document || "Ativo"}
+                        </span>
+                        <button
+                          className="icon delete"
+                          aria-label={"Excluir " + r.name}
+                          onClick={async () => {
+                            if (
+                              confirm(
+                                "Excluir este cadastro? Documentos já emitidos serão preservados.",
+                              )
+                            ) {
+                              await api("/records/" + r.id, "DELETE");
+                              await refresh();
+                            }
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                {!records.filter((r) => r.kind === page).length && (
+                  <div className="empty panel">
+                    <Users size={32} />
+                    <h3>Vamos começar seu cadastro?</h3>
+                    <p>
+                      Salve os dados uma vez e reutilize em todos os documentos.
+                    </p>
+                    <button
+                      className="primary"
+                      onClick={() => setModal({ kind: "record", type: page })}
+                    >
+                      <Plus size={16} /> Novo cadastro
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {page === "settings" && (
+              <>
+                <section className="settings-records">
+                  <h3>Informações reutilizáveis nos documentos</h3>
+                  <p>
+                    Clientes, motoristas e veículos para preencher suas notas
+                    rapidamente.
+                  </p>
+                  <div className="settings-record-actions">
+                    {NAV.slice(2, 5).map(([key, label, Icon]) => (
+                      <button
+                        key={key}
+                        className="secondary"
+                        onClick={() => {
+                          setPage(key);
+                          setSearch("");
+                        }}
+                      >
+                        <Icon size={18} />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+                <SettingsForm
+                  company={state.company}
+                  onSave={async (c) => {
+                    await api("/company", "PUT", c);
+                    await refresh();
+                    notify(
+                      "Configurações salvas. Novos documentos usarão estes dados.",
+                    );
+                  }}
+                />
+              </>
+            )}
+            <footer className="page-footer">
+              <span>
+                brummie <span>OFFLINE STUDIO</span>
+              </span>
+              <small>Feito para levar seu atendimento mais longe.</small>
+            </footer>
+          </div>
+        </main>
+        {toast && (
+          <div className="toast">
+            <CheckCircle2 size={18} />
+            {toast}
+          </div>
         )}
-      {modal?.kind === "preview" && (
-        <Preview
-          d={modal.doc}
-          onClose={() => setModal(null)}
-          onCopy={() =>
-            setModal({ kind: "document", type: modal.doc.type, doc: modal.doc })
-          }
-          onTemplate={async (name) => {
-            if (!name?.trim()) return;
-            try {
-              await api("/records/template", "POST", {
-                name: name.trim(),
-                content: modal.doc,
-              });
+        {modal?.kind === "import" && (
+          <ImportPdf
+            onClose={() => setModal(null)}
+            onSave={async (file, text, review) => {
+              await importArchive(file, text, review);
               await refresh();
-              notify("Modelo salvo para reutilizar.");
-            } catch (e) {
-              notify(e.message);
+              setModal(null);
+              setPage("templates");
+              notify("PDF e modelo guardados localmente.");
+            }}
+          />
+        )}
+        {modal?.kind === "record" && (
+          <RecordForm
+            type={modal.type}
+            onClose={() => setModal(null)}
+            onSave={async (d) => {
+              await api("/records/" + modal.type, "POST", d);
+              await done();
+            }}
+          />
+        )}
+        {modal?.kind === "document" &&
+          React.createElement(
+            conciergeTypes[modal.type] ? ConciergeForm : DocForm,
+            {
+              ui: { Modal, Field, Photo, LocalForm },
+              initial: modal.doc,
+              type: modal.type,
+              state,
+              onClose: () => setModal(null),
+              onSave: async (d) => {
+                const saved = await api("/documents", "POST", d);
+                await refresh();
+                const full = await api("/state");
+                setModal({
+                  kind: "preview",
+                  doc: full.documents.find((x) => x.id === saved.id),
+                });
+                notify("Documento criado. Seu PDF está pronto.");
+              },
+            },
+          )}
+        {modal?.kind === "preview" && (
+          <Preview
+            d={modal.doc}
+            onClose={() => setModal(null)}
+            onCopy={() =>
+              setModal({
+                kind: "document",
+                type: modal.doc.type,
+                doc: modal.doc,
+              })
             }
-          }}
-          onStatus={async (status) => {
-            try {
-              await api("/documents/" + modal.doc.id, "PATCH", { status });
-              await refresh();
-              setModal({ ...modal, doc: { ...modal.doc, status } });
-            } catch (e) {
-              notify(e.message);
-            }
-          }}
-        />
-      )}
-    </div>
+            onTemplate={async (name) => {
+              if (!name?.trim()) return;
+              try {
+                await api("/records/template", "POST", {
+                  name: name.trim(),
+                  content: modal.doc,
+                });
+                await refresh();
+                notify("Modelo salvo para reutilizar.");
+              } catch (e) {
+                notify(e.message);
+              }
+            }}
+            onStatus={async (status) => {
+              try {
+                await api("/documents/" + modal.doc.id, "PATCH", { status });
+                await refresh();
+                setModal({ ...modal, doc: { ...modal.doc, status } });
+              } catch (e) {
+                notify(e.message);
+              }
+            }}
+          />
+        )}
+      </div>
+    </PhotoLibraryContext.Provider>
   );
 }
 function Stat({ label, value, sub, icon: I, color }) {
@@ -1371,11 +1484,20 @@ const newItem = () => ({
 function DocForm({ initial, type, state, onClose, onSave }) {
   const [d, setD] = useState(
       initial
-        ? reuseDocument(initial, today())
+        ? {
+            ...reuseDocument(initial, today()),
+            cover: initial.cover || {
+              enabled: true,
+              title: "",
+              place: "",
+              dateLabel: "",
+            },
+          }
         : {
             type,
             brand: "lines",
             showPrices: true,
+            cover: { enabled: true, title: "", place: "", dateLabel: "" },
             language: "pt",
             currency: "BRL",
             client: "",
@@ -1400,13 +1522,23 @@ function DocForm({ initial, type, state, onClose, onSave }) {
         i === idx ? { ...item, [key]: v } : item,
       ),
     });
-  const total = Math.max(
+  const baseTotal = Math.max(
     0,
     d.items.reduce(
       (s, i) => s + Number(i.quantity) * Number(i.price) + Number(i.extra),
       0,
     ) - Number(d.discount),
   );
+  const total =
+    Math.round(
+      (baseTotal +
+        Math.round(
+          ((baseTotal * Number(d.cardFeePct || 0)) / 100 + Number.EPSILON) *
+            100,
+        ) /
+          100) *
+        100,
+    ) / 100;
   const f = (k, l, t = "text") => (
     <Field
       label={l}
@@ -1597,6 +1729,19 @@ function DocForm({ initial, type, state, onClose, onSave }) {
                     />
                   </Field>
                 </div>
+                <Field label={`Foto do serviço ${idx + 1}`}>
+                  <Photo
+                    value={i.image}
+                    onChange={(value) => update(idx, "image", value)}
+                  />
+                </Field>
+                <Field label={`Descrição detalhada do serviço ${idx + 1}`}>
+                  <textarea
+                    rows={3}
+                    value={i.details || ""}
+                    onChange={(e) => update(idx, "details", e.target.value)}
+                  />
+                </Field>
                 <div className="form-grid four">
                   <Field label="Passageiros">
                     <input
@@ -1773,6 +1918,29 @@ function DocForm({ initial, type, state, onClose, onSave }) {
               />
             </Field>
           </div>
+          {cardFeeTypes.includes(d.type) && (
+            <div className="form-section">
+              <label className="attachment-choice">
+                <input
+                  type="checkbox"
+                  checked={Number(d.cardFeePct || 0) > 0}
+                  onChange={(e) => set("cardFeePct", e.target.checked ? 5 : 0)}
+                />
+                Aplicar adicional de cartão
+              </label>
+              {Number(d.cardFeePct || 0) > 0 && (
+                <Field
+                  label="Adicional de cartão (%)"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={d.cardFeePct}
+                  onChange={(e) => set("cardFeePct", e.target.value)}
+                />
+              )}
+            </div>
+          )}
           <div className="total-bar">
             <Field label="Desconto">
               <input
@@ -1894,148 +2062,7 @@ function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
           Baixar guia para celular (HTML)
         </button>
       )}
-      <div className="paper-wrap">
-        <DocumentCoverPreview d={d} />
-        {conciergeTypes[d.type] ? (
-          <ConciergePaper d={d} />
-        ) : (
-          <article className="paper" style={{ "--doc-color": c.color }}>
-            <header>
-              {(c.logo || !d.brand || d.brand === "lines") && (
-                <img className="paper-logo" src={c.logo || logo} alt={c.name} />
-              )}
-              <div className="paper-brand">
-                {c.name}
-                <small>PRIVATE TRANSPORT & EXPERIENCES</small>
-              </div>
-              <div>
-                <h2>
-                  {en
-                    ? {
-                        invoice: "Invoice",
-                        fatura: "Statement",
-                        voucher: "Booking confirmation",
-                        nota: "Service information",
-                        orcamento: "Quotation",
-                        recibo: "Payment receipt",
-                      }[d.type]
-                    : TYPES[d.type]}
-                </h2>
-                <span>BRM-{String(d.number).padStart(5, "0")}</span>
-              </div>
-            </header>
-            <div className="paper-client">
-              <div>
-                <small>{en ? "PREPARED FOR" : "PREPARADO PARA"}</small>
-                <h2>{d.client}</h2>
-                <p>{d.email}</p>
-              </div>
-              <div>
-                <small>{en ? "ISSUED" : "EMISSÃO"}</small>
-                <p>{date(d.date)}</p>
-                <small>
-                  {en ? "DUE / VALID UNTIL" : "VENCIMENTO / VALIDADE"}
-                </small>
-                <p>{date(d.due)}</p>
-              </div>
-            </div>
-            {d.status === "Cancelado" && (
-              <div className="error">{en ? "CANCELLED" : "CANCELADO"}</div>
-            )}
-            {d.items.map((i, n) => (
-              <div className="paper-service" key={n}>
-                <div className="service-index">
-                  {String(n + 1).padStart(2, "0")}
-                </div>
-                <div>
-                  <h3>{i.description}</h3>
-                  <p>
-                    {date(i.date)} {i.time} • {i.origin || "—"} →{" "}
-                    {i.destination || "—"}
-                  </p>
-                  <small>
-                    {i.pax} {en ? "passengers" : "passageiros"} • {i.quantity}{" "}
-                    {i.unit}
-                    {i.flight && " • " + (en ? "Flight " : "Voo ") + i.flight}
-                  </small>
-                  {financial && (
-                    <small>
-                      {amount(i.price, d.currency)} × {i.quantity} +{" "}
-                      {amount(i.extra, d.currency)}
-                    </small>
-                  )}
-                </div>
-                {financial && <strong>{amount(i.total, d.currency)}</strong>}
-              </div>
-            ))}
-            {financial && (
-              <div className="paper-totals">
-                <p>
-                  {en ? "Subtotal" : "Subtotal"}{" "}
-                  <span>{amount(d.subtotal, d.currency)}</span>
-                </p>
-                <p>
-                  {en ? "Discount" : "Desconto"}{" "}
-                  <span>{amount(d.discount, d.currency)}</span>
-                </p>
-                <h2>
-                  {en ? "Total" : "Valor total"}{" "}
-                  <span>{amount(d.total, d.currency)}</span>
-                </h2>
-              </div>
-            )}
-            {(d.driver || d.vehicle) && (
-              <div className="paper-people">
-                {[d.driver, d.vehicle].filter(Boolean).map((r, i) => (
-                  <div key={i}>
-                    {r.photo && <img src={r.photo} />}
-                    <small>
-                      {r.kind === "driver"
-                        ? en
-                          ? "YOUR CHAUFFEUR"
-                          : "SEU MOTORISTA"
-                        : en
-                          ? "YOUR VEHICLE"
-                          : "SEU VEÍCULO"}
-                    </small>
-                    <h3>{r.name}</h3>
-                    <p>{r.kind === "driver" ? r.languages : r.category}</p>
-                    <strong>{r.plate || r.phone}</strong>
-                  </div>
-                ))}
-              </div>
-            )}
-            {d.notes && (
-              <div className="paper-note">
-                <small>
-                  {en ? "SERVICE INFORMATION" : "INFORMAÇÕES DO ATENDIMENTO"}
-                </small>
-                <p>{d.notes}</p>
-              </div>
-            )}
-            {financial && c.payment && (
-              <div className="paper-note">
-                <small>{en ? "PAYMENT DETAILS" : "DADOS DE PAGAMENTO"}</small>
-                <p>{c.payment}</p>
-              </div>
-            )}
-            {c.terms && (
-              <div className="paper-note">
-                <small>{en ? "TERMS" : "CONDIÇÕES"}</small>
-                <p>{c.terms}</p>
-              </div>
-            )}
-            <footer>
-              {[c.address, c.phone, c.website].filter(Boolean).join(" • ")}
-              <small>
-                {en
-                  ? "Informational document. Not a tax invoice."
-                  : "Documento informativo. Não substitui nota fiscal."}
-              </small>
-            </footer>
-          </article>
-        )}
-      </div>
+      <PdfPreview document={d} />
     </Modal>
   );
 }

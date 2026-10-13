@@ -1,6 +1,16 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import PdfWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs?worker&inline";
 let worker;
+export async function openLocalPdf(blob) {
+  worker ??= new PdfWorker();
+  pdfjs.GlobalWorkerOptions.workerPort = worker;
+  const task = pdfjs.getDocument({
+    data: await blob.arrayBuffer(),
+    useSystemFonts: true,
+    isEvalSupported: false,
+  });
+  return { task, doc: await task.promise };
+}
 export async function readPdf(file) {
   if (file.size > 25 * 1024 * 1024)
     throw new Error("Cada PDF pode ter até 25 MB.");

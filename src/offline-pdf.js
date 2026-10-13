@@ -1,115 +1,114 @@
 import { addDocumentCover } from "./pdf-cover.js";
 import { makeConciergePdf } from "./concierge-pdf.js";
-import { jsPDF } from "jspdf";
-import logo from "./assets/icon.png";
+import { EditorialPdf, imageBox, moneyFor, dateFor } from "./pdf-design.js";
+export const PDF_RENDER_VERSION = 3;
 const names = {
-  invoice: "Invoice",
-  fatura: "Fatura",
-  voucher: "Voucher de confirmação",
-  nota: "Nota de atendimento",
-  orcamento: "Orçamento",
-  recibo: "Recibo",
+  invoice: ["INVOICE", "INVOICE"],
+  fatura: ["FATURA", "STATEMENT"],
+  voucher: ["CONFIRMAÇÃO DE SERVIÇO", "BOOKING CONFIRMATION"],
+  nota: ["INFORMAÇÕES DO ATENDIMENTO", "SERVICE INFORMATION"],
+  orcamento: ["ORÇAMENTO", "QUOTATION"],
+  recibo: ["RECIBO", "PAYMENT RECEIPT"],
 };
 export async function makePdf(d) {
-  if (["guia", "hospedagem", "proposta"].includes(d.type))
+  if (["guia", "hospedagem", "proposta", "horas", "interno"].includes(d.type))
     return makeConciergePdf(d);
-  const pdf = new jsPDF(),
-    en = d.language === "en",
-    c = d.company,
-    financial = !["nota", "voucher"].includes(d.type) && d.showPrices !== false;
-  await addDocumentCover(pdf, d);
-  let y = 24;
-  const col = /^#[0-9a-f]{6}$/i.test(c.color || "") ? c.color : "#0089cf";
-  const money = (n) =>
-    new Intl.NumberFormat(en ? "en-US" : "pt-BR", {
-      style: "currency",
-      currency: d.currency,
-    }).format(n || 0);
-  const line = (s, size = 11, color = "#243c34") => {
-    pdf.setTextColor(color);
-    pdf.setFontSize(size);
-    const rows = pdf.splitTextToSize(String(s || ""), 174);
-    for (const row of rows) {
-      if (y > 272) {
-        pdf.addPage();
-        y = 24;
-      }
-      pdf.text(row, 18, y);
-      y += size * 0.48 + 2;
-    }
-    y += 2;
-  };
-  const image = (src, x, yy, w, h) => {
-    try {
-      pdf.addImage(
-        src,
-        src.includes("image/jpeg") ? "JPEG" : "PNG",
-        x,
-        yy,
-        w,
-        h,
-      );
-    } catch {
-      line(en ? "Photo unavailable" : "Foto indisponível", 9);
-    }
-  };
-  const logoSource = c.logo || (!c.brand || c.brand === "lines" ? logo : "");
-  if (logoSource) {
-    const img = new Image();
-    img.src = logoSource;
-    await img.decode();
-    pdf.addImage(img, "PNG", 158, 17, 32, 14);
+  const design = new EditorialPdf(d),
+    { pdf, en } = design,
+    c = design.doc.company,
+    money = moneyFor(d),
+    date = dateFor(d);
+  const financial =
+    !["nota", "voucher"].includes(d.type) && d.showPrices !== false;
+  if (await addDocumentCover(pdf, design.doc)) design.covers.add(1);
+  if (!d.cover?.enabled) {
+    await imageBox(pdf, c.logo, 70, 12, 70, 30, {trim:true});
+    design.y = 51;
   }
-  line(c.name, 23, col);
-  line(
-    en
-      ? {
-          invoice: "Invoice",
-          fatura: "Statement",
-          voucher: "Booking confirmation",
-          nota: "Service information",
-          orcamento: "Quotation",
-          recibo: "Payment receipt",
-        }[d.type]
-      : names[d.type],
-    18,
+  design.heading(
+    names[d.type][en ? 1 : 0],
+    `${d.client} • ${date(d.date)} • #${String(d.number).padStart(5, "0")}`,
   );
-  line(`#${String(d.number).padStart(5, "0")} | ${d.date} | ${d.status}`, 9);
   if (d.status === "Cancelado")
-    line(en ? "CANCELLED" : "CANCELADO", 18, "#a94440");
-  y += 5;
-  line(en ? "CLIENT" : "CLIENTE", 9, col);
-  line(d.client, 16);
-  line(d.email);
-  line(`${en ? "Due / valid until" : "Vencimento / validade"}: ${d.due}`, 10);
-  y += 5;
+    design.text(en ? "CANCELLED" : "CANCELADO", {
+      color: "#a94440",
+      bold: true,
+      align: "center",
+    });
+  if (d.email) design.text(d.email, { size: 9, align: "center" });
+  design.text(
+    `${en ? "Valid until / due" : "Validade / vencimento"}: ${date(d.due)}`,
+    { size: 8, align: "center", gap: 12 },
+  );
   for (const i of d.items) {
-    line(i.description, 13, col);
-    line(
-      `${i.date || d.date} ${i.time || ""} | ${i.origin || ""} > ${i.destination || ""}`,
-      10,
-    );
-    line(
-      `${en ? "Passengers" : "Passageiros"}: ${i.pax || 1} | ${en ? "Quantity" : "Quantidade"}: ${i.quantity} ${i.unit}`,
-      10,
-    );
-    if (i.flight) line(`${en ? "Flight" : "Voo"}: ${i.flight}`, 10);
-    if (financial)
-      line(
-        `${money(i.price)} x ${i.quantity} + ${money(i.extra)} = ${money(i.total)}`,
-      );
-    y += 4;
-  }
-  if (financial && Object.keys(d.groups || {}).length) {
-    for (const [group, total] of Object.entries(d.groups))
-      line(`${group}: ${money(total)}`, 11, col);
+    const detail = [
+      {
+        text: [date(i.date || d.date), i.time].filter(Boolean).join(" • "),
+        bold: true,
+      },
+      { text: [i.origin, i.destination].filter(Boolean).join(" → ") },
+      {
+        text: `${i.pax || 1} ${en ? "passengers" : "passageiros"} • ${i.quantity} ${i.unit || ""}${i.flight ? ` • ${en ? "Flight" : "Voo"} ${i.flight}` : ""}`,
+      },
+    ].filter((x) => x.text);
+    if (financial) {
+      detail.push({
+        text: `${money(i.price)} × ${i.quantity}${Number(i.extra) ? ` + ${money(i.extra)}` : ""}`,
+        bold: true,
+      });
+      detail.push({
+        text: money(i.total),
+        bold: true,
+        color: design.color,
+        size: 12,
+      });
+    }
+    await design.card({
+      image: i.image || d.vehicle?.photo,
+      title: i.description,
+      description: i.details,
+      details: detail,
+      height: i.image || d.vehicle?.photo ? 62 : 35,
+    });
   }
   if (financial) {
-    line(`${en ? "Discount" : "Desconto"}: ${money(d.discount)}`);
-    line(`${en ? "TOTAL" : "VALOR TOTAL"}: ${money(d.total)}`, 21, col);
+    for (const [group, total] of Object.entries(d.groups || {}))
+      design.text(`${group}: ${money(total)}`, { bold: true, size: 10 });
+    if (Number(d.discount))
+      design.text(`${en ? "Discount" : "Desconto"}: ${money(d.discount)}`, {
+        align: "right",
+      });
+    if (Number(d.cardFee)) {
+      design.text(
+        `${en ? "Base after discount" : "Base após desconto"}: ${money(d.subtotal - d.discount)}`,
+        { align: "right" },
+      );
+      design.text(
+        `${en ? "Card surcharge" : "Adicional de cartão"} (${d.cardFeePct}%): ${money(d.cardFee)}`,
+        { align: "right" },
+      );
+    }
+    design.room(30);
+    design.y += 5;
+    design.text(en ? "Total for the period" : "Valor total do período", {
+      size: 23,
+      serif: true,
+      bold: true,
+      italic: true,
+      align: "center",
+      gap: 4,
+    });
+    design.text(money(d.total), {
+      size: 25,
+      bold: true,
+      italic: true,
+      color: design.color,
+      align: "center",
+      gap: 12,
+    });
     if (c.payment) {
-      line(en ? "PAYMENT DETAILS" : "DADOS DE PAGAMENTO", 9, col);
-      line(c.payment, 10);
+      design.section(en ? "Payment details" : "Dados de pagamento");
+      design.text(c.payment, { size: 10 });
     }
   }
   for (const [r, label] of [
@@ -117,47 +116,35 @@ export async function makePdf(d) {
     [d.vehicle, en ? "YOUR VEHICLE" : "SEU VEÍCULO"],
   ]) {
     if (!r) continue;
-    if (y > 200) {
-      pdf.addPage();
-      y = 24;
+    await design.card({
+      image: r.photo,
+      eyebrow: label,
+      title: r.name,
+      description: r.kind === "driver" ? r.languages : r.category,
+      details: [
+        {
+          text: r.plate
+            ? `${en ? "Plate" : "Placa"}: ${r.plate}`
+            : r.phone || "",
+          bold: true,
+        },
+      ],
+      height: 56,
+    });
+  }
+  for (const [title, text] of [
+    [en ? "Service notes" : "Observações", d.notes],
+    [en ? "Conditions" : "Condições", c.terms],
+  ])
+    if (text) {
+      design.section(title);
+      design.text(text, { size: 9 });
     }
-    line(label, 10, col);
-    if (r.photo) {
-      image(r.photo, 18, y, r.kind === "driver" ? 35 : 65, 35);
-      y += 40;
-    }
-    line(r.name, 14);
-    line(r.kind === "driver" ? r.languages : r.category, 10);
-    line(r.plate ? (en ? "Plate: " : "Placa: ") + r.plate : r.phone, 10);
-  }
-  if (d.notes) {
-    line(en ? "SERVICE NOTES" : "OBSERVAÇÕES", 9, col);
-    line(d.notes, 10);
-  }
-  if (c.terms) {
-    line(en ? "TERMS" : "CONDIÇÕES", 9, col);
-    line(c.terms, 10);
-  }
-  line(
+  design.text(
     en
       ? "Informational document. Not a tax invoice."
       : "Documento informativo. Não substitui nota fiscal.",
-    8,
+    { size: 7, gap: 0, color: "#777777" },
   );
-  const pages = pdf.getNumberOfPages();
-  for (let p = 1; p <= pages; p++) {
-    pdf.setPage(p);
-    pdf.setFontSize(8);
-    pdf.setTextColor("#819388");
-    pdf.text(
-      pdf.splitTextToSize(
-        [c.address, c.phone, c.website].filter(Boolean).join(" | "),
-        165,
-      )[0] || "",
-      18,
-      286,
-    );
-    pdf.text(`${p}/${pages}`, 184, 286);
-  }
-  return pdf.output("blob");
+  return design.finish();
 }

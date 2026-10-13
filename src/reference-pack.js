@@ -1,4 +1,4 @@
-import { validateDoc } from "../domain.js";
+import { validateDoc } from "./editorial-document.js";
 
 // Reference packs are supplied locally with the private HTML, never fetched.
 export function applyReferencePack(data, pack) {

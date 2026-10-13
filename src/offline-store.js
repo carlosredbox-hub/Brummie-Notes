@@ -1,10 +1,11 @@
-import { validateDoc } from "../domain.js";
-import { makePdf } from "./offline-pdf.js";
+import { validateDoc } from "./editorial-document.js";
+import { makePdf, PDF_RENDER_VERSION } from "./offline-pdf.js";
 import { applyReferencePack } from "./reference-pack.js";
 import { documentPresets } from "./presets.js";
 import { documentCompany } from "./document-branding.js";
 import { appendOriginalPdfs } from "./pdf-attachments.js";
 import { makeGuideHtml } from "./guide-html.js";
+import { extractPdfPhotos } from "./pdf-photos.js";
 const DB = "brummie-offline-v1";
 let connection;
 let sessionData;
@@ -229,7 +230,7 @@ export async function documentPdf(docId) {
     data.documents.find((d) => d.id === docId),
   );
   if (!doc) throw new Error("Documento não encontrado.");
-  if (doc.pdf) return doc.pdf;
+  if (doc.pdf && doc.pdfRenderVersion === PDF_RENDER_VERSION) return doc.pdf;
   const attachments = await transaction((data) =>
     (doc.attachments || []).map((a) => ({
       ...a,
@@ -240,9 +241,25 @@ export async function documentPdf(docId) {
   const blob = await appendOriginalPdfs(await makePdf(doc), attachments);
   await transaction((data) => {
     const current = data.documents.find((d) => d.id === docId);
-    if (current?.status === doc.status) current.pdf = blob;
+    if (current?.status === doc.status) {
+      current.pdf = blob;
+      current.pdfRenderVersion = PDF_RENDER_VERSION;
+    }
   });
   return blob;
+}
+export async function rememberPdfPhotos(archiveId) {
+  const archive = await transaction((data) =>
+    data.records.find((r) => r.id === archiveId && r.kind === "archive"),
+  );
+  if (!archive) throw new Error("PDF original não encontrado.");
+  if (archive.photos) return archive.photos.length;
+  const photos = await extractPdfPhotos(archive.source);
+  await transaction((data) => {
+    const current = data.records.find((r) => r.id === archiveId);
+    if (current) current.photos = photos;
+  });
+  return photos.length;
 }
 export async function documentGuideHtml(docId) {
   const d = await transaction((data) =>

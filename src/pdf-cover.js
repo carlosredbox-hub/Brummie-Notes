@@ -1,105 +1,111 @@
+import { imageBox } from "./pdf-design.js";
 export async function addDocumentCover(pdf, d) {
   if (!d.cover?.enabled || d.confidential) return false;
-  const c = d.company,
-    col = /^#[a-f0-9]{6}$/i.test(c.color || "") ? c.color : "#315b47";
-  pdf.setFillColor("#fbfaf5");
-  pdf.rect(0, 0, 210, 90, "F");
-  const fit = async (src, x, y, w, h) => {
-    if (!src) return false;
-    try {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      const scale = Math.min(w / img.width, h / img.height);
-      const rw = img.width * scale,
-        rh = img.height * scale;
-      pdf.addImage(
-        img,
-        src.includes("image/jpeg") ? "JPEG" : "PNG",
-        x + (w - rw) / 2,
-        y + (h - rh) / 2,
-        rw,
-        rh,
-      );
-      return true;
-    } catch {
-      return false;
-    }
-  };
-  if (!(await fit(c.logo, 35, 15, 140, 65))) {
-    pdf.setFont("times", "bold");
-    pdf.setFontSize(28);
-    pdf.setTextColor(col);
+  const c = d.company;
+  pdf.setFillColor("#fdfbf6");
+  pdf.rect(0, 0, 210, 91, "F");
+  if (!(await imageBox(pdf, c.logo, 26, 12, 158, 67, {trim:true}))) {
+    pdf.setFont("Cormorant", "bold");
+    pdf.setFontSize(30);
+    pdf.setTextColor("#151515");
     pdf.text(c.name, 105, 52, { align: "center" });
   }
-  await fit(
+  await imageBox(
+    pdf,
     d.cover.image || d.guide?.coverImage || c.coverImage,
     0,
-    90,
+    91,
     210,
-    120,
+    115,
+    { crop: true },
   );
   const titles = {
-    invoice: "Invoice",
-    fatura: "Fatura",
-    voucher: "Voucher de confirmação",
-    nota: "Nota de atendimento",
-    orcamento: "Orçamento",
-    recibo: "Recibo",
-    guia: "Home Guide",
-    hospedagem: "Voucher de hospedagem",
-    proposta: "Proposta",
-    horas: "Extra Hours",
+    invoice: "INVOICE",
+    fatura: "STATEMENT",
+    voucher: "BOOKING CONFIRMATION",
+    nota: "SERVICE INFORMATION",
+    orcamento: "CAR SELECTION",
+    recibo: "PAYMENT RECEIPT",
+    guia: "HOME GUIDE",
+    hospedagem: "BOOKING VOUCHER",
+    proposta:
+      d.proposal?.layout === "property-selection"
+        ? "PROPERTY SELECTION"
+        : "EXPERIENCE SELECTION",
+    horas: "EXTRA HOURS",
   };
-  pdf.setFont("times", "normal");
-  pdf.setTextColor("#283a31");
-  pdf.setFontSize(24);
+  pdf.setFont("Cormorant", "normal");
+  pdf.setTextColor("#111111");
+  pdf.setFontSize(26);
   const title =
-    d.cover.title || d.guide?.title || d.proposal?.title || titles[d.type];
-  pdf.text(pdf.splitTextToSize(title, 172).slice(0, 2), 105, 230, {
-    align: "center",
-  });
-  let dateLabel = d.cover.dateLabel;
-  if (!dateLabel) {
-    const dates = (
-      d.stay
+    d.cover.title ||
+    (d.type === "guia" ? d.guide?.title : "") ||
+    titles[d.type];
+  const centered = (
+    value,
+    maxSize,
+    y,
+    height,
+    width = 177,
+    style = "normal",
+  ) => {
+    pdf.setFont("Cormorant", style);
+    let size = maxSize,
+      rows;
+    do {
+      pdf.setFontSize(size);
+      rows = pdf.splitTextToSize(String(value || ""), width);
+      if (rows.length * size * 0.41 <= height) break;
+      size--;
+    } while (size > 8);
+    pdf.text(rows, 105, y - ((rows.length - 1) * size * 0.41) / 2, {
+      align: "center",
+    });
+  };
+  centered(title, 26, 235, 26);
+
+  let label = d.cover.dateLabel;
+  if (!label) {
+    const values = (
+      d.type === "hospedagem"
         ? [d.stay.checkIn, d.stay.checkOut]
-        : d.overtime
+        : d.type === "horas"
           ? d.overtime.days.map((x) => x.date)
           : d.type === "proposta"
             ? [d.proposal.eventDate]
-            : d.items?.map((i) => i.date) || [d.date]
+            : d.items?.map((x) => x.date) || [d.date]
     )
       .filter(Boolean)
       .sort();
-    dateLabel = dates.length
-      ? dates[0] === dates[dates.length - 1]
-        ? dates[0]
-        : `${dates[0]} — ${dates[dates.length - 1]}`
-      : d.date;
+    const format = (s) =>
+      new Date(s + "T12:00:00Z").toLocaleDateString(
+        d.language === "en" ? "en-GB" : "pt-BR",
+        { timeZone: "UTC" },
+      );
+    label = values.length
+      ? values[0] === values.at(-1)
+        ? format(values[0])
+        : `${format(values[0])} — ${format(values.at(-1))}`
+      : format(d.date);
   }
-  pdf.setFont("times", "italic");
-  pdf.setFontSize(12);
-  pdf.text(
-    pdf
-      .splitTextToSize(
-        [d.cover.place, dateLabel].filter(Boolean).join(" • "),
-        175,
-      )
-      .slice(0, 2),
-    105,
-    251,
-    { align: "center" },
+  pdf.setFont("Cormorant", "bold");
+  pdf.setFontSize(16);
+  centered(
+    [d.cover.place, label].filter(Boolean).join(" • "),
+    16,
+    255,
+    17,
+    180,
+    "bold",
   );
-  pdf.setFont("times", "normal");
-  pdf.setFontSize(17);
-  pdf.text(pdf.splitTextToSize(d.client || "", 175).slice(0, 2), 105, 270, {
-    align: "center",
-  });
+  pdf.setFont("Cormorant", "bolditalic");
+  pdf.setFontSize(21);
+  centered(d.client, 21, 277, 19, 178, "bolditalic");
   if (d.status === "Cancelado") {
+    pdf.setFont("OpenSans", "bold");
+    pdf.setFontSize(9);
     pdf.setTextColor("#a33d30");
-    pdf.setFontSize(11);
-    pdf.text(d.language === "en" ? "CANCELLED" : "CANCELADO", 105, 285, {
+    pdf.text(d.language === "en" ? "CANCELLED" : "CANCELADO", 105, 289, {
       align: "center",
     });
   }

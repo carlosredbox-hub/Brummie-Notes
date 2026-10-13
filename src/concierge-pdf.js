@@ -1,308 +1,323 @@
 import { addDocumentCover } from "./pdf-cover.js";
-import { jsPDF } from "jspdf";
+import { EditorialPdf, imageBox, moneyFor, dateFor } from "./pdf-design.js";
+import { isSelection } from "./editorial-document.js";
 import { wifiQr } from "./qr.js";
-
 export async function makeConciergePdf(d) {
-  const pdf = new jsPDF(),
-    c = d.company,
-    en = d.language === "en",
-    col = /^#[a-f0-9]{6}$/i.test(c.color || "") ? c.color : "#b67842";
-  let y = 53;
-  const money = (n) =>
-    new Intl.NumberFormat(en ? "en-US" : "pt-BR", {
-      style: "currency",
-      currency: d.currency,
-    }).format(n || 0);
-  const date = (s) =>
-    s
-      ? new Date(s + "T12:00:00Z").toLocaleDateString(en ? "en-GB" : "pt-BR", {
-          timeZone: "UTC",
-        })
-      : "—";
-  const heading = () => {
-    pdf.setFillColor(col);
-    pdf.rect(0, 0, 210, 4, "F");
-    pdf.setFont("times", "bold");
-    pdf.setFontSize(22);
-    pdf.setTextColor(col);
-    pdf.text(pdf.splitTextToSize(c.name, 155)[0], 18, 23);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor("#7a837d");
-    pdf.setFontSize(8);
-    pdf.text(
-      `${en ? "GUEST DOCUMENT" : "DOCUMENTO DO CLIENTE"}  /  ${String(d.number).padStart(5, "0")}`,
-      18,
-      32,
-    );
-    pdf.setDrawColor("#dedfd8");
-    pdf.line(18, 40, 192, 40);
-    if (d.status === "Cancelado") {
-      pdf.setTextColor("#a64235");
-      pdf.text(en ? "CANCELLED" : "CANCELADO", 150, 32);
+  const design = new EditorialPdf(d),
+    { pdf, en } = design,
+    c = design.doc.company,
+    money = moneyFor(d),
+    date = dateFor(d);
+  if (await addDocumentCover(pdf, design.doc)) design.covers.add(1);
+  if (d.status === "Cancelado")
+    design.text(en ? "CANCELLED" : "CANCELADO", {
+      bold: true,
+      color: "#a64235",
+      align: "center",
+    });
+  if (isSelection(d)) {
+    for (const option of d.proposal.options) {
+      const details = [];
+      if (d.showPrices !== false)
+        details.push({
+          text: `${en ? "Total price per stay" : "Preço total da estadia"}: ${money(option.total)}`,
+          bold: true,
+        });
+      details.push({
+        text: `(${option.rooms} ${en ? "rooms" : "quartos"} • ${option.nights} ${en ? "nights" : "noites"})`,
+        bold: true,
+      });
+      if (option.inclusions)
+        details.push({ text: option.inclusions, bold: true });
+      await design.card({
+        image: option.image,
+        eyebrow: option.city?.toUpperCase(),
+        title: option.title,
+        description: option.description,
+        details,
+        height: 58,
+      });
     }
-  };
-  const next = () => {
-    pdf.addPage();
-    heading();
-    y = 53;
-  };
-  const room = (h) => {
-    if (y + h > 273) next();
-  };
-  const text = (
-    value,
-    size = 10,
-    color = "#304438",
-    font = "helvetica",
-    style = "normal",
-  ) => {
-    pdf.setFont(font, style);
-    pdf.setFontSize(size);
-    pdf.setTextColor(color);
-    const lines = pdf.splitTextToSize(String(value || ""), 170);
-    for (const line of lines) {
-      room(size * 0.45 + 3);
-      pdf.text(line, 20, y);
-      y += size * 0.45 + 2;
+    if (d.proposal.paymentTerms) {
+      design.section(en ? "Conditions" : "Condições");
+      design.text(d.proposal.paymentTerms, { size: 9 });
     }
-    y += 3;
-  };
-  const section = (title) => {
-    room(23);
-    y += 5;
-    pdf.setDrawColor("#e6e5dd");
-    pdf.line(18, y - 2, 192, y - 2);
-    y += 7;
-    text(title, 17, col, "times", "bold");
-  };
-  const photo = async (src, maxHeight = 65) => {
-    if (!/^data:image\/(png|jpeg);base64,/.test(src || "")) return;
-    try {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      const width = Math.min(170, (maxHeight * img.width) / img.height),
-        height = (width * img.height) / img.width;
-      room(height + 8);
-      pdf.addImage(
-        img,
-        src.includes("image/jpeg") ? "JPEG" : "PNG",
-        20,
-        y,
-        width,
-        height,
-      );
-      y += height + 8;
-    } catch {
-      text(en ? "Photo unavailable" : "Foto indisponível", 9);
-    }
-  };
-  const detail = (label, value) => {
-    if (value) {
-      text(label.toUpperCase(), 8, col);
-      text(value, 11);
-    }
-  };
-  await addDocumentCover(pdf, d);
-  heading();
-  if (c.logo) await photo(c.logo, 18);
-  if (d.type === "guia") {
+  } else if (d.type === "guia") {
     const g = d.guide;
-    text(
-      en ? "YOUR HOME, PREPARED FOR YOU" : "SUA CASA, PREPARADA PARA VOCÊ",
-      8,
-      col,
-    );
-    text(g.title, 27, col, "times", "bold");
-    detail(en ? "Property" : "Imóvel", g.propertyCode);
-    text(g.address, 11);
-    await photo(g.coverImage, 80);
+    design.heading("HOME GUIDE", g.title);
+    if (g.propertyCode || g.address)
+      design.text([g.propertyCode, g.address].filter(Boolean).join(" • "), {
+        size: 10,
+        align: "center",
+        gap: 12,
+      });
+    if (g.coverImage) {
+      design.room(80);
+      await imageBox(pdf, g.coverImage, 15, design.y, 180, 72, {
+        crop: true,
+        radius: 4,
+      });
+      design.y += 83;
+    }
     if (g.accessInstructions) {
-      section(en ? "Arrival & access" : "Chegada & acesso");
-      text(g.accessInstructions);
+      design.section(en ? "Arrival & access" : "Chegada e acesso");
+      design.text(g.accessInstructions);
     }
     if (g.wifi?.ssid) {
-      section("Wi-Fi");
-      detail(en ? "Network" : "Rede", g.wifi.ssid);
+      design.room(64);
+      const top = design.y;
+      design.section("Wi-Fi");
+      design.text(`${en ? "Network" : "Rede"}: ${g.wifi.ssid}`, {
+        width: 125,
+        bold: true,
+      });
       if (g.wifi.encryption !== "nopass")
-        detail(en ? "Password" : "Senha", g.wifi.password);
+        design.text(`${en ? "Password" : "Senha"}: ${g.wifi.password}`, {
+          width: 125,
+        });
       const qr = await wifiQr(g.wifi);
       if (qr) {
-        room(49);
-        pdf.addImage(qr, "PNG", 20, y, 42, 42);
-        y += 48;
+        await imageBox(pdf, qr, 151, top + 3, 42, 42);
+        design.y = Math.max(design.y, top + 52);
       }
     }
-    for (const s of g.sections) {
-      section(s.title);
-      await photo(s.image);
-      text(s.text);
+    for (const section of g.sections) {
+      if (!section.text && !section.image) continue;
+      if (section.image)
+        await design.card({
+          image: section.image,
+          title: section.title,
+          description: section.text,
+          height: 63,
+        });
+      else {
+        design.section(section.title);
+        design.text(section.text, { size: 10 });
+      }
     }
   } else if (d.type === "hospedagem") {
     const s = d.stay;
-    text(en ? "BOOKING VOUCHER" : "VOUCHER DE HOSPEDAGEM", 9, col);
-    text(s.hotelName, 27, col, "times", "bold");
-    detail(en ? "Guest / reservation holder" : "Titular da reserva", d.client);
-    detail(en ? "Additional guests" : "Hóspedes", s.guests);
-    detail(en ? "Hotel address" : "Endereço do hotel", s.hotelAddress);
-    detail("CNPJ", s.hotelTaxId);
-    detail(en ? "Requested by" : "Solicitante", s.requester);
-    section(en ? "Your stay" : "Sua estadia");
-    detail("Check-in", `${date(s.checkIn)} ${s.checkInTime || ""}`);
-    detail("Check-out", `${date(s.checkOut)} ${s.checkOutTime || ""}`);
-    detail(en ? "Nights" : "Diárias", String(s.nights));
-    section(en ? "Rooms & rates" : "Quartos & valores");
+    design.heading(
+      en ? "BOOKING VOUCHER" : "VOUCHER DE HOSPEDAGEM",
+      s.hotelName,
+    );
+    if (s.coverImage) {
+      design.room(65);
+      await imageBox(pdf, s.coverImage, 15, design.y, 180, 60, {
+        crop: true,
+        radius: 4,
+      });
+      design.y += 72;
+    }
+    design.text(
+      `${en ? "Reservation holder" : "Titular da reserva"}: ${d.client}`,
+      { bold: true },
+    );
+    for (const value of [
+      s.guests,
+      s.hotelAddress,
+      s.hotelTaxId && `CNPJ: ${s.hotelTaxId}`,
+      s.requester && `${en ? "Requested by" : "Solicitante"}: ${s.requester}`,
+    ])
+      if (value) design.text(value, { size: 9 });
+    design.room(29);
+    pdf.setFillColor("#f7f4ed");
+    pdf.roundedRect(15, design.y - 2, 180, 23, 3, 3, "F");
+    const top = design.y;
+    design.text(`CHECK-IN  ${date(s.checkIn)} ${s.checkInTime || ""}`, {
+      x: 21,
+      width: 95,
+      bold: true,
+      gap: 4,
+    });
+    design.text(`CHECK-OUT  ${date(s.checkOut)} ${s.checkOutTime || ""}`, {
+      x: 21,
+      width: 95,
+      bold: true,
+      gap: 8,
+    });
+    design.font(19, true, true);
+    pdf.text(`${s.nights} ${en ? "nights" : "diárias"}`, 185, top + 11, {
+      align: "right",
+    });
+    design.y = Math.max(design.y, top + 31);
     for (const r of s.rooms) {
-      text(r.description, 13, col, "times", "bold");
-      text(
-        `${r.quantity} ${en ? "room(s)" : "quarto(s)"} × ${s.nights} ${en ? "night(s)" : "diária(s)"}${d.showPrices === false ? "" : ` × ${money(r.nightlyRate)}`}`,
-        10,
-      );
+      const details = [
+        {
+          text: `${r.quantity} ${en ? "rooms" : "quartos"} × ${s.nights} ${en ? "nights" : "diárias"}`,
+          bold: true,
+        },
+      ];
       if (d.showPrices !== false)
-        text(money(r.quantity * s.nights * r.nightlyRate), 12);
+        details.push({
+          text: `${money(r.nightlyRate)} ${en ? "per night" : "por diária"} • ${money(r.amount)}`,
+          bold: true,
+          color: design.color,
+        });
+      if (r.inclusions) details.push({ text: r.inclusions, bold: true });
+      await design.card({
+        image: r.image,
+        title: r.description,
+        description: r.details,
+        details,
+        height: r.image ? 58 : 29,
+      });
     }
     if (d.showPrices !== false) {
-      section(en ? "Reservation total" : "Total da reserva");
-      text(money(s.total), 25, col, "times", "bold");
-      for (const p of s.payments) {
-        text(`${p.description} • ${date(p.date)} • ${money(p.amount)}`, 10);
-      }
-      detail(
-        en ? "Payments recorded" : "Pagamentos registrados",
-        money(s.paid),
+      design.section(en ? "Reservation total" : "Total da reserva");
+      design.text(money(s.total), {
+        size: 25,
+        serif: true,
+        bold: true,
+        color: design.color,
+      });
+      for (const payment of s.payments)
+        design.text(
+          `${payment.description} • ${date(payment.date)} • ${money(payment.amount)}`,
+          { size: 9 },
+        );
+      design.text(
+        `${en ? "Payments" : "Pagamentos"}: ${money(s.paid)}  •  ${en ? "Balance" : "Saldo"}: ${money(s.balance)}`,
+        { bold: true },
       );
-      detail(en ? "Remaining balance" : "Saldo restante", money(s.balance));
     }
     if (s.terms) {
-      section(en ? "Hotel conditions" : "Condições da hospedagem");
-      text(s.terms);
+      design.section(en ? "Hotel conditions" : "Condições da hospedagem");
+      design.text(s.terms, { size: 9 });
     }
-  } else if (d.type === "interno") {
-    text("INTERNO — NÃO ENVIAR AO CLIENTE", 14, "#9b392e", "helvetica", "bold");
-    text(d.internal.partner, 25, col, "times", "bold");
-    section(
-      d.internal.kind === "repasse"
-        ? "Repasse / comissão"
-        : "Fechamento de operação",
-    );
-    for (const line of d.internal.lines) {
-      text(line.label, 13, col);
-      text(
-        line.pct !== undefined
-          ? `${money(line.base)} × ${line.pct}% = ${money(line.amount)}`
-          : `${line.qty} × ${money(line.unit)} = ${money(line.amount)}`,
-      );
-    }
-    section("TOTAL INTERNO");
-    text(money(d.internal.total), 24, col, "times", "bold");
-  } else if (d.type === "horas") {
-    text(en ? "EXTRA HOURS" : "HORAS EXTRAS", 27, col, "times", "bold");
-    detail(en ? "Prepared for" : "Preparado para", d.client);
-    text(
-      `${d.overtime.baseHours} ${en ? "contracted hours" : "horas contratadas"} · ${d.overtime.ratePct}% ${en ? "of the daily rate per extra hour" : "da diária por hora extra"}`,
-      10,
-    );
-    for (const day of d.overtime.days) {
-      section(date(day.date));
-      for (const line of day.lines) {
-        text(line.vehicle, 14, col, "times", "bold");
-        text(
-          `${line.start} > ${line.end} | ${line.extraHours} ${en ? "extra hours" : "horas extras"}`,
-          10,
-        );
-        if (line.overridden)
-          text(
-            en ? "Reviewed manual exception" : "Exceção manual revisada",
-            9,
-            "#9a652f",
-          );
-        if (d.showPrices !== false)
-          text(
-            `${money(line.rate)} × ${line.extraHours} × ${line.quantity || 1} = ${money(line.amount)}`,
-            11,
-          );
-      }
-    }
-    if (d.showPrices !== false) {
-      section(en ? "TOTAL" : "TOTAL");
-      text(money(d.total), 24, col, "times", "bold");
-    }
-  } else {
+  } else if (d.type === "proposta") {
     const p = d.proposal;
-    text(en ? "CURATED EXPERIENCE" : "EXPERIÊNCIA PERSONALIZADA", 9, col);
-    text(p.title, 27, col, "times", "bold");
-    detail(en ? "Prepared for" : "Preparado para", d.client);
-    detail(en ? "Location" : "Local", p.venue);
-    detail(en ? "Event date" : "Data do evento", date(p.eventDate));
-    await photo(p.coverImage, 75);
-    section(en ? "Your proposal" : "Sua proposta");
-    for (const i of d.items) {
-      text(i.description, 13, col, "times", "bold");
-      if (d.showPrices !== false)
-        text(
-          `${i.quantity} ${i.unit || ""} × ${money(i.price)} + ${money(i.extra)} = ${money(i.total)}`,
-          10,
-        );
+    design.heading(
+      p.title,
+      [d.client, p.venue, date(p.eventDate)].filter(Boolean).join(" • "),
+    );
+    if (p.coverImage) {
+      design.room(68);
+      await imageBox(pdf, p.coverImage, 15, design.y, 180, 62, {
+        crop: true,
+        radius: 4,
+      });
+      design.y += 73;
     }
-    if (d.showPrices !== false)
-      detail(en ? "Discount" : "Desconto", money(d.discount));
-    if (d.showPrices !== false)
-      text(
-        `${en ? "TOTAL" : "TOTAL"}  ${money(d.total)}`,
-        24,
-        col,
-        "times",
-        "bold",
-      );
-    for (const [label, content] of [
+    for (const item of d.items)
+      await design.card({
+        image: item.image,
+        title: item.description,
+        description: item.details,
+        details:
+          d.showPrices === false
+            ? []
+            : [
+                {
+                  text: `${item.quantity} ${item.unit || ""} × ${money(item.price)}${Number(item.extra) ? ` + ${money(item.extra)}` : ""}`,
+                  bold: true,
+                },
+                {
+                  text: money(item.total),
+                  size: 13,
+                  bold: true,
+                  color: design.color,
+                },
+              ],
+        height: item.image ? 62 : 35,
+      });
+    if (d.showPrices !== false) {
+      if (Number(d.discount))
+        design.text(`${en ? "Discount" : "Desconto"}: ${money(d.discount)}`, {
+          align: "right",
+        });
+      if (Number(d.cardFee))
+        design.text(
+          `${en ? "Card surcharge" : "Adicional de cartão"} (${d.cardFeePct}%): ${money(d.cardFee)}`,
+          { align: "right" },
+        );
+      design.room(24);
+      design.text(`TOTAL  ${money(d.total)}`, {
+        serif: true,
+        size: 24,
+        bold: true,
+        align: "center",
+        color: design.color,
+      });
+    }
+    for (const [label, text] of [
       [en ? "Included" : "O que está incluído", p.inclusions],
       [en ? "Schedule" : "Programação", p.schedule],
       [en ? "Payment terms" : "Condições de pagamento", p.paymentTerms],
     ])
-      if (content) {
-        section(label);
-        text(content);
+      if (text) {
+        design.section(label);
+        design.text(text, { size: 9 });
       }
+  } else if (d.type === "horas") {
+    design.heading(en ? "EXTRA HOURS" : "HORAS EXTRAS", d.client);
+    design.text(
+      `${d.overtime.baseHours} ${en ? "contracted hours" : "horas contratadas"} • ${d.overtime.ratePct}% ${en ? "of daily rate per extra hour" : "da diária por hora extra"}`,
+      { size: 9, align: "center" },
+    );
+    for (const day of d.overtime.days) {
+      design.section(date(day.date));
+      for (const line of day.lines) {
+        design.room(27);
+        design.text(`${line.vehicle}  × ${line.quantity || 1}`, { bold: true });
+        design.text(
+          `${line.start} → ${line.end} • ${line.extraHours} ${en ? "extra hours" : "horas extras"}${line.overridden ? (en ? " • Reviewed manual exception" : " • Exceção manual revisada") : ""}`,
+          { size: 9 },
+        );
+        if (d.showPrices !== false)
+          design.text(
+            `${money(line.rate)} × ${line.extraHours} × ${line.quantity || 1} = ${money(line.amount)}`,
+            { bold: true, color: design.color },
+          );
+      }
+    }
+    if (d.showPrices !== false) {
+      design.section("TOTAL");
+      design.text(money(d.total), {
+        size: 26,
+        bold: true,
+        serif: true,
+        color: design.color,
+      });
+    }
+    if (d.discrepancy && d.showPrices !== false)
+      design.text(
+        `${en ? "Difference from supplied total" : "Diferença em relação ao total do original"}: ${money(d.discrepancy)}`,
+        { size: 9, bold: true, color: "#9b392e" },
+      );
+  } else if (d.type === "interno") {
+    design.heading("FECHAMENTO / REPASSE", d.internal.partner);
+    design.text("INTERNO — NÃO ENVIAR AO CLIENTE", {
+      bold: true,
+      color: "#9b392e",
+      align: "center",
+    });
+    for (const line of d.internal.lines) {
+      design.room(30);
+      design.section(line.label);
+      design.text(
+        line.pct !== undefined
+          ? `${money(line.base)} × ${line.pct}% = ${money(line.amount)}`
+          : `${line.qty} × ${money(line.unit)} = ${money(line.amount)}`,
+        { bold: true },
+      );
+    }
+    design.section("TOTAL INTERNO");
+    design.text(money(d.internal.total), {
+      size: 25,
+      serif: true,
+      bold: true,
+      color: design.color,
+    });
   }
   if (d.notes) {
-    section(en ? "Additional information" : "Informações adicionais");
-    text(d.notes);
+    design.section(en ? "Additional information" : "Informações adicionais");
+    design.text(d.notes, { size: 9 });
   }
   if (d.attachments?.length) {
-    section(en ? "Original attachments" : "Documentos originais anexos");
-    for (const a of d.attachments) text(a.name, 10);
-    text(
-      en
-        ? "Original supplier documents follow, with their original codes and conditions."
-        : "Os documentos originais dos fornecedores seguem nas próximas páginas, com seus códigos e condições preservados.",
-      9,
-    );
+    design.section(en ? "Original attachments" : "Documentos originais anexos");
+    for (const attachment of d.attachments)
+      design.text(attachment.name, { size: 9 });
   }
-  text(
-    en
-      ? "Informational document. Not a tax invoice."
-      : "Documento informativo. Não substitui nota fiscal.",
-    8,
-    "#7a837d",
-  );
-  const pages = pdf.getNumberOfPages();
-  for (let p = 1; p <= pages; p++) {
-    pdf.setPage(p);
-    pdf.setDrawColor("#dedfd8");
-    pdf.line(18, 280, 192, 280);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(8);
-    pdf.setTextColor("#7a837d");
-    pdf.text(
-      pdf.splitTextToSize(
-        [c.website, c.phone].filter(Boolean).join(" | "),
-        145,
-      )[0] || c.name,
-      18,
-      287,
-    );
-    if (d.confidential) pdf.text("INTERNO — NÃO ENVIAR AO CLIENTE", 18, 277);
-    pdf.text(`${p}/${pages}`, 181, 287);
-  }
-  return pdf.output("blob");
+  return design.finish();
 }

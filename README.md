@@ -17,15 +17,17 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 - **Apresente o atendimento.** Envie uma nota com os dados do motorista bilíngue e do veículo; os cadastros também aceitam fotos.
 - **Trabalhe offline.** Dados ficam no dispositivo. Backup permite levar a biblioteca para outro computador ou celular.
 
-## Novos documentos no Studio 1.2.1
+## Revisão visual no Studio 1.3
 
 Guias de hospedagem com QR de Wi-Fi e exportação HTML, vouchers de hotel com quartos/diárias/pagamentos, propostas de experiências e relatórios de horas extras agora têm editores próprios. Brummie Lines e Real Estate usam perfis de identidade editáveis e capas opcionais. PDFs originais podem ser anexados ao documento.
 
-**Documentos internos** ficam em uma área própria, como moldes editáveis de fechamento e repasse, com aviso de confidencialidade. Não aparecem no painel de clientes. O adicional de cartão continua pendente nesta versão; nenhum percentual é acrescentado automaticamente.
+**Documentos internos** ficam em uma área própria, como moldes editáveis de fechamento e repasse, com aviso de confidencialidade. Não aparecem no painel de clientes. Adicional de cartão opcional, desligado por padrão, aparece separado no documento quando selecionado.
 
-**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML e os instaladores da release v1.2.1 incluem esta tela, interface azul e menu principal focado em documentos. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
+**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML em main inclui a revisão visual1.3; os instaladores da release v1.2.1 correspondem à revisão anterior. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
 
 ![Guias, hospedagem, experiências e horas extras](docs/screenshots/07-concierge.png)
+
+**Composição baseada nos PDFs enviados:** capa fotográfica, Open Sans e Cormorant incorporadas, fotos ao lado do texto, rodapé com endereço/logo/contato e prévia que renderiza o PDF final. **Property Selection** permite várias opções de hospedagem com valores independentes. Fotos de serviços, experiências, quartos e guias ficam nos modelos. Em Biblioteca de PDFs, use **Extrair fotos deste PDF** para reutilizá-las nos editores; extração local de imagens raster, sem OCR ou reconstrução de páginas escaneadas.
 
 ## Veja o app em uso
 
