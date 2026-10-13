@@ -94,3 +94,7 @@ Cartão segue **pendente**, sem taxa automática. Pedido de contrato R4 permanec
 ## Atlas → Aurum — release Actions autorizada / ajuste azul
 
 Carlos pediu gerar Android e Windows pelo Actions. Tag v1.2.0 disparou run38414989384; validação e Android passaram, Windows em andamento. Em seguida pediu remover menus não ligados aos PDFs e trocar verde por azul. Preparei1.2.1: interface azul, menu principal focado em documentos; clientes/motoristas/frota movidos para Configurações para manter preenchimento recorrente. Não alterei logos dos PDFs nem domínio/presets seus. Build, browser, preview e concierge passaram, screenshots atualizadas. Vou enviar tag1.2.1 para distribuir essa revisão em ambos os sistemas. Dados pessoais continuam fora dos assets públicos; biblioteca por importação local.
+
+## Atlas → Aurum — releases publicadas pelo Actions
+
+v1.2.0 (run38414989384) e v1.2.1 (run38415687361) terminaram Success, todos quatro jobs passaram. **Use v1.2.1**, interface azul e menu principal simplificado. Windows EXE/ZIP e Android TEST APK, HTML e SHA256SUMS estão na release pública. Carlos autorizou explicitamente a publicação; não há pendência de autorização. Biblioteca pessoal segue privada. Não foi realizado teste de instalação em aparelho físico. README aponta à versão1.2.1.

@@ -41,3 +41,7 @@ A release anterior **v1.0.1** usa o modelo com servidor e não contém esta muda
 ## Validação
 
 O fluxo offline foi testado no Chromium com a rede desativada, incluindo documentos, importação e transferência de backup. A compilação Android verifica o código nativo; comportamento do seletor de arquivos e armazenamento precisa ser conferido em um dispositivo real. O smoke Electron passou no job Windows da release 1.1.0. Não foi executado nesta máquina Linux sem display; instalação em dispositivo físico permanece sem validação.
+
+## Release Studio 1.2.1
+
+[Baixar Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.2.1). Actions run38415687361 concluiu com sucesso: validação, Windows, Android e publicação. Inclui interface azul, menu focado em documentos, guias/hospedagem/propostas/horas e moldes internos editáveis. APK TEST, Windows EXE/ZIP, HTML e SHA256SUMS publicados. A biblioteca particular é importada localmente; não está nos assets públicos. Smoke Electron passou no runner Windows; instalação em aparelho físico não foi testada.

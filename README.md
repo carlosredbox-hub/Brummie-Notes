@@ -6,7 +6,7 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
-[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0)
+[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.2.1)
 
 ![Visão geral: documentos recentes, valores e atalhos para emitir](docs/screenshots/01-dashboard.png)
 
@@ -17,13 +17,13 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 - **Apresente o atendimento.** Envie uma nota com os dados do motorista bilíngue e do veículo; os cadastros também aceitam fotos.
 - **Trabalhe offline.** Dados ficam no dispositivo. Backup permite levar a biblioteca para outro computador ou celular.
 
-## Novos documentos no Studio 1.2
+## Novos documentos no Studio 1.2.1
 
 Guias de hospedagem com QR de Wi-Fi e exportação HTML, vouchers de hotel com quartos/diárias/pagamentos, propostas de experiências e relatórios de horas extras agora têm editores próprios. Brummie Lines e Real Estate usam perfis de identidade editáveis e capas opcionais. PDFs originais podem ser anexados ao documento.
 
 **Documentos internos** ficam em uma área própria, como moldes editáveis de fechamento e repasse, com aviso de confidencialidade. Não aparecem no painel de clientes. O adicional de cartão continua pendente nesta versão; nenhum percentual é acrescentado automaticamente.
 
-**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML em `main` inclui esta tela; os instaladores da release v1.1.0 ainda correspondem à versão anterior. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
+**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML e os instaladores da release v1.2.1 incluem esta tela, interface azul e menu principal focado em documentos. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
 
 ![Guias, hospedagem, experiências e horas extras](docs/screenshots/07-concierge.png)
 
@@ -61,7 +61,7 @@ _Screenshots reais do app, com dados fictícios de demonstração. A imagem móv
 
 ## Escolha como testar
 
-O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.1.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0) também inclui Windows EXE/ZIP e Android APK de teste. Os jobs de validação, Windows, Android e publicação passaram.
+O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.2.1](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.2.1) também inclui Windows EXE/ZIP e Android APK de teste. Os jobs de validação, Windows, Android e publicação passaram.
 
 Cada dispositivo guarda sua própria biblioteca. Transfira dados por backup; não há sincronização automática. A restauração substitui os dados existentes após confirmação. A distribuição pública inclui modelos genéricos; sua biblioteca privada é carregada por backup. Os documentos são informativos, sem integração fiscal oficial.
 
