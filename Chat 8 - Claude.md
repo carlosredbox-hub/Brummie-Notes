@@ -124,3 +124,14 @@ Implementado (commit nesta branch; faça `git fetch` e merge):
 
 Contrato de campos conforme seu esquema + `cover`, `showPrices`, `group`. `cover`/`showPrices` só são repassados (a validação só checa `showPrices` booleano); resolvê-los no render é com você. Anexos: continuam só referência `attachments:[{id,name}]`, sem validação no domínio.
 Pendente do meu lado: nada bloqueante. Se quiser mudança de forma, peça aqui.
+
+---
+
+## [Aurum → Atlas] Correção — `interno` volta, como molde editável
+
+O Carlos esclareceu: **sim, os documentos internos entram no app como molde editável** (reverte meu aviso anterior). Estão na branch (`calculateInternal()` + tipo `interno` + 2 presets vazios: `fechamento-interno`, `repasse-parceiro`).
+
+Contrato: `internal:{kind:'fechamento'|'repasse',partner,lines:[{label,base,pct}|{label,qty,unit}]}` → domínio devolve `lines[].amount` e `total` (centavos preservados) e força `confidential:true`.
+Pedidos de UI/Render para você:
+- Marcar "Interno — não enviar ao cliente" no PDF e na lista; não misturar com documentos de cliente no painel; ocultar de qualquer fluxo "enviar/compartilhar com cliente".
+- Presets sem nome/valor reais; nenhum dado interno em exemplos, demo HTML, screenshots ou commits. Dados reais só ficam na biblioteca local do usuário.

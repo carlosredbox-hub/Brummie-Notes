@@ -129,3 +129,27 @@ test("presets sem credenciais e com tipos conhecidos", () => {
   for (const p of documentPresets) assert.ok(p.content.type === p.type);
   assert.ok(!JSON.stringify(guideSections).match(/senha|password|\d{4}\*/i));
 });
+import { calculateInternal } from "../domain.js";
+test("interno: base × % preserva centavos, sempre confidencial", () => {
+  const n = {
+    kind: "repasse",
+    partner: "Parceiro",
+    lines: [
+      { label: "A", base: 181744, pct: 5 },
+      { label: "B", qty: 2, unit: 10.5 },
+    ],
+  };
+  assert.equal(calculateInternal(n).lines[0].amount, 9087.2);
+  const d = validateDoc({
+    type: "interno",
+    language: "pt",
+    currency: "BRL",
+    internal: n,
+  });
+  assert.equal(d.total, 9108.2);
+  assert.equal(d.confidential, true);
+  assert.throws(() => calculateInternal({ ...n, kind: "x" }));
+  assert.throws(() =>
+    calculateInternal({ ...n, lines: [{ label: "A", base: 1, pct: 101 }] }),
+  );
+});

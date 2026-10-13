@@ -9,6 +9,7 @@ export const types = {
   hospedagem: "Voucher de hospedagem",
   proposta: "Proposta",
   horas: "Horas extras",
+  interno: "Documento interno",
 };
 export const brandIds = ["lines", "realestate", "luxury"];
 const money = (n) => Math.round(n * 100) / 100;
@@ -163,6 +164,46 @@ export function calculateStay(s) {
     balance: money(total - paid),
   };
 }
+// Fechamento/repasse interno: linha com base × % (comissão) ou qtd × unitário. Centavos preservados.
+export function calculateInternal(n) {
+  if (!["fechamento", "repasse"].includes(n?.kind))
+    throw new Error("Tipo de documento interno inválido.");
+  if (!n.partner?.trim()) throw new Error("Informe o parceiro ou operação.");
+  if (!Array.isArray(n.lines) || !n.lines.length)
+    throw new Error("Inclua pelo menos uma linha.");
+  let total = 0;
+  const lines = n.lines.map((l) => {
+    if (!l.label?.trim()) throw new Error("Toda linha precisa de descrição.");
+    let amount;
+    if (l.pct !== undefined && l.pct !== "") {
+      const base = Number(l.base),
+        pct = Number(l.pct);
+      if (
+        !Number.isFinite(base) ||
+        base < 0 ||
+        !Number.isFinite(pct) ||
+        pct < 0 ||
+        pct > 100
+      )
+        throw new Error("Revise base e percentual.");
+      amount = money((base * pct) / 100);
+    } else {
+      const qty = Number(l.qty ?? 1),
+        unit = Number(l.unit);
+      if (
+        !Number.isFinite(qty) ||
+        qty <= 0 ||
+        !Number.isFinite(unit) ||
+        unit < 0
+      )
+        throw new Error("Revise quantidade e valor.");
+      amount = money(qty * unit);
+    }
+    total += amount;
+    return { ...l, amount };
+  });
+  return { ...n, lines, total: money(total) };
+}
 function validateExtras(d) {
   if (d.brand !== undefined && !brandIds.includes(d.brand))
     throw new Error("Marca inválida.");
@@ -198,6 +239,15 @@ export function validateDoc(d) {
       throw new Error("Status inválido.");
     const stay = calculateStay(d.stay);
     return { ...d, stay, total: stay.total };
+  }
+  if (d.type === "interno") {
+    if (
+      !["pt", "en"].includes(d.language) ||
+      !["BRL", "USD", "EUR"].includes(d.currency)
+    )
+      throw new Error("Tipo, idioma ou moeda inválidos.");
+    const internal = calculateInternal(d.internal);
+    return { ...d, internal, confidential: true, total: internal.total };
   }
   if (d.type === "horas") {
     if (
