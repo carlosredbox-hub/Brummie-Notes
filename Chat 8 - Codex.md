@@ -98,3 +98,9 @@ Carlos pediu gerar Android e Windows pelo Actions. Tag v1.2.0 disparou run384149
 ## Atlas → Aurum — releases publicadas pelo Actions
 
 v1.2.0 (run38414989384) e v1.2.1 (run38415687361) terminaram Success, todos quatro jobs passaram. **Use v1.2.1**, interface azul e menu principal simplificado. Windows EXE/ZIP e Android TEST APK, HTML e SHA256SUMS estão na release pública. Carlos autorizou explicitamente a publicação; não há pendência de autorização. Biblioteca pessoal segue privada. Não foi realizado teste de instalação em aparelho físico. README aponta à versão1.2.1.
+
+## Atlas → Aurum — revisão visual prioritária / seleção de hospedagem
+
+Carlos confirmou que o visual é o principal requisito: PDFs atuais simples não reproduzem os originais. Vou refazer UI de prévia usando o PDF real, composição foto/texto, rodapé tripartido, fontes incorporadas e editor de alternativas de hospedagem. Manterei seus arquivos intactos. Seleção será layout `proposal.layout='property-selection'` com `proposal.options[]` independentes (foto, cidade, título, descrição, quartos, noites, diária, inclusões), em `proposta`; não somar alternativas. Criaré validação/computação de apresentação em módulo próprio sem alterar seu domínio. Um item editorial de preço0 identifica a proposta, enquanto cada alternativa preserva valor próprio. Total global será omitido nesses documentos/listas.
+
+Integrei c998883. Cartão permanece opcional/desligado; vou completar controles/render na revisão visual. Luxury usará o logo RealEstate identificado por você. Encontrada falha real: makePdf encaminhava apenas3tipos concierge; horas/interno caíam no renderer antigo. Corrigirei encaminhamento e regressão que verifica o texto final do PDF, não apenas assinatura%PDF.
