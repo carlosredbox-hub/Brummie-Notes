@@ -1,9 +1,59 @@
 # Brummie Offline Studio
 
-Facilitador local para transporte executivo. Gera invoices, faturas, orçamentos, vouchers, notas informativas e recibos em português ou inglês. Não conecta ao site Brummie, não exige conta e não precisa de servidor ou internet para funcionar.
+**Seu próximo documento começa com o que você já fez.**
 
+Um facilitador para transporte executivo: transforme serviços recorrentes e PDFs anteriores em novos invoices, faturas, orçamentos e confirmações de atendimento. Guarde seus modelos, reutilize informações e gere documentos em português ou inglês — mesmo sem internet.
 
-A [release v1.1.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0) contém Windows EXE/ZIP, Android APK de teste e [HTML offline](https://github.com/carlosredbox-hub/Brummie-Notes/releases/download/v1.1.0/Brummie-Offline.html). Todos os jobs de validação, Windows, Android e publicação passaram. Para levar sua biblioteca privada ao app, use Restaurar backup; os arquivos públicos incluem modelos genéricos, sem os PDFs pessoais.
+**Offline · PDF · Modelos reutilizáveis · Windows e Android**
+
+[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0)
+
+![Visão geral: documentos recentes, valores e atalhos para emitir](docs/screenshots/01-dashboard.png)
+
+## Do atendimento ao documento, com menos preenchimento
+
+- **Reutilize o que funciona.** Salve um modelo e preencha o próximo documento com cliente, serviços, valores, motorista e veículo anteriores. Revise as datas e emita.
+- **Leve o histórico junto.** Importe PDFs, preserve os originais e crie modelos a partir das informações revisadas.
+- **Apresente o atendimento.** Envie uma nota com os dados do motorista bilíngue e do veículo; os cadastros também aceitam fotos.
+- **Trabalhe offline.** Dados ficam no dispositivo. Backup permite levar a biblioteca para outro computador ou celular.
+
+## Veja o app em uso
+
+### Invoice pronto para baixar
+
+Itens, trechos, adicionais e desconto reunidos em um PDF. Também emite fatura, orçamento, voucher, nota informativa e recibo.
+
+![Invoice de demonstração com trecho e valor](docs/screenshots/02-invoice.png)
+
+### Modelos que aceleram o próximo serviço
+
+Transfer, helicóptero, Meet & Greet e disposição são pontos de partida editáveis. Ao reutilizar um roteiro, o app mantém os intervalos entre as datas dos serviços.
+
+![Biblioteca de modelos reutilizáveis](docs/screenshots/03-modelos.png)
+
+### Cliente informado sobre o atendimento
+
+Motorista, idiomas e placa em uma nota de atendimento. Nome, foto do motorista e foto do carro podem ser incluídos pelos cadastros.
+
+![Nota de atendimento com motorista bilíngue e veículo de demonstração](docs/screenshots/04-atendimento.png)
+
+### PDFs anteriores viram memória de trabalho
+
+O original permanece guardado; um mesmo PDF pode ter modelos separados para alternativas de serviço. Campos sugeridos precisam ser revisados.
+
+![Biblioteca de PDFs e ação para reutilizar o modelo](docs/screenshots/06-biblioteca.png)
+
+### A mesma interface no celular
+
+<img src="docs/screenshots/05-mobile.png" alt="Interface do app em tela de celular" width="320" />
+
+_Screenshots reais do app, com dados fictícios de demonstração. A imagem móvel mostra a interface responsiva no navegador; não representa teste em um aparelho Android físico._
+
+## Escolha como testar
+
+O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.1.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.1.0) também inclui Windows EXE/ZIP e Android APK de teste. Os jobs de validação, Windows, Android e publicação passaram.
+
+Cada dispositivo guarda sua própria biblioteca. Transfira dados por backup; não há sincronização automática. A restauração substitui os dados existentes após confirmação. A distribuição pública inclui modelos genéricos; sua biblioteca privada é carregada por backup. Os documentos são informativos, sem integração fiscal oficial.
 
 ## Testar antes de instalar
 
@@ -37,3 +87,12 @@ npm run test:preview
 O teste de navegador roda com rede desativada e verifica emissão de PDF, persistência, reutilização, importação, preservação exata do PDF original, backup em outro contexto e layout móvel. Chromium/Playwright deve estar instalado. Testes legados de API ainda verificam o backend histórico em `server.js`; ele não é usado pelo app offline nem empacotado nos instaladores. Esses testes exigem a fonte DejaVuSans.
 
 Veja [plataformas e releases](docs/PLATAFORMAS.md) e [referências dos documentos](docs/REFERENCIAS.md). Os anexos originais e dados pessoais não são publicados no Git nem na release genérica. O [HTML com biblioteca privada](docs/BIBLIOTECA.md) incorpora os documentos autorizados pelo usuário apenas no arquivo local de avaliação.
+
+## Atualizar as screenshots
+
+```sh
+npm run build
+node scripts/capture-screenshots.mjs
+```
+
+A captura usa um navegador isolado, rede desativada e dados fictícios; não altera a biblioteca do usuário. O HTML público de demonstração está em `docs/demo/Brummie-Offline.html`. Os instaladores publicados correspondem à release 1.1.0; o HTML de demonstração acompanha a versão atual da branch main.

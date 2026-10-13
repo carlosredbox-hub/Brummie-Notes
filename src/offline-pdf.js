@@ -115,7 +115,7 @@ export async function makePdf(d) {
       y += 40;
     }
     line(r.name, 14);
-    line(r.languages || r.category, 10);
+    line(r.kind === "driver" ? r.languages : r.category, 10);
     line(r.plate ? (en ? "Plate: " : "Placa: ") + r.plate : r.phone, 10);
   }
   if (d.notes) {

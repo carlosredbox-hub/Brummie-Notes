@@ -1068,8 +1068,8 @@ function SettingsForm({ company, onSave }) {
 function RecordForm({ type, onClose, onSave }) {
   const [d, setD] = useState({
       name: "",
-      languages: "Português, Inglês",
-      category: "Sedan Executivo",
+      languages: type === "driver" ? "Português, Inglês" : "",
+      category: type === "vehicle" ? "Sedan Executivo" : "",
       photo: "",
     }),
     [error, setError] = useState(""),
@@ -1711,7 +1711,7 @@ function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
                         : "SEU VEÍCULO"}
                   </small>
                   <h3>{r.name}</h3>
-                  <p>{r.languages || r.category}</p>
+                  <p>{r.kind === "driver" ? r.languages : r.category}</p>
                   <strong>{r.plate || r.phone}</strong>
                 </div>
               ))}
