@@ -138,9 +138,11 @@ try {
     .getByRole("button", { name: "Biblioteca de PDFs", exact: true })
     .click();
   await shot("06-biblioteca");
+  await page.getByRole("button", { name: "Guias & experiências", exact: true }).click();
+  await shot("07-concierge");
   if (errors.length) throw new Error(errors.join("\n"));
   console.log(
-    "Six real app screenshots captured with fictitious demo data, offline.",
+    "Seven real app screenshots captured with fictitious demo data, offline.",
   );
 } finally {
   await browser.close();

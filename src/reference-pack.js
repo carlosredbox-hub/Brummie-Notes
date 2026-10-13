@@ -10,7 +10,11 @@ export function applyReferencePack(data, pack) {
     if (!record.id || ids.has(record.id))
       throw new Error("Referências duplicadas.");
     ids.add(record.id);
-    if (record.kind === "template") validateDoc(record.content);
+    if (record.kind === "template")
+      return structuredClone({
+        ...record,
+        content: validateDoc(record.content),
+      });
     if (record.kind === "archive") {
       if (
         record.source?.type !== "application/pdf" ||

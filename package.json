@@ -1,6 +1,6 @@
 {
   "name": "brummie-documents",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,14 +12,17 @@
     "build:windows": "electron-builder --win --x64",
     "test:browser": "node tests/browser.mjs",
     "test:desktop": "node tests/desktop.smoke.mjs",
-    "test:preview": "node tests/preview.browser.mjs"
+    "test:preview": "node tests/preview.browser.mjs",
+    "test:concierge": "node tests/concierge.browser.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.468.0",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.4.299",
     "pdfkit": "^0.17.2",
+    "qrcode": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "vite-plugin-singlefile": "^2.3.3"

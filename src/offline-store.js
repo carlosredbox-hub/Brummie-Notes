@@ -1,6 +1,10 @@
 import { validateDoc } from "../domain.js";
 import { makePdf } from "./offline-pdf.js";
 import { applyReferencePack } from "./reference-pack.js";
+import { documentPresets } from "./presets.js";
+import { documentCompany } from "./document-branding.js";
+import { appendOriginalPdfs } from "./pdf-attachments.js";
+import { makeGuideHtml } from "./guide-html.js";
 const DB = "brummie-offline-v1";
 let connection;
 let sessionData;
@@ -80,6 +84,21 @@ function initial() {
     ],
   };
 }
+function prepareWorkspace(data) {
+  if (data.documentPresetsVersion !== 1) {
+    for (const preset of documentPresets) {
+      const recordId = "preset-" + preset.id;
+      if (!data.records.some((r) => r.id === recordId))
+        data.records.push({
+          id: recordId,
+          kind: "template",
+          name: preset.name,
+          content: structuredClone(preset.content),
+        });
+    }
+    data.documentPresetsVersion = 1;
+  }
+}
 async function database() {
   if (!connection)
     connection = new Promise((resolve) => {
@@ -101,6 +120,7 @@ async function transaction(fn) {
     storageUnavailable = true;
     const data = structuredClone(sessionData || initial());
     applyReferencePack(data, window.__BRUMMIE_REFERENCE_PACK__);
+    prepareWorkspace(data);
     const result = fn(data);
     data.revision++;
     sessionData = data;
@@ -115,6 +135,7 @@ async function transaction(fn) {
       try {
         const data = req.result || initial();
         applyReferencePack(data, window.__BRUMMIE_REFERENCE_PACK__);
+        prepareWorkspace(data);
         result = fn(data);
         data.revision++;
         store.put(data, "data");
@@ -163,19 +184,26 @@ export async function localApi(url, method = "GET", body) {
       return { ok: true };
     }
     if (url === "/documents" && method === "POST") {
+      const validated = validateDoc(body);
       const d = {
-        ...validateDoc(body),
+        ...validated,
+        items: validated.items || [],
+        client: body.client || (body.type === "guia" ? "Hóspedes" : ""),
         id: id(),
         number: Math.max(0, ...data.documents.map((d) => d.number)) + 1,
-        company: structuredClone(data.company),
+        company: structuredClone(
+          documentCompany(data.company, body.brand || "lines"),
+        ),
         created: new Date().toISOString(),
       };
       data.documents.unshift(d);
-      const known = data.records.some(
-        (r) =>
-          r.kind === "client" &&
-          r.name.toLowerCase() === d.client.toLowerCase(),
-      );
+      const known =
+        d.confidential ||
+        data.records.some(
+          (r) =>
+            r.kind === "client" &&
+            r.name.toLowerCase() === d.client.toLowerCase(),
+        );
       if (!known)
         data.records.push({
           id: id(),
@@ -202,12 +230,27 @@ export async function documentPdf(docId) {
   );
   if (!doc) throw new Error("Documento não encontrado.");
   if (doc.pdf) return doc.pdf;
-  const blob = await makePdf(doc);
+  const attachments = await transaction((data) =>
+    (doc.attachments || []).map((a) => ({
+      ...a,
+      source: data.records.find((r) => r.id === a.id && r.kind === "archive")
+        ?.source,
+    })),
+  );
+  const blob = await appendOriginalPdfs(await makePdf(doc), attachments);
   await transaction((data) => {
     const current = data.documents.find((d) => d.id === docId);
     if (current?.status === doc.status) current.pdf = blob;
   });
   return blob;
+}
+export async function documentGuideHtml(docId) {
+  const d = await transaction((data) =>
+    data.documents.find((d) => d.id === docId),
+  );
+  if (d?.type !== "guia")
+    throw new Error("Este documento não é um guia do imóvel.");
+  return makeGuideHtml(d);
 }
 export function download(blob, name) {
   if (window.BrummieAndroid?.saveFile) {
@@ -303,6 +346,15 @@ function decode(value) {
       Object.entries(value).map(([k, v]) => [k, decode(v)]),
     );
   return value;
+}
+export async function importReferenceLibrary(file) {
+  if (file.size > 32 * 1024 * 1024)
+    throw new Error("Cada biblioteca pode ter até 32 MB.");
+  const pack = JSON.parse(await file.text());
+  return transaction((data) => {
+    applyReferencePack(data, pack);
+    return { ok: true };
+  });
 }
 export async function exportBackup() {
   const data = await transaction((d) => structuredClone(d));

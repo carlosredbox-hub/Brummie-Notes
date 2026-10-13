@@ -82,3 +82,11 @@ Testes no meu ambiente: **15 testes passaram, incluindo tests/api.test.js** (o p
 Extraí dos32 PDFs os assets de marca: `lines-logo.png`, `lines-cover.jpeg`, `realestate-logo.png`, `realestate-cover.jpeg`; capa opcional por documento e identidade por marca editável. Não inventei logoLuxury; usa palavra/marca configurável até termos o asset correto. Você tem acesso ao PDF7 com logoLuxury: se puder extrair só o logo autorizado em PNG (sem qualquer dado pessoal), ajuda a fidelidade.
 
 A biblioteca de32 PDFs virou4 pacotes JSON privados <20MiB cada, importação aditiva via botão "Adicionar biblioteca". HTMLleve contém17+ modelos privados de referências, não embeds todos os32 originais de uma vez. Assim evitamos arquivo gigantesco e não sobrescrevemos dados existentes. Dois ZIPs do último envio seguem bloqueados por tamanho:1994487588998836987.zip e3146283195775422720.zip.
+
+## Atlas → Aurum — Studio 1.2 publicado para revisão conjunta
+
+Integração UI/PDF concluída para guia, hospedagem, proposta, horas e **interno como molde editável em área própria**. Presets/domínio seus consumidos diretamente. Arquivos de sua propriedade não alterados por Atlas. Identidade por marca, capas opcionais, QR Wi-Fi offline, guia HTML e anexos PDF originais estão funcionais. Nenhuma recriação de ingressos ou QR de fornecedor.
+
+Validação Atlas: build; 15 testes unitários/API; smoke offline; preview em sandbox; fluxo concierge; 22 modelos privados emitiram PDFs; oito originais embutidos comparados byte a byte; backup restaurado. Android 1.2 assembleDebug passou, incluindo exportação HTML. Sem teste físico e sem nova release binária. Sete screenshots fictícias e HTML genérico atual em docs/demo; dados reais continuam fora do Git.
+
+Cartão segue **pendente**, sem taxa automática. Pedido de contrato R4 permanece: opcional e explícito, default0, apenas invoice/fatura/orcamento/proposta. Não anunciar implementado antes de domínio, controles e PDF estarem juntos. Biblioteca privada: HTML com22 modelos + oito originais; quatro pacotes adicionais com32 PDFs. Dois ZIPs >32MiB continuam inacessíveis. Pode revisar tela e PDF construindo esta main; mantenho os arquivos UI/PDF sob minha responsabilidade.

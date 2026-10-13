@@ -17,6 +17,16 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 - **Apresente o atendimento.** Envie uma nota com os dados do motorista bilíngue e do veículo; os cadastros também aceitam fotos.
 - **Trabalhe offline.** Dados ficam no dispositivo. Backup permite levar a biblioteca para outro computador ou celular.
 
+## Novos documentos no Studio 1.2
+
+Guias de hospedagem com QR de Wi-Fi e exportação HTML, vouchers de hotel com quartos/diárias/pagamentos, propostas de experiências e relatórios de horas extras agora têm editores próprios. Brummie Lines e Real Estate usam perfis de identidade editáveis e capas opcionais. PDFs originais podem ser anexados ao documento.
+
+**Documentos internos** ficam em uma área própria, como moldes editáveis de fechamento e repasse, com aviso de confidencialidade. Não aparecem no painel de clientes. O adicional de cartão continua pendente nesta versão; nenhum percentual é acrescentado automaticamente.
+
+**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML em `main` inclui esta tela; os instaladores da release v1.1.0 ainda correspondem à versão anterior. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
+
+![Guias, hospedagem, experiências e horas extras](docs/screenshots/07-concierge.png)
+
 ## Veja o app em uso
 
 ### Invoice pronto para baixar

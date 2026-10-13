@@ -1,3 +1,5 @@
+import { addDocumentCover } from "./pdf-cover.js";
+import { makeConciergePdf } from "./concierge-pdf.js";
 import { jsPDF } from "jspdf";
 import logo from "./assets/icon.png";
 const names = {
@@ -9,10 +11,13 @@ const names = {
   recibo: "Recibo",
 };
 export async function makePdf(d) {
+  if (["guia", "hospedagem", "proposta"].includes(d.type))
+    return makeConciergePdf(d);
   const pdf = new jsPDF(),
     en = d.language === "en",
     c = d.company,
-    financial = !["nota", "voucher"].includes(d.type);
+    financial = !["nota", "voucher"].includes(d.type) && d.showPrices !== false;
+  await addDocumentCover(pdf, d);
   let y = 24;
   const col = /^#[0-9a-f]{6}$/i.test(c.color || "") ? c.color : "#0089cf";
   const money = (n) =>
@@ -48,10 +53,13 @@ export async function makePdf(d) {
       line(en ? "Photo unavailable" : "Foto indisponível", 9);
     }
   };
-  const img = new Image();
-  img.src = logo;
-  await img.decode();
-  pdf.addImage(img, "PNG", 158, 17, 32, 14);
+  const logoSource = c.logo || (!c.brand || c.brand === "lines" ? logo : "");
+  if (logoSource) {
+    const img = new Image();
+    img.src = logoSource;
+    await img.decode();
+    pdf.addImage(img, "PNG", 158, 17, 32, 14);
+  }
   line(c.name, 23, col);
   line(
     en
@@ -91,6 +99,10 @@ export async function makePdf(d) {
         `${money(i.price)} x ${i.quantity} + ${money(i.extra)} = ${money(i.total)}`,
       );
     y += 4;
+  }
+  if (financial && Object.keys(d.groups || {}).length) {
+    for (const [group, total] of Object.entries(d.groups))
+      line(`${group}: ${money(total)}`, 11, col);
   }
   if (financial) {
     line(`${en ? "Discount" : "Desconto"}: ${money(d.discount)}`);

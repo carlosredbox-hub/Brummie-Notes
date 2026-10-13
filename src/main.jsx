@@ -1,3 +1,10 @@
+import {
+  ConciergeForm,
+  ConciergePaper,
+  DocumentCoverPreview,
+} from "./concierge.jsx";
+import { brandProfiles, conciergeTypes } from "./document-branding.js";
+import { types as domainTypes } from "../domain.js";
 import { reuseDocument } from "./reuse-document.js";
 import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -34,21 +41,16 @@ import logo from "./assets/icon.png";
 import {
   localApi,
   documentPdf,
+  documentGuideHtml,
   download,
   importArchive,
   originalPdf,
   exportBackup,
   restoreBackup,
+  importReferenceLibrary,
 } from "./offline-store.js";
 import { readPdf, suggestions } from "./pdf-import.js";
-const TYPES = {
-    invoice: "Invoice",
-    fatura: "Fatura",
-    voucher: "Voucher de confirmação",
-    nota: "Nota de atendimento",
-    orcamento: "Orçamento",
-    recibo: "Recibo",
-  },
+const TYPES = domainTypes,
   NAV = [
     ["dashboard", "Visão geral", LayoutDashboard],
     ["documents", "Documentos", FileText],
@@ -78,7 +80,7 @@ function Field({ label, children, ...props }) {
     </label>
   );
 }
-function Photo({ value, onChange }) {
+function Photo({ value, onChange, "aria-label": label }) {
   return (
     <label className="upload">
       {value ? <img src={value} /> : <Car size={24} />}
@@ -87,6 +89,7 @@ function Photo({ value, onChange }) {
         <small>JPG ou PNG • até 2 MB</small>
       </span>
       <input
+        aria-label={label || "Adicionar foto"}
         type="file"
         accept="image/png,image/jpeg"
         onChange={(e) => {
@@ -211,7 +214,12 @@ function App() {
         </button>
       </div>
     );
-  const docs = state.documents,
+  const allDocs = state.documents,
+    docs = allDocs.filter((d) =>
+      page === "internal"
+        ? d.confidential || d.type === "interno"
+        : !d.confidential && d.type !== "interno",
+    ),
     records = state.records;
   const matches = (d) =>
     (filter === "Todos" || d.type === filter) &&
@@ -244,6 +252,8 @@ function App() {
     driver: "Motoristas",
     vehicle: "Frota",
     settings: "Configurações",
+    concierge: "Estúdio de documentos",
+    internal: "Documentos internos",
   };
   const table = (
     <div className="table-scroll">
@@ -281,12 +291,19 @@ function App() {
                 <td>
                   {d.client}
                   <small>
-                    {d.items.length} serviço{d.items.length > 1 ? "s" : ""}
+                    {d.type === "guia"
+                      ? "Guia do imóvel"
+                      : d.type === "hospedagem"
+                        ? "Hospedagem"
+                        : d.type === "horas"
+                          ? "Jornada"
+                          : `${(d.items || []).length} serviço(s)`}
                   </small>
                 </td>
                 <td>{date(d.date)}</td>
                 <td className="money">
-                  {["nota", "voucher"].includes(d.type)
+                  {["nota", "voucher", "guia"].includes(d.type) ||
+                  d.showPrices === false
                     ? "—"
                     : amount(d.total, d.currency)}
                 </td>
@@ -365,6 +382,28 @@ function App() {
               )}
             </button>
           ))}
+          <button
+            className={page === "concierge" ? "active" : ""}
+            onClick={() => {
+              setPage("concierge");
+              setMobile(false);
+            }}
+          >
+            <FileText size={19} />
+            Guias & experiências
+          </button>
+          <button
+            className={page === "internal" ? "active" : ""}
+            onClick={() => {
+              setPage("internal");
+              setFilter("Todos");
+              setSearch("");
+              setMobile(false);
+            }}
+          >
+            <ShieldCheck size={19} />
+            Documentos internos
+          </button>
           <span className="nav-label">CADASTROS</span>
           <button
             className={page === "templates" ? "active" : ""}
@@ -501,7 +540,7 @@ function App() {
                       : "Cadastros reutilizáveis para agilizar cada atendimento."}
               </p>
             </div>
-            {page !== "settings" && (
+            {page !== "settings" && page !== "internal" && (
               <button
                 className="primary"
                 onClick={() =>
@@ -564,12 +603,35 @@ function App() {
                 }}
               />
             </label>
+            <label className="secondary library-import-label">
+              Adicionar biblioteca
+              <input
+                type="file"
+                accept="application/json,.json"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  try {
+                    await importReferenceLibrary(file);
+                    await refresh();
+                    notify(
+                      "Biblioteca adicionada sem substituir seus documentos.",
+                    );
+                  } catch (e) {
+                    notify(e.message);
+                  }
+                }}
+              />
+            </label>
             <small>Sem login. Sem servidor. Seus arquivos ficam aqui.</small>
           </div>
           {page === "templates" && (
             <div className="record-grid">
               {records
-                .filter((r) => r.kind === "template")
+                .filter(
+                  (r) => r.kind === "template" && r.content.type !== "interno",
+                )
                 .map((r) => (
                   <article className="panel template-card" key={r.id}>
                     <div className="tile green">
@@ -577,7 +639,7 @@ function App() {
                     </div>
                     <h3>{r.name}</h3>
                     <p>
-                      {TYPES[r.content.type]} • {r.content.items.length}{" "}
+                      {TYPES[r.content.type]} • {(r.content.items || []).length}{" "}
                       serviço(s)
                     </p>
                     <small>{r.content.client || "Cliente a definir"}</small>
@@ -626,7 +688,7 @@ function App() {
                 </div>
               </div>
               {records
-                .filter((r) => r.kind === "archive")
+                .filter((r) => r.kind === "archive" && !r.confidential)
                 .map((r) => (
                   <div className="archive-row" key={r.id}>
                     <FileText size={24} />
@@ -690,6 +752,46 @@ function App() {
             </section>
           )}
 
+          {page === "concierge" && (
+            <section className="concierge-gallery">
+              <div>
+                <span className="eyebrow">
+                  BRUMMIE LINES · REAL ESTATE · LUXURY ESTATE
+                </span>
+                <h2>Do conteúdo ao documento, sem redesenhar.</h2>
+                <p>
+                  Escolha um formato, preencha as informações e salve como
+                  modelo. O app cuida da composição e dos cálculos.
+                </p>
+              </div>
+              <div className="record-grid">
+                {Object.entries(conciergeTypes)
+                  .filter(([type]) => type !== "interno")
+                  .map(([type, label]) => (
+                    <article key={type} className="panel template-card">
+                      <FileText size={26} />
+                      <h3>{label}</h3>
+                      <p>
+                        {
+                          {
+                            guia: "Seções do imóvel, fotos, QR Wi-Fi e versão para celular.",
+                            hospedagem:
+                              "Quartos, diárias, hóspedes, pagamentos e saldo.",
+                            proposta:
+                              "Experiências selecionadas, programação, valores e anexos.",
+                            horas:
+                              "Jornadas, tarifa, cálculo automático e exceção manual.",
+                          }[type]
+                        }
+                      </p>
+                      <button className="primary" onClick={() => create(type)}>
+                        Criar {label}
+                      </button>
+                    </article>
+                  ))}
+              </div>
+            </section>
+          )}
           {page === "dashboard" && (
             <>
               <div className="stats">
@@ -774,6 +876,47 @@ function App() {
                 </div>
               </section>
             </>
+          )}
+          {page === "internal" && (
+            <section className="panel">
+              <div className="panel-head">
+                <div>
+                  <h2>Interno — não enviar ao cliente</h2>
+                  <p>
+                    Fechamentos e repasses editáveis. Não entram nos valores a
+                    receber dos documentos de cliente.
+                  </p>
+                </div>
+                <button className="primary" onClick={() => create("interno")}>
+                  Novo demonstrativo interno
+                </button>
+              </div>
+              {table}
+              <div className="record-grid">
+                {records
+                  .filter(
+                    (r) =>
+                      r.kind === "template" && r.content.type === "interno",
+                  )
+                  .map((r) => (
+                    <article key={r.id} className="template-card panel">
+                      <h3>{r.name}</h3>
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          setModal({
+                            kind: "document",
+                            type: "interno",
+                            doc: r.content,
+                          })
+                        }
+                      >
+                        Usar modelo interno
+                      </button>
+                    </article>
+                  ))}
+              </div>
+            </section>
           )}
           {["dashboard", "documents"].includes(page) && (
             <section className="panel">
@@ -925,8 +1068,10 @@ function App() {
           onClose={() => setModal(null)}
           onSave={async (file, text, review) => {
             await importArchive(file, text, review);
-            await done();
+            await refresh();
+            setModal(null);
             setPage("templates");
+            notify("PDF e modelo guardados localmente.");
           }}
         />
       )}
@@ -940,24 +1085,27 @@ function App() {
           }}
         />
       )}
-      {modal?.kind === "document" && (
-        <DocForm
-          initial={modal.doc}
-          type={modal.type}
-          state={state}
-          onClose={() => setModal(null)}
-          onSave={async (d) => {
-            const saved = await api("/documents", "POST", d);
-            await refresh();
-            const full = await api("/state");
-            setModal({
-              kind: "preview",
-              doc: full.documents.find((x) => x.id === saved.id),
-            });
-            notify("Documento criado. Seu PDF está pronto.");
-          }}
-        />
-      )}
+      {modal?.kind === "document" &&
+        React.createElement(
+          conciergeTypes[modal.type] ? ConciergeForm : DocForm,
+          {
+            ui: { Modal, Field, Photo, LocalForm },
+            initial: modal.doc,
+            type: modal.type,
+            state,
+            onClose: () => setModal(null),
+            onSave: async (d) => {
+              const saved = await api("/documents", "POST", d);
+              await refresh();
+              const full = await api("/state");
+              setModal({
+                kind: "preview",
+                doc: full.documents.find((x) => x.id === saved.id),
+              });
+              notify("Documento criado. Seu PDF está pronto.");
+            },
+          },
+        )}
       {modal?.kind === "preview" && (
         <Preview
           d={modal.doc}
@@ -1043,6 +1191,72 @@ function SettingsForm({ company, onSave }) {
         {f("website", "Website")}
         {f("address", "Endereço")}
         {f("color", "Cor dos documentos", "color")}
+      </div>
+      <div className="form-section">
+        <h3>Identidade por marca</h3>
+        <p>
+          Logos e fotos padrão foram extraídos dos PDFs enviados. Troque aqui
+          para personalizar os próximos documentos.
+        </p>
+        {Object.entries(brandProfiles).map(([id, brand]) => (
+          <details className="concierge-block" key={id}>
+            <summary>{brand.name}</summary>
+            <div className="form-grid">
+              {[
+                ["Nome da marca", "name", "text"],
+                ["Cor da marca", "color", "color"],
+                ["Website da marca", "website", "text"],
+              ].map(([label, key, type]) => (
+                <Field
+                  key={key}
+                  label={`${label} — ${brand.name}`}
+                  value={c.brandProfiles?.[id]?.[key] || brand[key] || ""}
+                  type={type}
+                  onChange={(e) =>
+                    setC({
+                      ...c,
+                      brandProfiles: {
+                        ...c.brandProfiles,
+                        [id]: {
+                          ...c.brandProfiles?.[id],
+                          [key]: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                />
+              ))}
+            </div>
+            <Field label={`Logo — ${brand.name}`}>
+              <Photo
+                value={c.brandProfiles?.[id]?.logo}
+                onChange={(logo) =>
+                  setC({
+                    ...c,
+                    brandProfiles: {
+                      ...c.brandProfiles,
+                      [id]: { ...c.brandProfiles?.[id], logo },
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field label={`Foto de capa — ${brand.name}`}>
+              <Photo
+                value={c.brandProfiles?.[id]?.coverImage}
+                onChange={(coverImage) =>
+                  setC({
+                    ...c,
+                    brandProfiles: {
+                      ...c.brandProfiles,
+                      [id]: { ...c.brandProfiles?.[id], coverImage },
+                    },
+                  })
+                }
+              />
+            </Field>
+          </details>
+        ))}
       </div>
       <Field label="Dados de pagamento">
         <textarea
@@ -1160,6 +1374,8 @@ function DocForm({ initial, type, state, onClose, onSave }) {
         ? reuseDocument(initial, today())
         : {
             type,
+            brand: "lines",
+            showPrices: true,
             language: "pt",
             currency: "BRL",
             client: "",
@@ -1238,9 +1454,23 @@ function DocForm({ initial, type, state, onClose, onSave }) {
                     })
                   }
                 >
-                  {Object.entries(TYPES).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
+                  {Object.entries(TYPES)
+                    .filter(([v]) => !conciergeTypes[v])
+                    .map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+              <Field label="Marca do documento">
+                <select
+                  value={d.brand || "lines"}
+                  onChange={(e) => set("brand", e.target.value)}
+                >
+                  {Object.entries(brandProfiles).map(([id, b]) => (
+                    <option key={id} value={id}>
+                      {b.name}
                     </option>
                   ))}
                 </select>
@@ -1455,6 +1685,44 @@ function DocForm({ initial, type, state, onClose, onSave }) {
               Adicionar serviço
             </button>
           </div>
+          <label className="attachment-choice">
+            <input
+              type="checkbox"
+              checked={d.showPrices !== false}
+              onChange={(e) => set("showPrices", e.target.checked)}
+            />
+            Mostrar valores na versão do cliente
+          </label>
+          <div className="form-section">
+            <h3>Capa do documento</h3>
+            <label className="attachment-choice">
+              <input
+                type="checkbox"
+                checked={!!d.cover?.enabled}
+                onChange={(e) =>
+                  set("cover", { ...d.cover, enabled: e.target.checked })
+                }
+              />
+              Incluir capa com logo, foto e título
+            </label>
+            {d.cover?.enabled && (
+              <div className="form-grid">
+                {[
+                  ["Título da capa", "title"],
+                  ["Cidade / trecho na capa", "place"],
+                ].map(([label, key]) => (
+                  <Field
+                    key={key}
+                    label={label}
+                    value={d.cover?.[key] || ""}
+                    onChange={(e) =>
+                      set("cover", { ...d.cover, [key]: e.target.value })
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
           <div className="form-section">
             <h3>
               <span>03</span> Motorista & veículo
@@ -1559,7 +1827,7 @@ function DocForm({ initial, type, state, onClose, onSave }) {
 function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
   const [modelName, setModelName] = useState(TYPES[d.type] + " • " + d.client);
   const en = d.language === "en",
-    financial = !["voucher", "nota"].includes(d.type),
+    financial = !["voucher", "nota"].includes(d.type) && d.showPrices !== false,
     c = d.company;
   return (
     <Modal title="Seu documento está pronto" onClose={onClose} wide>
@@ -1612,140 +1880,161 @@ function Preview({ d, onClose, onCopy, onStatus, onTemplate }) {
           Baixar PDF
         </button>
       </div>
+      {d.type === "guia" && (
+        <button
+          className="secondary guide-download"
+          onClick={async () => {
+            try {
+              download(await documentGuideHtml(d.id), `Guia-${d.number}.html`);
+            } catch (e) {
+              alert(e.message);
+            }
+          }}
+        >
+          Baixar guia para celular (HTML)
+        </button>
+      )}
       <div className="paper-wrap">
-        <article className="paper" style={{ "--doc-color": c.color }}>
-          <header>
-            <img className="paper-logo" src={logo} alt="Brummie Lines" />
-            <div className="paper-brand">
-              {c.name}
-              <small>PRIVATE TRANSPORT & EXPERIENCES</small>
-            </div>
-            <div>
-              <h2>
-                {en
-                  ? {
-                      invoice: "Invoice",
-                      fatura: "Statement",
-                      voucher: "Booking confirmation",
-                      nota: "Service information",
-                      orcamento: "Quotation",
-                      recibo: "Payment receipt",
-                    }[d.type]
-                  : TYPES[d.type]}
-              </h2>
-              <span>BRM-{String(d.number).padStart(5, "0")}</span>
-            </div>
-          </header>
-          <div className="paper-client">
-            <div>
-              <small>{en ? "PREPARED FOR" : "PREPARADO PARA"}</small>
-              <h2>{d.client}</h2>
-              <p>{d.email}</p>
-            </div>
-            <div>
-              <small>{en ? "ISSUED" : "EMISSÃO"}</small>
-              <p>{date(d.date)}</p>
-              <small>
-                {en ? "DUE / VALID UNTIL" : "VENCIMENTO / VALIDADE"}
-              </small>
-              <p>{date(d.due)}</p>
-            </div>
-          </div>
-          {d.status === "Cancelado" && (
-            <div className="error">{en ? "CANCELLED" : "CANCELADO"}</div>
-          )}
-          {d.items.map((i, n) => (
-            <div className="paper-service" key={n}>
-              <div className="service-index">
-                {String(n + 1).padStart(2, "0")}
+        <DocumentCoverPreview d={d} />
+        {conciergeTypes[d.type] ? (
+          <ConciergePaper d={d} />
+        ) : (
+          <article className="paper" style={{ "--doc-color": c.color }}>
+            <header>
+              {(c.logo || !d.brand || d.brand === "lines") && (
+                <img className="paper-logo" src={c.logo || logo} alt={c.name} />
+              )}
+              <div className="paper-brand">
+                {c.name}
+                <small>PRIVATE TRANSPORT & EXPERIENCES</small>
               </div>
               <div>
-                <h3>{i.description}</h3>
-                <p>
-                  {date(i.date)} {i.time} • {i.origin || "—"} →{" "}
-                  {i.destination || "—"}
-                </p>
-                <small>
-                  {i.pax} {en ? "passengers" : "passageiros"} • {i.quantity}{" "}
-                  {i.unit}
-                  {i.flight && " • " + (en ? "Flight " : "Voo ") + i.flight}
-                </small>
-                {financial && (
-                  <small>
-                    {amount(i.price, d.currency)} × {i.quantity} +{" "}
-                    {amount(i.extra, d.currency)}
-                  </small>
-                )}
+                <h2>
+                  {en
+                    ? {
+                        invoice: "Invoice",
+                        fatura: "Statement",
+                        voucher: "Booking confirmation",
+                        nota: "Service information",
+                        orcamento: "Quotation",
+                        recibo: "Payment receipt",
+                      }[d.type]
+                    : TYPES[d.type]}
+                </h2>
+                <span>BRM-{String(d.number).padStart(5, "0")}</span>
               </div>
-              {financial && <strong>{amount(i.total, d.currency)}</strong>}
+            </header>
+            <div className="paper-client">
+              <div>
+                <small>{en ? "PREPARED FOR" : "PREPARADO PARA"}</small>
+                <h2>{d.client}</h2>
+                <p>{d.email}</p>
+              </div>
+              <div>
+                <small>{en ? "ISSUED" : "EMISSÃO"}</small>
+                <p>{date(d.date)}</p>
+                <small>
+                  {en ? "DUE / VALID UNTIL" : "VENCIMENTO / VALIDADE"}
+                </small>
+                <p>{date(d.due)}</p>
+              </div>
             </div>
-          ))}
-          {financial && (
-            <div className="paper-totals">
-              <p>
-                {en ? "Subtotal" : "Subtotal"}{" "}
-                <span>{amount(d.subtotal, d.currency)}</span>
-              </p>
-              <p>
-                {en ? "Discount" : "Desconto"}{" "}
-                <span>{amount(d.discount, d.currency)}</span>
-              </p>
-              <h2>
-                {en ? "Total" : "Valor total"}{" "}
-                <span>{amount(d.total, d.currency)}</span>
-              </h2>
-            </div>
-          )}
-          {(d.driver || d.vehicle) && (
-            <div className="paper-people">
-              {[d.driver, d.vehicle].filter(Boolean).map((r, i) => (
-                <div key={i}>
-                  {r.photo && <img src={r.photo} />}
-                  <small>
-                    {r.kind === "driver"
-                      ? en
-                        ? "YOUR CHAUFFEUR"
-                        : "SEU MOTORISTA"
-                      : en
-                        ? "YOUR VEHICLE"
-                        : "SEU VEÍCULO"}
-                  </small>
-                  <h3>{r.name}</h3>
-                  <p>{r.kind === "driver" ? r.languages : r.category}</p>
-                  <strong>{r.plate || r.phone}</strong>
+            {d.status === "Cancelado" && (
+              <div className="error">{en ? "CANCELLED" : "CANCELADO"}</div>
+            )}
+            {d.items.map((i, n) => (
+              <div className="paper-service" key={n}>
+                <div className="service-index">
+                  {String(n + 1).padStart(2, "0")}
                 </div>
-              ))}
-            </div>
-          )}
-          {d.notes && (
-            <div className="paper-note">
+                <div>
+                  <h3>{i.description}</h3>
+                  <p>
+                    {date(i.date)} {i.time} • {i.origin || "—"} →{" "}
+                    {i.destination || "—"}
+                  </p>
+                  <small>
+                    {i.pax} {en ? "passengers" : "passageiros"} • {i.quantity}{" "}
+                    {i.unit}
+                    {i.flight && " • " + (en ? "Flight " : "Voo ") + i.flight}
+                  </small>
+                  {financial && (
+                    <small>
+                      {amount(i.price, d.currency)} × {i.quantity} +{" "}
+                      {amount(i.extra, d.currency)}
+                    </small>
+                  )}
+                </div>
+                {financial && <strong>{amount(i.total, d.currency)}</strong>}
+              </div>
+            ))}
+            {financial && (
+              <div className="paper-totals">
+                <p>
+                  {en ? "Subtotal" : "Subtotal"}{" "}
+                  <span>{amount(d.subtotal, d.currency)}</span>
+                </p>
+                <p>
+                  {en ? "Discount" : "Desconto"}{" "}
+                  <span>{amount(d.discount, d.currency)}</span>
+                </p>
+                <h2>
+                  {en ? "Total" : "Valor total"}{" "}
+                  <span>{amount(d.total, d.currency)}</span>
+                </h2>
+              </div>
+            )}
+            {(d.driver || d.vehicle) && (
+              <div className="paper-people">
+                {[d.driver, d.vehicle].filter(Boolean).map((r, i) => (
+                  <div key={i}>
+                    {r.photo && <img src={r.photo} />}
+                    <small>
+                      {r.kind === "driver"
+                        ? en
+                          ? "YOUR CHAUFFEUR"
+                          : "SEU MOTORISTA"
+                        : en
+                          ? "YOUR VEHICLE"
+                          : "SEU VEÍCULO"}
+                    </small>
+                    <h3>{r.name}</h3>
+                    <p>{r.kind === "driver" ? r.languages : r.category}</p>
+                    <strong>{r.plate || r.phone}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+            {d.notes && (
+              <div className="paper-note">
+                <small>
+                  {en ? "SERVICE INFORMATION" : "INFORMAÇÕES DO ATENDIMENTO"}
+                </small>
+                <p>{d.notes}</p>
+              </div>
+            )}
+            {financial && c.payment && (
+              <div className="paper-note">
+                <small>{en ? "PAYMENT DETAILS" : "DADOS DE PAGAMENTO"}</small>
+                <p>{c.payment}</p>
+              </div>
+            )}
+            {c.terms && (
+              <div className="paper-note">
+                <small>{en ? "TERMS" : "CONDIÇÕES"}</small>
+                <p>{c.terms}</p>
+              </div>
+            )}
+            <footer>
+              {[c.address, c.phone, c.website].filter(Boolean).join(" • ")}
               <small>
-                {en ? "SERVICE INFORMATION" : "INFORMAÇÕES DO ATENDIMENTO"}
+                {en
+                  ? "Informational document. Not a tax invoice."
+                  : "Documento informativo. Não substitui nota fiscal."}
               </small>
-              <p>{d.notes}</p>
-            </div>
-          )}
-          {financial && c.payment && (
-            <div className="paper-note">
-              <small>{en ? "PAYMENT DETAILS" : "DADOS DE PAGAMENTO"}</small>
-              <p>{c.payment}</p>
-            </div>
-          )}
-          {c.terms && (
-            <div className="paper-note">
-              <small>{en ? "TERMS" : "CONDIÇÕES"}</small>
-              <p>{c.terms}</p>
-            </div>
-          )}
-          <footer>
-            {[c.address, c.phone, c.website].filter(Boolean).join(" • ")}
-            <small>
-              {en
-                ? "Informational document. Not a tax invoice."
-                : "Documento informativo. Não substitui nota fiscal."}
-            </small>
-          </footer>
-        </article>
+            </footer>
+          </article>
+        )}
       </div>
     </Modal>
   );
