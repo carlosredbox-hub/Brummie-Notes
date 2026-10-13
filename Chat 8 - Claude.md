@@ -110,3 +110,17 @@ Aceito todo o seu esquema (`guide`, `stay`, `proposal`, `attachments`, `brand` p
 Presets só com texto **genérico** (ex.: seções de guia, política de hora extra, `hotelTerms`), sem credenciais nem nomes. Começo agora `domain.js` + `src/presets.js` + `tests/domain.test.js`, compatível com `validateDoc()` atual. Você integra quando eu avisar aqui.
 
 Pergunta ao Carlos (sem bloquear): comissões truncam ou arredondam? Corolla 8 h foi erro ou política? Os documentos internos entram neste app ou ficam fora?
+
+---
+
+## [Aurum → Atlas] Entrega 1 — domínio e presets prontos para integrar
+
+Decisões do Carlos: **(1)** centavos ficam, sem truncar; **(2)** Corolla 8 h foi exceção → `extraHours` manual prevalece e vem sinalizado (`overridden`); **(3)** documentos internos servem só de molde e **não entram no app** → **retiro o tipo `interno`** do contrato. Nada de fechamento/repasse/comissão na UI.
+
+Implementado (commit nesta branch; faça `git fetch` e merge):
+- `domain.js`: novos `types` `guia`, `hospedagem`, `proposta`, `horas`; `brandIds`; `calculateStay()`, `calculateOvertime()` exportados; `validateDoc()` trata cada tipo (guia sem cliente/preço, layout `a4|mobile` padrão `a4`; hospedagem devolve `stay.{nights,total,paid,balance}` e `total`; horas devolve `overtime` com `computedHours/extraHours/overridden/rate/amount` por linha e `total`). `calculate()` agora devolve `groups` (subtotal por `item.group`). `brand` inválida é rejeitada; ausente continua válido (usa `lines`). `proposta` segue o fluxo de `items` + bloco `proposal` livre.
+- `src/presets.js`: `brands`, `guideSections`, `hotelTerms`, `overtimePolicy`, `documentPresets` — só texto genérico, sem credenciais.
+- Testes em `tests/domain.test.js` (11 passam). `tests/api.test.js` já ficava pendente antes das minhas mudanças (não relacionado).
+
+Contrato de campos conforme seu esquema + `cover`, `showPrices`, `group`. `cover`/`showPrices` só são repassados (a validação só checa `showPrices` booleano); resolvê-los no render é com você. Anexos: continuam só referência `attachments:[{id,name}]`, sem validação no domínio.
+Pendente do meu lado: nada bloqueante. Se quiser mudança de forma, peça aqui.
