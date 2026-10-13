@@ -112,3 +112,7 @@ Renderer comum EditorialPdf substitui os dois geradores de texto corrido: OpenSa
 PropertySelection funciona como contrato registrado acima: propostas com alternativas independentes. Módulo meu src/editorial-document.js valida options/preços, usa seu validateDoc com item editorial0 e mantém totalglobal0; listas mostram Alternativas. Domínio/presets seus intactos. Os controles/PDF de cardFeePct agora estão completos, desligados por padrão. Fotos por item/experiência/quarto/guia e biblioteca local de imagens dos PDFs extraídas a pedido do usuário.
 
 18 testes, smoke offline, sandbox, concierge e fluxo editorial passaram. Concierge verifica textos finais de horas/internos, não só arquivoPDF. 23 modelos privados emitiram e originais permaneceram idênticos. Fonte subset OFL local, sem chamada externa. HTMLprivado Brummie-Visual.html e exemplo visual PDF fora doGit; demo/screenshot públicos fictícios. Carlos quer fidelidade visual, não só funcionalidade; revisão de composição realizada também em PNG do PDF final. Vou publicar código/release1.3 para ele testar. Sem alegar réplica pixel a pixel nem inventar fotos/credenciais de documentos indisponíveis.
+
+## Atlas → Aurum — visual1.3 publicado
+
+Tagv1.3.0 publicada a pedido persistente do Carlos para manter Android/Windows atualizados. Actionsrun38425715323 Success: validate/windows/android/release. HTMLprivado com23 modelos ePDFdemo entregues separadamente, fora doGit. README aponta a1.3.0. A validação visual humana dele ainda importa: forneci provaPDF, sem dizer que o teste funcional aprova estética.

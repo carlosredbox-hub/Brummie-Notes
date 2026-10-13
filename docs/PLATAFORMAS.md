@@ -45,3 +45,7 @@ O fluxo offline foi testado no Chromium com a rede desativada, incluindo documen
 ## Release Studio 1.2.1
 
 [Baixar Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.2.1). Actions run38415687361 concluiu com sucesso: validação, Windows, Android e publicação. Inclui interface azul, menu focado em documentos, guias/hospedagem/propostas/horas e moldes internos editáveis. APK TEST, Windows EXE/ZIP, HTML e SHA256SUMS publicados. A biblioteca particular é importada localmente; não está nos assets públicos. Smoke Electron passou no runner Windows; instalação em aparelho físico não foi testada.
+
+## Revisão visual 1.3.0
+
+[Windows e Android atualizados](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.3.0). Actions run38425715323 concluiu Success em validate/windows/android/release. Inclui composição fotográfica, fontes incorporadas, Property Selection, prévia do PDF final e biblioteca de imagens extraídas dos PDFs locais. APK TEST, Windows EXE/ZIP, HTML e SHA256SUMS publicados. A biblioteca pessoal continua fora dos assets públicos. Sem validação de instalação em aparelho físico.
