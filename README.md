@@ -27,6 +27,8 @@ Antes de salvar, **Visualizar antes de finalizar** mostra as páginas do própri
 
 ![Edição visual opcional sobre a página do PDF](docs/screenshots/09-visual-editor.png)
 
+A [execução da release 1.4](https://github.com/carlosredbox-hub/Brummie-Notes/actions/runs/38444020828) passou em validação, Windows, Android e publicação. HTML da release conferido por SHA256; APK de teste e Windows sem assinatura de distribuição.
+
 ## Revisão visual no Studio 1.4
 
 Guias de hospedagem com QR de Wi-Fi e exportação HTML, vouchers de hotel com quartos/diárias/pagamentos, propostas de experiências e relatórios de horas extras agora têm editores próprios. Brummie Lines e Real Estate usam perfis de identidade editáveis e capas opcionais. PDFs originais podem ser anexados ao documento.
