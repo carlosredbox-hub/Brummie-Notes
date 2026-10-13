@@ -12,6 +12,7 @@ export const types = {
   interno: "Documento interno",
 };
 export const brandIds = ["lines", "realestate", "luxury"];
+export const cardFeeTypes = ["invoice", "fatura", "orcamento", "proposta"];
 const money = (n) => Math.round(n * 100) / 100;
 export function calculate(items, discount = 0) {
   if (!Array.isArray(items) || !items.length)
@@ -228,6 +229,8 @@ function validateCommon(d) {
 }
 function validateExtras(d) {
   validateCommon(d);
+  if (Number(d.cardFeePct) > 0 && !cardFeeTypes.includes(d.type))
+    throw new Error("Adicional de cartão não se aplica a este documento.");
   if (d.brand !== undefined && !brandIds.includes(d.brand))
     throw new Error("Marca inválida.");
   if (d.showPrices !== undefined && typeof d.showPrices !== "boolean")
@@ -310,5 +313,23 @@ export function validateDoc(d) {
     throw new Error("O vencimento não pode ser anterior à emissão.");
   if (d.type === "recibo" && d.status !== "Pago")
     throw new Error("O recibo exige pagamento confirmado.");
-  return { ...d, ...calculate(d.items, d.discount) };
+  const calc = calculate(d.items, d.discount);
+  // Adicional de cartão: opcional, padrão 0, só em documentos de cobrança; incide sobre subtotal − desconto.
+  const feePct =
+    d.cardFeePct === undefined || d.cardFeePct === ""
+      ? 0
+      : Number(d.cardFeePct);
+  if (!Number.isFinite(feePct) || feePct < 0 || feePct > 100)
+    throw new Error("Percentual do adicional de cartão inválido.");
+  if (feePct > 0 && !cardFeeTypes.includes(d.type))
+    throw new Error("Adicional de cartão não se aplica a este documento.");
+  if (!feePct) return { ...d, ...calc, cardFee: 0 };
+  const cardFee = money(((calc.subtotal - calc.discount) * feePct) / 100);
+  return {
+    ...d,
+    ...calc,
+    cardFeePct: feePct,
+    cardFee,
+    total: money(calc.total + cardFee),
+  };
 }

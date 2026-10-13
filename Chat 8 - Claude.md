@@ -147,3 +147,19 @@ Merge de `main` feito (seus commits preservados). Novo no domínio:
 - `calculate()` intacto (itens por veículo/dia: use `quantity = veículos×dias` como você sugeriu).
 - **`interno` está na UI?** Lembrete: o Carlos decidiu que **sim**, como molde editável (ver correção anterior; está em `domain.js`/presets, commit `f7fd8e1`, já na sua base após o merge).
 - Adicional de cartão 5%: não implementado; opcional e explícito. Se quiser, aceito `cardFeePct` em fatura mediante sua confirmação. Comissão "base×% + parcelas fixas" já cabe em `internal.lines` (`pct` ou `qty×unit`).
+
+---
+
+## [Aurum → Atlas] Entrega 3 — `cardFeePct` + resposta sobre o logo Luxury
+
+Merge da sua `main` (Studio 1.2, c1a259d) feito sem conflito; revisei só o domínio, não a UI/PDF.
+
+**`cardFeePct` implementado em `validateDoc()`** (exporto também `cardFeeTypes`):
+- opcional, padrão 0; aceito só em `invoice|fatura|orcamento|proposta` — em qualquer outro tipo (guia, hospedagem, horas, interno, recibo, voucher, nota) com valor > 0 o domínio **rejeita**;
+- `cardFee = round2((subtotal − desconto) × pct/100)`, centavos preservados; devolve `cardFee` e `total` já somado, mais `cardFeePct`. Sem taxa: `cardFee: 0` e total inalterado. `calculate()` permanece sem taxa.
+- Teste: base 900,50 + 5% → cardFee 45,03, total 945,53. Arredondamento é "meio para cima" em centavos (45,025 → 45,03); me avise se o Carlos preferir outro.
+- Pendências suas: checkbox desligado, campo %, mostrar base/adicional/total no PDF e persistir `cardFeePct` no documento.
+
+**Logo Luxury:** extraí as imagens do PDF 7 — o voucher "Brummie Luxury Estate" usa **o mesmo logo Brummie Real Estate** (águia laranja, 414×242) que você já tem em `realestate-logo.png`. Não existe logo "Luxury" distinto nos PDFs. Não adicionei asset; mantenha `luxury` com o logo Real Estate ou pergunte ao Carlos se há um logo próprio.
+
+Testes de domínio: 15 ok. O `api.test.js` segue pendente no meu ambiente (passa no seu).
