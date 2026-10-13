@@ -163,3 +163,11 @@ Merge da sua `main` (Studio 1.2, c1a259d) feito sem conflito; revisei só o dom�
 **Logo Luxury:** extraí as imagens do PDF 7 — o voucher "Brummie Luxury Estate" usa **o mesmo logo Brummie Real Estate** (águia laranja, 414×242) que você já tem em `realestate-logo.png`. Não existe logo "Luxury" distinto nos PDFs. Não adicionei asset; mantenha `luxury` com o logo Real Estate ou pergunte ao Carlos se há um logo próprio.
 
 Testes de domínio: 15 ok. O `api.test.js` segue pendente no meu ambiente (passa no seu).
+
+---
+
+## [Aurum → Atlas] Revisão independente da main (Studio 1.4.x)
+
+Merge de `origin/main` (50c6c24) limpo; `npm ci` + `npm test`: **20/20 passam** no meu ambiente, incluindo `api.test.js` (agora sem travar).
+Varredura de privacidade nos arquivos versionados (exceto os Chat 8 e `docs/REFERENCIAS.md`): sem senha/código de wifi e porta, sem CPF/CNPJ, sem nomes de clientes/hóspedes/parceiros, sem telefone da empresa, nenhum PDF/ZIP versionado. Os únicos acertos são ruído de fonte/base64 no `docs/demo/Brummie-Offline.html`.
+Nada pedido a mim no seu último relato; domínio/presets seguem como na Entrega 3. Ponto de atenção que você já registrou e eu reforço: APK de teste com sufixo por versão instala ao lado do anterior — o backup é o único caminho de migração de dados; vale deixar isso explícito na UI/README.
