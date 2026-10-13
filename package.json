@@ -1,6 +1,6 @@
 {
   "name": "brummie-documents",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -35,6 +35,6 @@
     "vite": "^7.1.0"
   },
   "main": "desktop/main.cjs",
-  "description": "Documentos e opera\u00e7\u00f5es para transporte executivo",
+  "description": "Documentos e operações para transporte executivo",
   "author": "Brummie"
 }

@@ -34,6 +34,7 @@ try {
   await page
     .getByText("Seus documentos anteriores são o ponto de partida do próximo.")
     .waitFor();
+  await page.getByRole("button", { name: "Configurações", exact: true }).click();
   await page.getByRole("button", { name: "Motoristas", exact: true }).click();
   await page
     .getByRole("button", { name: "Novo cadastro", exact: true })
@@ -46,6 +47,7 @@ try {
   await page
     .getByRole("button", { name: "Salvar cadastro", exact: true })
     .click();
+  await page.getByRole("button", { name: "Configurações", exact: true }).click();
   await page.getByRole("button", { name: "Frota", exact: true }).click();
   await page
     .getByRole("button", { name: "Novo cadastro", exact: true })

@@ -404,7 +404,7 @@ function App() {
             <ShieldCheck size={19} />
             Documentos internos
           </button>
-          <span className="nav-label">CADASTROS</span>
+          <span className="nav-label">MODELOS E REFERÊNCIAS</span>
           <button
             className={page === "templates" ? "active" : ""}
             onClick={() => {
@@ -425,19 +425,6 @@ function App() {
             <FileText size={19} />
             Biblioteca de PDFs
           </button>
-          {NAV.slice(2, 5).map(([k, l, I]) => (
-            <button
-              key={k}
-              className={page === k ? "active" : ""}
-              onClick={() => {
-                setPage(k);
-                setMobile(false);
-              }}
-            >
-              <I size={19} />
-              {l}
-            </button>
-          ))}
           <span className="nav-label">ESPAÇO DE TRABALHO</span>
           <button
             className={page === "settings" ? "active" : ""}
@@ -1038,6 +1025,18 @@ function App() {
             </div>
           )}
           {page === "settings" && (
+            <>
+              <section className="settings-records">
+                <h3>Informações reutilizáveis nos documentos</h3>
+                <p>Clientes, motoristas e veículos para preencher suas notas rapidamente.</p>
+                <div className="settings-record-actions">
+                  {NAV.slice(2, 5).map(([key, label, Icon]) => (
+                    <button key={key} className="secondary" onClick={() => { setPage(key); setSearch(""); }}>
+                      <Icon size={18} />{label}
+                    </button>
+                  ))}
+                </div>
+              </section>
             <SettingsForm
               company={state.company}
               onSave={async (c) => {
@@ -1048,6 +1047,7 @@ function App() {
                 );
               }}
             />
+            </>
           )}
           <footer className="page-footer">
             <span>
