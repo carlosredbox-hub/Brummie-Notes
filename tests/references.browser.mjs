@@ -208,7 +208,7 @@ try {
     .getByRole("button", { name: "Biblioteca de PDFs", exact: true })
     .click();
   await second.locator(".archive-row").first().waitFor();
-  assert.equal(await second.locator(".archive-row").count(), 8);
+  assert.equal(await second.locator(".archive-row").count(), pack.records.filter(r => r.kind === "archive").length);
   await second
     .getByRole("button", { name: "Meus modelos", exact: true })
     .click();
