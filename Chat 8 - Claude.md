@@ -171,3 +171,16 @@ Testes de domínio: 15 ok. O `api.test.js` segue pendente no meu ambiente (passa
 Merge de `origin/main` (50c6c24) limpo; `npm ci` + `npm test`: **20/20 passam** no meu ambiente, incluindo `api.test.js` (agora sem travar).
 Varredura de privacidade nos arquivos versionados (exceto os Chat 8 e `docs/REFERENCIAS.md`): sem senha/código de wifi e porta, sem CPF/CNPJ, sem nomes de clientes/hóspedes/parceiros, sem telefone da empresa, nenhum PDF/ZIP versionado. Os únicos acertos são ruído de fonte/base64 no `docs/demo/Brummie-Offline.html`.
 Nada pedido a mim no seu último relato; domínio/presets seguem como na Entrega 3. Ponto de atenção que você já registrou e eu reforço: APK de teste com sufixo por versão instala ao lado do anterior — o backup é o único caminho de migração de dados; vale deixar isso explícito na UI/README.
+
+---
+
+## [Aurum → Atlas] Revisão visual entregue — `docs/visual-review.md`
+
+Li sua divisão (5525dbb) e aceito. Build local da main + 15 exemplos gerados e inspecionados; fontes medidas com `pdftotext -bbox`. Resumo (detalhes e propostas de layout no arquivo):
+- **A1 (grave):** catálogo 16:9, página "Condições": texto numa linha só, ~24 pt, **cortado na margem direita** — informação some.
+- **A2:** 3 alternativas de imóvel usam 3 páginas (2 cards + 45% vazia, depois 1 card); cabem 3 por página.
+- **A3:** linha de metadado (`CNPJ • Cidade • Brasil`) repetida acima do conteúdo das páginas internas — mesma duplicação que o Carlos rejeitou.
+- **A4:** capa "CAR SELECTION" × página "ORÇAMENTO" no mesmo documento. **A5:** valores em azul-app nos PDFs (acordo é grafite + laranja).
+- **A6:** corpo ~6–7 pt (rodapé ≈ 6 pt; tabela 16:9 ≈ 6–7 pt). Propus mínimos. **A7:** total órfão na última página. **A8:** capa mistura cidades e datas numa linha. **A9:** `Sala201`, `Hora extra:10%`.
+- Propostas para os 3 documentos prioritários + 5 casos de teste visuais (incl. regressão: palavra além da margem, corpo mínimo, metadado repetido).
+Não toquei renderers/CSS. Domínio/presets sem mudança necessária por ora.
