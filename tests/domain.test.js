@@ -236,3 +236,38 @@ test("horas: total impresso divergente gera discrepancy sem copiar o erro", () =
   assert.equal(r.total, 17540);
   assert.equal(r.discrepancy, 40);
 });
+test("adicional de cartão: opcional, só cobrança, sobre subtotal − desconto, centavos preservados", () => {
+  const inv = {
+    type: "invoice",
+    language: "pt",
+    currency: "BRL",
+    status: "Rascunho",
+    client: "C",
+    date: "2026-01-01",
+    due: "2026-01-02",
+    discount: 100,
+    items: [{ description: "T", quantity: 1, price: 1000.5 }],
+  };
+  const sem = validateDoc(inv);
+  assert.equal(sem.cardFee, 0);
+  assert.equal(sem.total, 900.5);
+  const com = validateDoc({ ...inv, cardFeePct: 5 });
+  assert.equal(com.cardFee, 45.03); // 5% de 900,50 = 45,025 → 45,03
+  assert.equal(com.total, 945.53);
+  assert.throws(() =>
+    validateDoc({ ...inv, type: "recibo", status: "Pago", cardFeePct: 5 }),
+  );
+  assert.throws(() => validateDoc({ ...inv, cardFeePct: -1 }));
+  assert.throws(() =>
+    validateDoc({
+      type: "horas",
+      language: "pt",
+      currency: "BRL",
+      client: "C",
+      cardFeePct: 5,
+      overtime: day([
+        { vehicle: "V", dailyRate: 1, start: "10:00", end: "22:00" },
+      ]),
+    }),
+  );
+});
