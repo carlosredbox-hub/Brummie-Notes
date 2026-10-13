@@ -8,7 +8,12 @@ function open() {
     minWidth: 390,
     minHeight: 600,
     title: "Brummie • Offline Studio",
-    icon: path.join(__dirname, process.platform === "win32" ? "../build/icon.ico" : "../src/assets/icon.png"),
+    icon: path.join(
+      __dirname,
+      process.platform === "win32"
+        ? "../build/icon.ico"
+        : "../src/assets/icon.png",
+    ),
     backgroundColor: "#f6f8f7",
     webPreferences: {
       nodeIntegration: false,
@@ -53,6 +58,7 @@ function open() {
       },
     ]),
   );
+  window.maximize();
   window.loadFile(path.join(__dirname, "../dist/index.html"));
 }
 app.setAppUserModelId("com.brummie.documents");

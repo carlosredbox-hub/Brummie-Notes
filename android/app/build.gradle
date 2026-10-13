@@ -11,6 +11,7 @@ android {
         targetSdk 35
         versionCode parts[0] * 1000000 + parts[1] * 1000 + parts[2]
         versionName releaseVersion
+        manifestPlaceholders = [appLabel: "Brummie Offline"]
     }
     signingConfigs {
         if (hasSigning) {
@@ -22,6 +23,16 @@ android {
             }
         }
     }
-    buildTypes { release { if (hasSigning) signingConfig signingConfigs.release } }
+    buildTypes {
+        release { if (hasSigning) signingConfig signingConfigs.release }
+        debug {
+            if (!hasSigning) {
+                // Temporary test keys differ between runners. Isolate each test
+                // version so installation never replaces an existing user's app.
+                applicationIdSuffix ".test.v${releaseVersion.replace('.', '_')}"
+                manifestPlaceholders = [appLabel: "Brummie TEST ${releaseVersion}"]
+            }
+        }
+    }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

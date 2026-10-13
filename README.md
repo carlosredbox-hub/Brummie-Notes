@@ -6,7 +6,7 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
-[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.1)
+[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.2)
 
 ![Visão geral: documentos recentes, valores e atalhos para emitir](docs/screenshots/01-dashboard.png)
 
@@ -18,6 +18,8 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 - **Trabalhe offline.** Dados ficam no dispositivo. Backup permite levar a biblioteca para outro computador ou celular.
 
 O ícone enviado em `Brummie Icon.png` é usado no app, aba do navegador, Windows (EXE, instalador, atalhos e janela) e Android (ícones adaptativo e temático). Para atualizar as imagens derivadas, execute `python scripts/generate-icons.py` com Pillow instalado.
+
+A interface agora tem textos e controles maiores; Windows abre maximizado. A saudação genérica foi substituída por “Seus documentos Brummie”. A logo branca identifica apenas o app; as marcas coloridas dos PDFs permanecem intactas. Android TEST1.4.2 instala lado a lado com versões anteriores para evitar conflito de assinaturas temporárias, preservando seus dados; use backup para transferir a biblioteca.
 
 ## Criar, conferir e ajustar
 
@@ -77,7 +79,7 @@ _Screenshots reais do app, com dados fictícios de demonstração. A imagem móv
 
 ## Escolha como testar
 
-O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.4.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.1) também inclui Windows EXE/ZIP e Android APK de teste. O workflow valida e gera os pacotes Windows e Android; acompanhe a execução da versão na aba Actions.
+O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.4.0](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.2) também inclui Windows EXE/ZIP e Android APK de teste. O workflow valida e gera os pacotes Windows e Android; acompanhe a execução da versão na aba Actions.
 
 Cada dispositivo guarda sua própria biblioteca. Transfira dados por backup; não há sincronização automática. A restauração substitui os dados existentes após confirmação. A distribuição pública inclui modelos genéricos; sua biblioteca privada é carregada por backup. Os documentos são informativos, sem integração fiscal oficial.
 

@@ -134,3 +134,9 @@ HTML privado fora doGit com29 modelos e13 PDFs de referência: todos os modelos 
 ## Atlas → Aurum — ícone enviado pelo Carlos
 
 Integrado commit f68f026 do usuário com Brummie Icon.png. Fonte preservada; geradas variantesPNG/ICO7tamanhos, Android5densidades/adaptativo/monocromático e favicon embutido noHTML offline. Windows havia signAndEditExecutable=false, o que impede gravar ícone noEXE; habilitada edição de recursos e desabilitada só assinatura (signExecutable=false). AppUserModelId corresponde aoappId dos atalhos. Logos das marcas nos documentos permanecem próprios. Versão1.4.1 será compilada peloActions para atualizar instaladores/atalhos.
+
+## Atlas → Aurum — escala UI e instalação Android1.4.2
+
+Carlos reportou saudação “Olá, Meu.”, escala pequena e Android “app não instalado”. Removidos saudação dependente deuser.name e avatar residual; textos pequenos aumentados3px e demais2px, campos16px/controles44px, Windows maximiza. Não alterados renderers nem assets coloridos dosPDFs, conforme confirmação explícita doCarlos de que logo branca é apenas para app.
+
+Verificados certificados dosAPKs públicos1.4.0/1.4.1: diferentes, impedindo update no mesmo package. Sem chaveprivada do runner anterior, não é possível assinar a atualização com certificado igual; não expor chaves ou apagar dados. APKdebug/test semquatrosecrets passa a ter applicationIdSuffix por versão e launcher TEST+version, instala ao lado e preserva appanterior. Produção comkeystore estável mantémapplicationId original. Backups importáveis transferem biblioteca; não prometer migraçãoautomaticamente. MinSDK29 continua; aguardandoOS/instalação anterior para outrascausas. NamespaceJava/Activity permanecemcom.brummie.documents; checar Manifestcompilado. Gerarrelease1.4.2 comUI/TESTapp corrigidos.

@@ -583,9 +583,6 @@ function App() {
                     : "Offline • salvo neste dispositivo"
                   : "Armazenamento indisponível"}
               </span>
-              <span className="avatar light">
-                {state.user.name.slice(0, 2).toUpperCase()}
-              </span>
             </div>
           </header>
           <div className="content">
@@ -612,11 +609,8 @@ function App() {
                 </div>
                 <h1>
                   {page === "dashboard"
-                    ? `Olá, ${state.user.name.split(" ")[0]}.`
+                    ? "Seus documentos Brummie"
                     : titles[page]}
-                  {page === "dashboard" && (
-                    <span className="greeting-dot">.</span>
-                  )}
                 </h1>
                 <p>
                   {page === "dashboard"

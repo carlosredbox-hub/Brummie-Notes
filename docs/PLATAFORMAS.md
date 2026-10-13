@@ -49,3 +49,9 @@ O fluxo offline foi testado no Chromium com a rede desativada, incluindo documen
 ## Revisão visual 1.3.0
 
 [Windows e Android atualizados](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.3.0). Actions run38425715323 concluiu Success em validate/windows/android/release. Inclui composição fotográfica, fontes incorporadas, Property Selection, prévia do PDF final e biblioteca de imagens extraídas dos PDFs locais. APK TEST, Windows EXE/ZIP, HTML e SHA256SUMS publicados. A biblioteca pessoal continua fora dos assets públicos. Sem validação de instalação em aparelho físico.
+
+## APK de teste e instalação
+
+A partir de1.4.2, os APKs TEST usam identificador próprio por versão (`com.brummie.documents.test.v1_4_2`) e nome no launcher `Brummie TEST 1.4.2`. Isso evita o conflito entre as chaves debug temporárias dos runners e mantém a instalação anterior intacta. Exporte o backup no app anterior e importe no novo para reutilizar a biblioteca. Não há migração automática entre apps distintos. Para produção e atualizações convencionais, configure os quatro secrets e preserve a chave privada de assinatura. Nenhuma chave privada é publicada no Git.
+
+Min Android10 (API29); o código não altera nem remove apps/dados existentes. Nos APKs1.4.0/1.4.1 foi confirmado que os certificados públicos de assinatura são diferentes, por isso não podem atualizar um ao outro. A nova variante elimina essa colisão; outras causas de instalação dependem da versão do Android e da mensagem do aparelho.

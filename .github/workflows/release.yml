@@ -118,7 +118,7 @@ jobs:
             echo 'signed=true' >> "$GITHUB_OUTPUT"
           else
             echo 'signed=false' >> "$GITHUB_OUTPUT"
-            echo '::warning::APK de teste: configure assinatura estável antes de distribuir para produção.'
+            echo '::warning::APK TEST com identificador próprio por versão; assinatura estável necessária para atualizações normais.'
           fi
       - name: Build signed release or installable test APK
         working-directory: android
@@ -141,6 +141,22 @@ jobs:
             mkdir -p ../release/android
             cp app/build/outputs/apk/debug/app-debug.apk "../release/android/Brummie-Documents-$APP_VERSION-Android-TEST.apk"
           fi
+      - name: Verify Android package identity and launcher
+        env:
+          APP_VERSION: ${{ needs.validate.outputs.version }}
+          SIGNED: ${{ steps.signing.outputs.signed }}
+        shell: bash
+        run: |
+          apk="$(find release/android -name '*.apk' -print -quit)"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/brummie-apk-metadata.txt"
+          if [ "$SIGNED" = true ]; then
+            expected='com.brummie.documents'
+          else
+            expected="com.brummie.documents.test.v${APP_VERSION//./_}"
+          fi
+          grep -F "package: name='$expected'" "$RUNNER_TEMP/brummie-apk-metadata.txt"
+          grep -F "launchable-activity: name='com.brummie.documents.MainActivity'" "$RUNNER_TEMP/brummie-apk-metadata.txt"
       - name: Remove temporary signing key
         if: always()
         shell: bash
@@ -175,7 +191,7 @@ jobs:
           flags=()
           if [ "$SIGNED" != true ]; then
             flags+=(--prerelease)
-            printf '\n%s\n' 'Android TEST: APK assinado com chave de debug temporária, somente para avaliação. A chave pode mudar entre builds; atualizar pode exigir desinstalação. Configure os quatro secrets Android para releases com assinatura estável.' >> notes.md
+            printf '\n%s\n' 'Android TEST: instala como app separado por versão, mantendo instalações e dados anteriores. Para reutilizar seus dados, exporte o backup no app anterior e importe no novo. Requer Android 10 ou superior. Configure os quatro secrets Android para releases com assinatura estável e atualizações normais.' >> notes.md
           fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk ./*.html SHA256SUMS.txt --clobber
