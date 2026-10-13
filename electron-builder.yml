@@ -6,12 +6,15 @@ files:
   - desktop/**/*
   - dist/**/*
   - src/assets/icon.png
+  - build/icon.ico
   - package.json
   - "!node_modules/**/*"
 directories:
   output: release/windows
 win:
-  signAndEditExecutable: false
+  icon: build/icon.ico
+  signAndEditExecutable: true
+  signExecutable: false
   target:
     - target: nsis
       arch: [x64]
@@ -23,3 +26,7 @@ nsis:
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
+  createStartMenuShortcut: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
