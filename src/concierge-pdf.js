@@ -65,8 +65,8 @@ export async function makeConciergePdf(d) {
         pdf.text(
           option.city.toUpperCase(),
           design.doc.visualLayout?.imagePosition === "right"
-            ? design.right - (design.theme.sidebar ? 24 : 40)
-            : design.left + (design.theme.sidebar ? 24 : 40),
+            ? design.right - 40
+            : design.left + 40,
           design.y,
           { align: "center" },
         );
@@ -185,13 +185,13 @@ export async function makeConciergePdf(d) {
       s.requester && `${en ? "Requested by" : "Solicitante"}: ${s.requester}`,
     ])
       if (value) design.text(value, { size: 9 });
-    design.room(design.theme.sidebar ? 40 : 29);
+    design.room(29);
     pdf.setFillColor(design.theme.panel);
     pdf.roundedRect(
       design.left,
       design.y - 2,
       design.right - design.left,
-      design.theme.sidebar ? 34 : 23,
+      23,
       3,
       3,
       "F",
@@ -199,13 +199,13 @@ export async function makeConciergePdf(d) {
     const top = design.y;
     design.text(`CHECK-IN  ${date(s.checkIn)} ${s.checkInTime || ""}`, {
       x: design.left + 6,
-      width: design.theme.sidebar ? 65 : 95,
+      width: 95,
       bold: true,
       gap: 4,
     });
     design.text(`CHECK-OUT  ${date(s.checkOut)} ${s.checkOutTime || ""}`, {
       x: design.left + 6,
-      width: design.theme.sidebar ? 65 : 95,
+      width: 95,
       bold: true,
       gap: 8,
     });

@@ -2,7 +2,7 @@ import { themeFor } from "./document-themes.js";
 import { jsPDF } from "jspdf";
 import { registerPdfFonts } from "./pdf-fonts.js";
 import { imageBox } from "./pdf-design.js";
-import mark from "./assets/icon.png";
+import mark from "./assets/lines-mark.png";
 export async function makeCommercialPdf(d) {
   const pdf = new jsPDF({
       orientation: "landscape",
@@ -15,7 +15,7 @@ export async function makeCommercialPdf(d) {
   const theme = themeFor(d.theme || c.documentTheme),
     basic =
       !(d.theme || c.documentTheme) || (d.theme || c.documentTheme) === "basic",
-    brown = basic ? "#695b44" : theme.header || theme.sidebar || theme.panel,
+    brown = basic ? "#695b44" : theme.header || theme.topBand || theme.panel,
     gold = basic ? "#b28938" : theme.accent,
     cream = basic ? "#f8f5ea" : theme.paper,
     ink = basic ? "#423b30" : theme.ink;

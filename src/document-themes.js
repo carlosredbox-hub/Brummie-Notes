@@ -11,14 +11,14 @@ export const documentThemes = {
     serif: "Cormorant",
   },
   orange: {
-    label: "Lateral escura + laranja",
+    label: "Grafite + laranja",
     paper: "#ffffff",
     ink: "#202529",
     muted: "#63717e",
     accent: "#ff701a",
     panel: "#f4f4f2",
-    sidebar: "#202529",
-    left: 64,
+    topBand: "#202529",
+    left: 15,
     top: 22,
     serif: "OpenSans",
   },
@@ -58,8 +58,10 @@ export function paintDocumentTheme(pdf, d) {
     pdf.rect(10, 10, 190, 277);
   }
   if (id === "orange") {
-    pdf.setFillColor(t.sidebar);
-    pdf.rect(0, 0, 52, 297, "F");
+    pdf.setFillColor(t.topBand);
+    pdf.rect(0, 0, 210, 8, "F");
+    pdf.setFillColor(t.accent);
+    pdf.rect(0, 8, 210, 1, "F");
   }
   if (id === "blue") {
     pdf.setFillColor(t.header);

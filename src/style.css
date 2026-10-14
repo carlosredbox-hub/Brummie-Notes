@@ -1860,7 +1860,7 @@ aside {
 .theme-settings { margin-bottom: 30px; }
 .theme-options { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin: 20px 0; }
 .theme-option { min-height: 95px; padding: 18px; border: 1px solid #d5dfef; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 9px; font-size: 15px; }
-.theme-orange { background: linear-gradient(90deg,#202529 24%,#fff 24%); border-bottom: 5px solid #ff701a; color:#182c42; }
+.theme-orange { background: linear-gradient(180deg,#202529 20%,#fff 20%); border-bottom: 5px solid #ff701a; color:#182c42; }
 .theme-gold { background:#13161e; color:#d6b36c; border:1px solid #d6b36c; }
 .theme-blue { background:#183b76; color:white; border-bottom:5px solid #b79247; }
 @media(max-width:700px){.theme-options {grid-template-columns:1fr 1fr}}

@@ -4,7 +4,7 @@ export async function addDocumentCover(pdf, d) {
   if (!d.cover?.enabled || d.confidential) return false;
   const c = d.company,
     t = themeFor(d.theme || c.documentTheme),
-    left = t.sidebar ? 52 : 0,
+    left = 0,
     width = 210 - left,
     center = left + width / 2;
   pdf.setFillColor(
@@ -13,6 +13,12 @@ export async function addDocumentCover(pdf, d) {
       : t.paper,
   );
   pdf.rect(left, 0, width, 91, "F");
+  if (t.topBand) {
+    pdf.setFillColor(t.topBand);
+    pdf.rect(0, 0, 210, 8, "F");
+    pdf.setFillColor(t.accent);
+    pdf.rect(0, 8, 210, 1, "F");
+  }
   if (t.header) {
     pdf.setFillColor(t.header);
     pdf.rect(left, 0, width, 91, "F");

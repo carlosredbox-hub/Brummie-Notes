@@ -2,7 +2,7 @@ import { themeFor, paintDocumentTheme } from "./document-themes.js";
 import linesLogo from "./assets/lines-logo.png";
 import estateLogo from "./assets/realestate-logo.png";
 import estateMark from "./assets/realestate-mark.png";
-import linesMark from "./assets/icon.png";
+import linesMark from "./assets/lines-mark.png";
 import { jsPDF } from "jspdf";
 import { registerPdfFonts } from "./pdf-fonts.js";
 
@@ -246,7 +246,7 @@ export class EditorialPdf {
     details = [],
     height = 59,
   }) {
-    const photoWidth = image ? (this.theme.sidebar ? 48 : 80) : 0,
+    const photoWidth = image ? 80 : 0,
       onRight = this.doc.visualLayout?.imagePosition === "right",
       textX = image && !onRight ? this.left + photoWidth + 6 : this.left,
       width = this.right - this.left - (image ? photoWidth + 6 : 0);
@@ -344,7 +344,7 @@ export class EditorialPdf {
           .filter(Boolean)
           .join("\n"),
         this.left,
-        this.theme.sidebar ? 55 : 72,
+        72,
       );
       await imageBox(
         this.pdf,
@@ -358,7 +358,7 @@ export class EditorialPdf {
               ? estateMark
               : linesMark
             : c.logo),
-        this.theme.sidebar ? 12 : 94,
+        94,
         278,
         22,
         13,
@@ -374,7 +374,7 @@ export class EditorialPdf {
           .filter(Boolean)
           .join("\n"),
         195,
-        this.theme.sidebar ? 65 : 72,
+        72,
         "right",
       );
       if (this.doc.confidential) {
@@ -399,46 +399,7 @@ export class EditorialPdf {
       this.pdf.text(`${i}/${total}`, 195, 295, { align: "right" });
     }
   }
-  async sidebar() {
-    if (!this.theme.sidebar) return;
-    const d = this.doc,
-      pdf = this.pdf;
-    for (let p = 1; p <= pdf.getNumberOfPages(); p++) {
-      pdf.setPage(p);
-      await imageBox(pdf, d.company.logo, 6, 6, 40, 18, { trim: true });
-      this.font(11, true, false, false, "#ffffff");
-      pdf.text(pdf.splitTextToSize(d.company.name, 39), 7, 34);
-      const fields = [
-        ["DOCUMENTO", `BRM-${String(d.number).padStart(5, "0")}`],
-        ["EMISSÃO", d.date],
-        ["VALIDADE", d.due],
-        ["STATUS", d.status],
-      ];
-      let y = 55;
-      for (const [label, value] of fields) {
-        this.font(6, false, false, false, "#aeb8c0");
-        pdf.text(label, 7, y);
-        this.font(9, true, false, false, "#ffffff");
-        pdf.text(String(value || ""), 7, y + 6);
-        y += 23;
-      }
-      if (
-        d.showPrices !== false &&
-        !["nota", "voucher", "guia"].includes(d.type) &&
-        !d.selection &&
-        !d.commercial
-      ) {
-        pdf.setFillColor(this.theme.accent);
-        pdf.roundedRect(6, 224, 40, 24, 2, 2, "F");
-        this.font(6, false, false, false, "#ffffff");
-        pdf.text("TOTAL", 9, 231);
-        this.font(11, true, false, false, "#ffffff");
-        pdf.text(moneyFor(d)(d.total), 9, 240);
-      }
-    }
-  }
   async finish() {
-    await this.sidebar();
     await this.footer();
     return this.pdf.output("blob");
   }

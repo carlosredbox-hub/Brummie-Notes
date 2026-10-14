@@ -25,7 +25,7 @@ A interface agora tem textos e controles maiores; Windows abre maximizado. A sau
 
 Uma única tela **Criar documentos** reúne 15 formatos, cada um com **Criar** e **Exemplo completo**. Os exemplos são fictícios, incluem vários serviços/fotos e não alteram a biblioteca.
 
-Escolha **Básico**, **Lateral escura + laranja**, **Escuro + dourado** ou **Clássico azul**. Configurações define o padrão de todos os documentos; cada documento pode ter uma escolha própria. Fotos, textos, valores, links e contatos continuam presentes.
+Escolha **Básico**, **Grafite + laranja**, **Escuro + dourado** ou **Clássico azul**. Configurações define o padrão de todos os documentos; cada documento pode ter uma escolha própria. Fotos, textos, valores, links e contatos continuam presentes. A composição lateral foi retirada para evitar metadados duplicados; a capa não recebe preços automáticos. O ícone branco é exclusivo do app: cabeçalhos e rodapés dos PDFs usam as marcas coloridas anteriores.
 
 Antes de salvar, **Visualizar antes de finalizar** mostra as páginas do próprio PDF. Ajuste o lado das fotos e o enquadramento, atualize a prévia e, se desejar, abra **Edição visual livre**: adicione texto/imagem, arraste, redimensione, desfaça/refaça e salve os ajustes no documento/modelo. [Detalhes e referência PdfCraft](docs/visual-editor.md). Perfil de usuário removido; funcionamento local sem conta.
 
