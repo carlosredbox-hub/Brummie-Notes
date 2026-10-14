@@ -6,6 +6,10 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
+**[Abrir galeria: 60 documentos completos em imagens](docs/examples/README.md)** — 15 formatos, quatro temas e todas as páginas, sem baixar o app.
+
+[![Comparação dos quatro temas de documentos](docs/examples/quatro-temas.jpg)](docs/examples/README.md)
+
 [Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.2)
 
 ![Visão geral: documentos recentes, valores e atalhos para emitir](docs/screenshots/01-dashboard.png)
