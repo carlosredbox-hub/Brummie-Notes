@@ -34,7 +34,6 @@ import {
   Download,
   Check,
   CheckCircle2,
-  Clock,
   LogOut,
   X,
   Trash2,
@@ -63,7 +62,7 @@ import {
 import { readPdf, suggestions } from "./pdf-import.js";
 const TYPES = domainTypes,
   NAV = [
-    ["dashboard", "Visão geral", LayoutDashboard],
+    ["dashboard", "Início", LayoutDashboard],
     ["documents", "Documentos", FileText],
     ["client", "Clientes", Users],
     ["driver", "Motoristas", UserRound],
@@ -257,22 +256,6 @@ function App() {
     (d.client + " " + TYPES[d.type] + " " + String(d.number).padStart(5, "0"))
       .toLowerCase()
       .includes(search.toLowerCase());
-  const totals = {};
-  for (const d of docs.filter(
-    (d) =>
-      ["invoice", "fatura"].includes(d.type) &&
-      ["Emitido", "Pago"].includes(d.status),
-  )) {
-    const c = d.currency;
-    totals[c] ??= { paid: 0, pending: 0 };
-    totals[c][d.status === "Pago" ? "paid" : "pending"] += d.total;
-  }
-  const sum = (k) =>
-    Object.keys(totals).length
-      ? Object.entries(totals)
-          .map(([c, v]) => amount(v[k], c))
-          .join(" · ")
-      : amount(0);
   const create = (type) => {
     if (!type) {
       setPage("concierge");
@@ -373,8 +356,6 @@ function App() {
             <th>DOCUMENTO</th>
             <th>CLIENTE</th>
             <th>EMISSÃO</th>
-            <th>VALOR</th>
-            <th>STATUS</th>
             <th></th>
           </tr>
         </thead>
@@ -411,24 +392,6 @@ function App() {
                   </small>
                 </td>
                 <td>{date(d.date)}</td>
-                <td className="money">
-                  {isSelection(d)
-                    ? "Alternativas"
-                    : ["nota", "voucher", "guia"].includes(d.type) ||
-                        d.showPrices === false
-                      ? "—"
-                      : amount(d.total, d.currency)}
-                </td>
-                <td>
-                  <span className={"badge " + d.status}>
-                    {d.status === "Pago" ? (
-                      <CheckCircle2 size={12} />
-                    ) : (
-                      <span className="dot" />
-                    )}
-                    {d.status}
-                  </span>
-                </td>
                 <td>
                   <button
                     className="icon"
@@ -606,8 +569,8 @@ function App() {
               <div>
                 <div className="eyebrow">
                   {page === "dashboard"
-                    ? "SEU DIA, BEM ORGANIZADO"
-                    : "DOCUMENTOS & OPERAÇÕES"}
+                    ? "CRIE, CONFIRA E REUTILIZE"
+                    : "DOCUMENTOS BRUMMIE"}
                 </div>
                 <h1>
                   {page === "dashboard"
@@ -621,7 +584,7 @@ function App() {
                       ? "Do orçamento ao recibo. Tudo organizado, do seu jeito."
                       : page === "settings"
                         ? "A identidade da sua empresa em cada documento."
-                        : "Cadastros reutilizáveis para agilizar cada atendimento."}
+                        : "Modelos e informações reutilizáveis para criar seu próximo documento."}
                 </p>
               </div>
               {page !== "settings" && page !== "internal" && (
@@ -875,83 +838,51 @@ function App() {
             )}
             {page === "dashboard" && (
               <>
-                <div className="stats">
-                  <Stat
-                    label="DOCUMENTOS EMITIDOS"
-                    value={docs.filter((d) => d.status !== "Rascunho").length}
-                    sub="No seu espaço de trabalho"
-                    icon={FileText}
-                    color="green"
-                  />
-                  <Stat
-                    label="A RECEBER"
-                    value={sum("pending")}
-                    sub="Invoices e faturas em aberto"
-                    icon={Clock}
-                    color="orange"
-                  />
-                  <Stat
-                    label="RECEBIDO"
-                    value={sum("paid")}
-                    sub="Pagamentos confirmados"
-                    icon={Receipt}
-                    color="blue"
-                  />
-                  <Stat
-                    label="CLIENTES CADASTRADOS"
-                    value={records.filter((r) => r.kind === "client").length}
-                    sub="Relacionamentos que continuam"
-                    icon={Users}
-                    color="purple"
-                  />
-                </div>
                 <section className="quick-section">
                   <div className="section-title">
                     <h2>O que vamos preparar hoje?</h2>
-                    <span>ESCOLHA UM DOCUMENTO</span>
+                    <span>COMECE PELO QUE VOCÊ JÁ TEM</span>
                   </div>
                   <div className="quick-grid">
                     {[
                       [
-                        "invoice",
-                        "Invoice & fatura",
-                        "Cobranças claras, em qualquer idioma.",
+                        "new",
+                        "Criar um documento",
+                        "Escolha o formato, preencha e confira a prévia.",
                         FileText,
-                        "green",
                       ],
                       [
-                        "voucher",
-                        "Voucher de confirmação",
-                        "Todos os detalhes de uma boa viagem.",
-                        Plane,
-                        "blue",
+                        "templates",
+                        "Usar um modelo",
+                        "Comece com um modelo salvo e adapte os detalhes.",
+                        Copy,
                       ],
                       [
-                        "orcamento",
-                        "Orçamento",
-                        "Uma proposta à altura do seu serviço.",
-                        Receipt,
-                        "orange",
+                        "documents",
+                        "Reutilizar documento",
+                        "Use informações de um documento anterior.",
+                        FileText,
                       ],
                       [
-                        "nota",
-                        "Nota de atendimento",
-                        "Motorista, veículo e tranquilidade.",
-                        UserRound,
-                        "purple",
+                        "archives",
+                        "Consultar PDFs anteriores",
+                        "Abra suas referências para preparar o próximo.",
+                        FileText,
                       ],
-                    ].map(([t, l, s, I, c]) => (
+                    ].map(([target, label, description, I]) => (
                       <button
                         className="quick-card"
-                        onClick={() => create(t)}
-                        key={t}
+                        key={target}
+                        onClick={() =>
+                          target === "new" ? create() : setPage(target)
+                        }
                       >
-                        <div className={"tile " + c}>
+                        <div className="tile blue">
                           <I size={22} />
                         </div>
                         <ArrowUpRight className="quick-arrow" size={18} />
-                        <h3>{l}</h3>
-                        <p>{s}</p>
+                        <h3>{label}</h3>
+                        <p>{description}</p>
                       </button>
                     ))}
                   </div>
@@ -964,8 +895,8 @@ function App() {
                   <div>
                     <h2>Interno — não enviar ao cliente</h2>
                     <p>
-                      Fechamentos e repasses editáveis. Não entram nos valores a
-                      receber dos documentos de cliente.
+                      Moldes editáveis de demonstrativos internos, preservados
+                      separadamente dos documentos de cliente.
                     </p>
                   </div>
                   <button className="primary" onClick={() => create("interno")}>
@@ -1009,7 +940,9 @@ function App() {
                         : "Todos os documentos"}{" "}
                       <span className="count">{docs.length}</span>
                     </h2>
-                    <p>Acompanhe cada etapa do seu atendimento.</p>
+                    <p>
+                      Abra, confira ou reutilize seus documentos anteriores.
+                    </p>
                   </div>
                   {page === "dashboard" ? (
                     <button
@@ -1252,37 +1185,10 @@ function App() {
                 notify(e.message);
               }
             }}
-            onStatus={async (status) => {
-              if (modal.doc.examplePreview) {
-                setModal({ ...modal, doc: { ...modal.doc, status } });
-                return;
-              }
-              try {
-                await api("/documents/" + modal.doc.id, "PATCH", { status });
-                await refresh();
-                setModal({ ...modal, doc: { ...modal.doc, status } });
-              } catch (e) {
-                notify(e.message);
-              }
-            }}
           />
         )}
       </div>
     </PhotoLibraryContext.Provider>
-  );
-}
-function Stat({ label, value, sub, icon: I, color }) {
-  return (
-    <article className="stat">
-      <div>
-        <span>{label}</span>
-        <div className={"stat-icon " + color}>
-          <I size={18} />
-        </div>
-      </div>
-      <h2>{value}</h2>
-      <p>{sub}</p>
-    </article>
   );
 }
 function SettingsForm({ company, onSave }) {
@@ -2045,15 +1951,7 @@ function DocForm({ initial, type, state, onClose, onSave }) {
     </Modal>
   );
 }
-function Preview({
-  d,
-  onClose,
-  onCopy,
-  onStatus,
-  onTemplate,
-  onTheme,
-  globalTheme,
-}) {
+function Preview({ d, onClose, onCopy, onTemplate, onTheme, globalTheme }) {
   const [modelName, setModelName] = useState(TYPES[d.type] + " • " + d.client);
   const en = d.language === "en",
     financial = !["voucher", "nota"].includes(d.type) && d.showPrices !== false,
@@ -2089,18 +1987,6 @@ function Preview({
       </div>
       <div className="preview-toolbar">
         <span className={"badge " + d.status}>{d.status}</span>
-        <select
-          aria-label="Alterar status"
-          value={d.status}
-          onChange={(e) => onStatus(e.target.value)}
-        >
-          {(d.type === "recibo"
-            ? ["Pago"]
-            : ["Rascunho", "Emitido", "Pago", "Cancelado"]
-          ).map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
         <button className="secondary" onClick={onCopy}>
           <Copy size={15} />
           Reutilizar

@@ -211,7 +211,7 @@ try {
   assert.match(await pdfText("interno"), /INTERNO.*NÃO ENVIAR AO CLIENTE/);
   assert.match(await pdfText("interno"), /100,00/);
   await close();
-  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
+  await page.getByRole("button", { name: "Início", exact: true }).click();
   assert.equal(
     await page.getByText("Operação fictícia", { exact: false }).count(),
     0,

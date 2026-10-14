@@ -59,7 +59,7 @@ try {
   await page
     .getByRole("button", { name: "Salvar cadastro", exact: true })
     .click();
-  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
+  await page.getByRole("button", { name: "Início", exact: true }).click();
   await page
     .getByRole("button", { name: "Novo documento", exact: true })
     .click();
@@ -92,7 +92,7 @@ try {
   await shot("01-dashboard");
   await page.getByRole("button", { name: "Meus modelos", exact: true }).click();
   await shot("03-modelos");
-  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
+  await page.getByRole("button", { name: "Início", exact: true }).click();
   await page
     .getByRole("button", { name: "Criar nota de atendimento", exact: true })
     .click();

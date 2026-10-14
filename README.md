@@ -14,7 +14,9 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 [Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.2)
 
-![Visão geral: documentos recentes, valores e atalhos para emitir](docs/screenshots/01-dashboard.png)
+![Início: criar documentos, usar modelos e reutilizar informações](docs/screenshots/01-dashboard.png)
+
+O app é um criador de documentos: a abertura oferece criar, usar modelos, reutilizar documentos e consultar PDFs. Indicadores de contas a receber/pagamentos, colunas de valor/status no histórico e alteração de status na prévia foram retirados.
 
 ## Do atendimento ao documento, com menos preenchimento
 

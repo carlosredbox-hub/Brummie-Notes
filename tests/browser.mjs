@@ -119,7 +119,7 @@ try {
   assert.equal(payload.schema, 1);
   assert.equal(payload.documents.length, 1);
   assert.ok(payload.records.find((r) => r.kind === "archive").source._blob);
-  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
+  await page.getByRole("button", { name: "Início", exact: true }).click();
   await page.screenshot({
     path: join(output, "offline-desktop.png"),
     fullPage: true,
