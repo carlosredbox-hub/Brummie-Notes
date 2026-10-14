@@ -34,7 +34,9 @@ try {
   await page
     .getByText("Seus documentos anteriores são o ponto de partida do próximo.")
     .waitFor();
-  await page.getByRole("button", { name: "Configurações", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Configurações", exact: true })
+    .click();
   await page.getByRole("button", { name: "Motoristas", exact: true }).click();
   await page
     .getByRole("button", { name: "Novo cadastro", exact: true })
@@ -47,7 +49,9 @@ try {
   await page
     .getByRole("button", { name: "Salvar cadastro", exact: true })
     .click();
-  await page.getByRole("button", { name: "Configurações", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Configurações", exact: true })
+    .click();
   await page.getByRole("button", { name: "Frota", exact: true }).click();
   await page
     .getByRole("button", { name: "Novo cadastro", exact: true })
@@ -63,7 +67,9 @@ try {
   await page
     .getByRole("button", { name: "Novo documento", exact: true })
     .click();
-  await page.getByRole("button", {name:"Criar Invoice",exact:true}).click();
+  await page
+    .getByRole("button", { name: "Criar Invoice", exact: true })
+    .click();
   await page
     .getByLabel("Nome do cliente / Empresa")
     .fill("Empresa Exemplo • demonstração");
@@ -141,11 +147,15 @@ try {
     .getByRole("button", { name: "Biblioteca de PDFs", exact: true })
     .click();
   await shot("06-biblioteca");
-  await page.getByRole("button", { name: "Criar documentos", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Criar documentos", exact: true })
+    .click();
   await shot("07-concierge");
+  await page.getByRole("button", { name: "Início", exact: true }).click();
+  await shot("08-inicio");
   if (errors.length) throw new Error(errors.join("\n"));
   console.log(
-    "Seven real app screenshots captured with fictitious demo data, offline.",
+    "Eight real app screenshots captured with fictitious demo data, offline.",
   );
 } finally {
   await browser.close();
