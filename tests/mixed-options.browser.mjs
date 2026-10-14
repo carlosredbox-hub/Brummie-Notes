@@ -18,6 +18,12 @@ await context.route("https://mixed.test/", (r) =>
     body: fs.readFileSync("dist/index.html", "utf8"),
   }),
 );
+await context.addInitScript(() => {
+  const read = FileReader.prototype.readAsDataURL;
+  FileReader.prototype.readAsDataURL = function (file) {
+    setTimeout(() => read.call(this, file), 250);
+  };
+});
 const page = await context.newPage();
 try {
   await page.goto("https://mixed.test/");
@@ -154,6 +160,18 @@ try {
     assert.equal(
       await page.getByLabel("Preço da opção 3", { exact: true }).inputValue(),
       "onrequest",
+    );
+    const expectedPhoto =
+      "data:image/jpeg;base64," +
+      fs.readFileSync("src/assets/example-van.jpeg").toString("base64");
+    assert.equal(
+      await page
+        .getByLabel("Foto da hospedagem 3", { exact: true })
+        .locator("..")
+        .locator("img")
+        .getAttribute("src"),
+      expectedPhoto,
+      "pending photo must finish before saving",
     );
   }
   console.log(

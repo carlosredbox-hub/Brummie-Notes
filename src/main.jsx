@@ -111,8 +111,22 @@ function Photo({ value, onChange, "aria-label": label }) {
               return alert("Use uma foto de até 2 MB.");
             if (!["image/png", "image/jpeg"].includes(f.type))
               return alert("Use JPG ou PNG.");
+            const input = e.currentTarget,
+              token = `${Date.now()}-${Math.random()}`;
+            input.dataset.photoUploading = token;
             const r = new FileReader();
-            r.onload = () => onChange(r.result);
+            r.onload = () => {
+              if (input.dataset.photoUploading !== token) return;
+              if (input.isConnected) onChange(r.result);
+              delete input.dataset.photoUploading;
+            };
+            r.onerror = () => {
+              if (input.dataset.photoUploading !== token) return;
+              delete input.dataset.photoUploading;
+              alert(
+                "Não foi possível carregar a foto. Selecione o arquivo novamente.",
+              );
+            };
             r.readAsDataURL(f);
           }}
         />
@@ -138,10 +152,33 @@ function Photo({ value, onChange, "aria-label": label }) {
   );
 }
 function LocalForm({ onSubmit, children, ...props }) {
+  const latest = useRef(onSubmit),
+    submitting = useRef(false);
+  latest.current = onSubmit;
+  const submit = async (event) => {
+    event.preventDefault();
+    if (submitting.current) return;
+    const form = event.currentTarget;
+    submitting.current = true;
+    try {
+      if (form.querySelector("[data-photo-uploading]")) {
+        while (form.querySelector("[data-photo-uploading]"))
+          await new Promise((resolve) => setTimeout(resolve, 16));
+        // React must commit the final photo update before taking the document snapshot.
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        );
+      }
+      if (!form.isConnected) return;
+      await latest.current(event);
+    } finally {
+      submitting.current = false;
+    }
+  };
   return (
     <form
       {...props}
-      onSubmit={onSubmit}
+      onSubmit={submit}
       onClick={(event) => {
         const button = event.target.closest("button");
         if (
@@ -150,9 +187,8 @@ function LocalForm({ onSubmit, children, ...props }) {
           !event.currentTarget.contains(button)
         )
           return;
-        // This app saves locally; no browser form navigation is needed.
         event.preventDefault();
-        if (event.currentTarget.reportValidity()) onSubmit(event);
+        if (event.currentTarget.reportValidity()) submit(event);
       }}
     >
       {children}

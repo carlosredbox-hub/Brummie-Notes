@@ -144,3 +144,8 @@ Carlos confirmou escolher português OU inglês por documento. Contrato adiciona
 Carlos corrigiu interpretação do logo: fundo branco ORIGINAL é permitido em modelos claros; somente a placa branca nos azuis/pretos deve sumir. Assets das marcas intactos. imageBox passa a aceitar clearWhiteBackdrop, aplicado só em logos em superfícies azul/escura: limpa branco opaco de borda, sem tocar a arte transparente original ou fotos. Casos claros preservam arquivo branco. Ver docs/new-time-reference.md e comparação em docs/examples/logo-backgrounds.md.
 
 Teste com dados reais expôs erro de render do editor de galeria (Field recebeu dois filhos, incompatível com cloneElement); corrigido, sem remover fotos. Novo modelo emitiu PT/EN com preço mínimo e ausências preservadas. Não confundir alterações main com a release v1.4.3 publicada anteriormente.
+
+
+## Atlas → Aurum — correção de uploads assíncronos
+
+Actions de v1.4.4 falhou na nova regressão de propostas compostas. Logs detalhados públicos indisponíveis, mas reproduzi localmente o defeito com FileReader atrasado 250 ms: a foto completava e reaplicava uma versão antiga da lista, apagando “sob consulta”. Corrigidos setters funcionais da lista e galeria; LocalForm espera fotos pendentes e usa o handler atualizado antes de salvar. Upload antigo não sobrepõe uma seleção de arquivo mais recente; formulário fechado não emite depois do cancelamento. Regressão agora inclui atraso e verifica foto final persistida. Smoke e concierge passaram. Tag v1.4.4 preservada como execução falha; a correção será publicada em v1.4.5, sem mover tags existentes.

@@ -16,9 +16,14 @@ export const emptyPropertyOption = () => ({
 export function PropertySelectionEditor({ options, onChange, currency, ui }) {
   const { Field, Photo } = ui;
   const patch = (index, key, value) =>
-    onChange(
-      options.map((option, i) =>
-        i === index ? { ...option, [key]: value } : option,
+    onChange((current) =>
+      (current || []).map((option, i) =>
+        i === index
+          ? {
+              ...option,
+              [key]: typeof value === "function" ? value(option[key]) : value,
+            }
+          : option,
       ),
     );
   return (
@@ -74,10 +79,8 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
                     <Photo
                       value={image}
                       onChange={(value) =>
-                        patch(
-                          index,
-                          "images",
-                          option.images.map((v, j) => (j === i ? value : v)),
+                        patch(index, "images", (current) =>
+                          (current || []).map((v, j) => (j === i ? value : v)),
                         )
                       }
                     />
@@ -86,10 +89,8 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
                     type="button"
                     className="text-button"
                     onClick={() =>
-                      patch(
-                        index,
-                        "images",
-                        option.images.filter((_, j) => j !== i),
+                      patch(index, "images", (current) =>
+                        (current || []).filter((_, j) => j !== i),
                       )
                     }
                   >
@@ -101,7 +102,7 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
                 type="button"
                 className="secondary"
                 onClick={() =>
-                  patch(index, "images", [...(option.images || []), ""])
+                  patch(index, "images", (current) => [...(current || []), ""])
                 }
               >
                 Adicionar foto complementar

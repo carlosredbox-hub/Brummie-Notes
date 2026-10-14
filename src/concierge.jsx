@@ -139,7 +139,11 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
   const patch = (key, field, value) =>
     setD((current) => ({
       ...current,
-      [key]: { ...current[key], [field]: value },
+      [key]: {
+        ...current[key],
+        [field]:
+          typeof value === "function" ? value(current[key]?.[field]) : value,
+      },
     }));
   const listPatch = (key, list, index, field, value) =>
     setD((current) => ({
