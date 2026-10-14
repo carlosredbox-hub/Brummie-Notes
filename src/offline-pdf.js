@@ -5,7 +5,7 @@ import { isCommercial } from "./commercial.jsx";
 import { addDocumentCover } from "./pdf-cover.js";
 import { makeConciergePdf } from "./concierge-pdf.js";
 import { EditorialPdf, imageBox, moneyFor, dateFor } from "./pdf-design.js";
-export const PDF_RENDER_VERSION = 12;
+export const PDF_RENDER_VERSION = 13;
 const names = {
   invoice: ["INVOICE", "INVOICE"],
   fatura: ["FATURA", "STATEMENT"],

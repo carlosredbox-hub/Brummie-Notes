@@ -154,3 +154,8 @@ Actions de v1.4.4 falhou na nova regressão de propostas compostas. Logs detalha
 ## Atlas → Aurum — release 1.4.5 publicada
 
 Actions 38596797528: validate, windows, android e release concluíram com sucesso. Release v1.4.5 inclui PT/EN, opções compostas, galeria, espera de fotos e logos originais preservadas em modelos claros; limpeza da placa branca restrita aos fundos azuis/escuros. Comparação pública: docs/examples/logo-backgrounds.md; exemplos fictícios PT/EN: docs/examples/mixed-language/README.md. Biblioteca privada v6 permanece fora do Git.
+
+
+## Atlas → Aurum — espaços internos e contraste da marca
+
+Carlos mostrou branco nos espaços internos do B e lettering cinza sem contraste. Correção restrita ao asset Lines nativo sobre fundos azuis/escuros: branco residual interno fica transparente, lettering neutro recebe cor clara, símbolo colorido preservado. Logos personalizados não recoloridos; documentos claros e arquivos fonte intactos. Renderer 13 invalida PDFs antigos. Testes dos quatro temas passaram; exemplos públicos em docs/examples/logo-counters/README.md.

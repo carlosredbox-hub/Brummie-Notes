@@ -109,9 +109,22 @@ export async function imageBox(
           visit(i + w);
         }
         for (let i = 0; i < write; i++) data[queue[i] * 4 + 3] = 0;
-        ctx.putImageData(bitmap, 0, 0);
-        img = canvas;
       }
+      // The built-in Lines wordmark needs a reversed treatment on dark paper.
+      // Clear white counters as well as the outer matte; preserve the colored bird.
+      // Custom/partner logos retain their own artwork and are never recolored.
+      if (source === linesLogo) {
+        for (let i = 0; i < data.length; i += 4) {
+          if (!data[i + 3]) continue;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          if (Math.min(r, g, b) > 235) data[i + 3] = 0;
+          else if (Math.max(r, g, b) - Math.min(r, g, b) < 18) {
+            data[i] = data[i + 1] = data[i + 2] = 245;
+          }
+        }
+      }
+      ctx.putImageData(bitmap, 0, 0);
+      img = canvas;
     }
     if (!crop && !radius) {
       const ratio = Math.min(width / img.width, height / img.height);
