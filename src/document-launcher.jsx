@@ -64,12 +64,6 @@ export function DocumentLauncher({ onCreate, onExample }) {
                   Criar {type === "selection" ? "seleção de hospedagem" : label}
                 </button>
                 <button className="secondary" onClick={() => onExample(type)}>
-                  <img
-                    className="launcher-example-logo"
-                    src={brandLogo}
-                    alt=""
-                    title={brandName}
-                  />
                   Exemplo completo: {label}
                 </button>
               </div>

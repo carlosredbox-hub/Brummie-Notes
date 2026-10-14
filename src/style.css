@@ -1879,5 +1879,4 @@ aside {
 .launcher-brand img { width: 100px; height: 44px; object-fit: contain; }
 .launcher-brand small { font-size: 13px; font-weight: 600; }
 .launcher-card button.primary { display: flex; flex-direction: column; align-items: center; }
-.launcher-example-logo { width: 76px; height: 32px; object-fit: contain; }
-.launcher-card button.secondary { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.launcher-card button.secondary { white-space: normal; overflow-wrap: anywhere; text-align: center; }
