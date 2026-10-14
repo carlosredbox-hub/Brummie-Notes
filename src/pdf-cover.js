@@ -22,12 +22,6 @@ export async function addDocumentCover(pdf, d) {
   if (t.header) {
     pdf.setFillColor(t.header);
     pdf.rect(left, 0, width, 91, "F");
-    pdf.setFillColor("#ffffff");
-    pdf.roundedRect(left + width * 0.1, 17, width * 0.8, 57, 3, 3, "F");
-  }
-  if ((d.theme || c.documentTheme) === "gold") {
-    pdf.setFillColor("#ffffff");
-    pdf.roundedRect(left + width * 0.15, 23, width * 0.7, 40, 3, 3, "F");
   }
   if (
     !(await imageBox(pdf, c.logo, left + width * 0.125, 12, width * 0.75, 67, {

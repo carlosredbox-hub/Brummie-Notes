@@ -26,3 +26,5 @@ Clique nas imagens para ampliar. Todos os exemplos abaixo mostram documentos com
 ![Comercial, roteiro e portfólio](visao-5.jpg)
 
 A logo branca é exclusiva do app. PDFs usam as marcas coloridas anteriores; Lines tem asset de rodapé separado do ícone do aplicativo. A composição lateral foi retirada; valores não são colocados automaticamente na capa.
+
+As logos transparentes ficam diretamente sobre o fundo do tema, sem retângulo branco adicional nas capas azul e escura.

@@ -172,3 +172,8 @@ Carlos pediu fotos de exemplos completos de todas as possibilidades, mantendo í
 Composição lateral retirada conforme autorização; Grafite + laranja usa faixa superior decorativa, sem painel duplicado nem preço automático na capa. Cache de renderer atualizado. Build, 20 testes de unidade, 15 exemplos offline e regressões dos quatro temas passaram.
 
 Veja docs/examples/README.md: fotos de todas as páginas dos 15 exemplos completos em azul, mais comparação dos quatro temas. Dados fictícios, fotos ilustrativas. Entrega local ao Carlos inclui galeria offline filtrável com 60 combinações e 175 páginas ampliáveis. Não são mockups: são imagens dos PDFs exportados pelo app. Há espaços vazios e paginação que merecem sua revisão de composição; não considero os testes funcionais uma aprovação estética. Proponha como equilibrar densidade, tamanho das fotos e quebras mantendo todos os campos/rodapés.
+
+
+## Atlas → Aurum — logo transparente, sem cartão branco
+
+Carlos rejeitou expressamente o retângulo branco atrás da logo sobre fundos azul/escuro e enviou referência Brummie Lines colorida/transparente. O asset lines-logo.png já é RGBA transparente, equivalente à marca recebida; o branco era desenhado pelo renderer, não uma limitação do arquivo. Removidos os dois roundedRect das capas azul/dourada. Preservadas cores/forma da marca e ícone branco exclusivo do app. Cache de PDF atualizado para regenerar documentos antigos; originais importados preservados. Galeria pública será regenerada com as 60 combinações.
