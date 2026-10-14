@@ -471,7 +471,14 @@ function App() {
       <div className="shell">
         <aside className={mobile ? "open" : ""}>
           <div className="brand">
-            <img className="brand-bird" src={logo} alt="Brummie Lines" />
+            <svg
+              className="brand-bird"
+              viewBox="20 178 478 200"
+              role="img"
+              aria-label="Brummie"
+            >
+              <image href={logo} width="512" height="512" />
+            </svg>
             brummie<span>OFFLINE STUDIO</span>
           </div>
           <button className="workspace" onClick={() => setPage("settings")}>

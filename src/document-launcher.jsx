@@ -1,4 +1,6 @@
 import React from "react";
+import linesLogo from "./assets/lines-logo.png";
+import estateLogo from "./assets/realestate-logo.png";
 export const documentFormats = [
   ["invoice", "Invoice", "Serviços, valores e pagamento."],
   ["fatura", "Fatura", "Resumo financeiro dos serviços."],
@@ -41,20 +43,39 @@ export function DocumentLauncher({ onCreate, onExample }) {
         editar.
       </p>
       <div className="launcher-grid">
-        {documentFormats.map(([type, label, description]) => (
-          <article className="panel launcher-card" key={type}>
-            <h3>{label}</h3>
-            <p>{description}</p>
-            <div>
-              <button className="primary" onClick={() => onCreate(type)}>
-                Criar {type === "selection" ? "seleção de hospedagem" : label}
-              </button>
-              <button className="secondary" onClick={() => onExample(type)}>
-                Exemplo completo: {label}
-              </button>
-            </div>
-          </article>
-        ))}
+        {documentFormats.map(([type, label, description]) => {
+          const estate = ["selection", "hospedagem", "guia"].includes(type);
+          const brandName = estate ? "Brummie Real Estate" : "Brummie Lines";
+          const brandLogo = estate ? estateLogo : linesLogo;
+          return (
+            <article className="panel launcher-card" key={type}>
+              <h3>{label}</h3>
+              <p>{description}</p>
+              <div>
+                <button className="primary" onClick={() => onCreate(type)}>
+                  <span
+                    className="launcher-brand"
+                    aria-hidden="true"
+                    title={brandName}
+                  >
+                    <img src={brandLogo} alt="" />
+                    <small>{brandName}</small>
+                  </span>
+                  Criar {type === "selection" ? "seleção de hospedagem" : label}
+                </button>
+                <button className="secondary" onClick={() => onExample(type)}>
+                  <img
+                    className="launcher-example-logo"
+                    src={brandLogo}
+                    alt=""
+                    title={brandName}
+                  />
+                  Exemplo completo: {label}
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );

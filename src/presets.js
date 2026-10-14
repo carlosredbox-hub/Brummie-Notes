@@ -1,12 +1,30 @@
 // Conteúdo genérico e editável. Sem credenciais, códigos de acesso, nomes ou valores reais.
+export const brummieFooter = {
+  address: "Rua Visconde de Pirajá 82 - Sala 201\nIpanema - Rio de Janeiro",
+  phone: "+55 21 99683-9024",
+  taxId: "22.738.565/0001-03",
+};
 export const brands = {
-  lines: { id: "lines", name: "Brummie Lines", color: "#1f6f4a" },
+  lines: {
+    ...brummieFooter,
+    id: "lines",
+    name: "Brummie Lines",
+    color: "#0089cf",
+  },
   realestate: {
+    ...brummieFooter,
+    website: "www.brummierealestate.com",
     id: "realestate",
     name: "Brummie Real Estate",
     color: "#e8821a",
   },
-  luxury: { id: "luxury", name: "Brummie Luxury Estate", color: "#e8821a" },
+  luxury: {
+    ...brummieFooter,
+    website: "www.brummierealestate.com",
+    id: "luxury",
+    name: "Brummie Luxury Estate",
+    color: "#e8821a",
+  },
 };
 export const guideSections = [
   [

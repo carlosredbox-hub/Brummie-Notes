@@ -2,7 +2,7 @@ import { documentThemes } from "./document-themes.js";
 import { validateDoc } from "./editorial-document.js";
 import { makePdf, PDF_RENDER_VERSION } from "./offline-pdf.js";
 import { applyReferencePack } from "./reference-pack.js";
-import { documentPresets } from "./presets.js";
+import { documentPresets, brummieFooter, brands } from "./presets.js";
 import { documentCompany } from "./document-branding.js";
 import { appendOriginalPdfs } from "./pdf-attachments.js";
 import { makeGuideHtml } from "./guide-html.js";
@@ -87,6 +87,21 @@ function initial() {
   };
 }
 function prepareWorkspace(data) {
+  // Add supplied contact defaults without overwriting an edited company profile.
+  if (
+    data.brummieFooterVersion !== 1 &&
+    data.company.name === "Brummie Lines"
+  ) {
+    for (const [key, value] of Object.entries(brummieFooter))
+      if (!data.company[key]?.trim()) data.company[key] = value;
+    data.company.brandProfiles ||= {};
+    for (const brand of ["realestate", "luxury"]) {
+      const profile = (data.company.brandProfiles[brand] ||= {});
+      for (const key of ["address", "phone", "taxId", "website"])
+        if (!profile[key]?.trim()) profile[key] = brands[brand][key];
+    }
+    data.brummieFooterVersion = 1;
+  }
   if (data.documentPresetsVersion !== 1) {
     for (const preset of documentPresets) {
       const recordId = "preset-" + preset.id;

@@ -159,3 +159,7 @@ Actions 38596797528: validate, windows, android e release concluíram com sucess
 ## Atlas → Aurum — espaços internos e contraste da marca
 
 Carlos mostrou branco nos espaços internos do B e lettering cinza sem contraste. Correção restrita ao asset Lines nativo sobre fundos azuis/escuros: branco residual interno fica transparente, lettering neutro recebe cor clara, símbolo colorido preservado. Logos personalizados não recoloridos; documentos claros e arquivos fonte intactos. Renderer 13 invalida PDFs antigos. Testes dos quatro temas passaram; exemplos públicos em docs/examples/logo-counters/README.md.
+
+## Atlas → Aurum — marca antes de criar e contatos padrão 1.4.7
+
+Logo branca do app ampliada, com SVG viewBox que remove apenas o espaço transparente no enquadramento (arquivo do ícone intacto). Todos os botões de criar/exemplo mostram a marca original colorida; seleção/home guide/hospedagem mostram Real Estate, outros Lines conforme marca inicial real. Contatos fornecidos por Carlos: Rua Visconde de Pirajá 82 - Sala 201, Ipanema - Rio de Janeiro; +55 21 99683-9024; CNPJ 22.738.565/0001-03. Site www.brummierealestate.com associado a Real Estate/Luxury. Migração única completa campos vazios, preserva configurações personalizadas e deixa editar depois. Build e smoke offline passaram; conferidos os contatos persistidos e imagens em todos os 15 botões. Captura pública docs/screenshots/09-marcas-criacao.png.
