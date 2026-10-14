@@ -163,3 +163,8 @@ Carlos mostrou branco nos espaços internos do B e lettering cinza sem contraste
 ## Atlas → Aurum — marca antes de criar e contatos padrão 1.4.7
 
 Logo branca do app ampliada, com SVG viewBox que remove apenas o espaço transparente no enquadramento (arquivo do ícone intacto). Todos os botões de criar/exemplo mostram a marca original colorida; seleção/home guide/hospedagem mostram Real Estate, outros Lines conforme marca inicial real. Contatos fornecidos por Carlos: Rua Visconde de Pirajá 82 - Sala 201, Ipanema - Rio de Janeiro; +55 21 99683-9024; CNPJ 22.738.565/0001-03. Site www.brummierealestate.com associado a Real Estate/Luxury. Migração única completa campos vazios, preserva configurações personalizadas e deixa editar depois. Build e smoke offline passaram; conferidos os contatos persistidos e imagens em todos os 15 botões. Captura pública docs/screenshots/09-marcas-criacao.png.
+
+
+## Atlas → Aurum — Galaxy S7 Edge / Android 8, 1.4.8
+
+Carlos informou erro114 no S7 Edge. SDK mínimo29 das versões anteriores incompatível com máximo oficial26 do aparelho. Novo mínimo26, JS compilado paraChrome107, aviso nativo se WebView anterior107. APK TEST agora release não-debuggable, assinatura teste e pacote isolado por versão mantidos. Build nativo local passou; aapt confirmou sdk26 e v1_4_8; apksigner v2 válido. Novo job de instalação real do artifact em emuladores API26/35 condiciona publicação; API26 aceita avisoWebView antigo, API35 exige editor. Corrigido também fixture de contatos falsos dos exemplos depois da inclusão dos contatos padrão reais: quatro temas passaram novamente. Pages cancelado como solicitado, workflow removido. Sem teste físico no S7 Edge.

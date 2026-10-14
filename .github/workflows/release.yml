@@ -139,9 +139,9 @@ jobs:
             cp app/build/outputs/apk/release/app-release.apk "../release/android/Brummie-Documents-$APP_VERSION-Android.apk"
             cp app/build/outputs/bundle/release/app-release.aab "../release/android/Brummie-Documents-$APP_VERSION-Android.aab"
           else
-            gradle --no-daemon :app:assembleDebug -PappVersion="$APP_VERSION"
+            gradle --no-daemon :app:assembleRelease -PappVersion="$APP_VERSION"
             mkdir -p ../release/android
-            cp app/build/outputs/apk/debug/app-debug.apk "../release/android/Brummie-Documents-$APP_VERSION-Android-TEST.apk"
+            cp app/build/outputs/apk/release/app-release.apk "../release/android/Brummie-Documents-$APP_VERSION-Android-TEST.apk"
           fi
       - name: Verify Android package identity and launcher
         env:
@@ -159,6 +159,11 @@ jobs:
           fi
           grep -F "package: name='$expected'" "$RUNNER_TEMP/brummie-apk-metadata.txt"
           grep -F "launchable-activity: name='com.brummie.documents.MainActivity'" "$RUNNER_TEMP/brummie-apk-metadata.txt"
+          grep -F "sdkVersion:'26'" "$RUNNER_TEMP/brummie-apk-metadata.txt"
+          if grep -q 'application-debuggable' "$RUNNER_TEMP/brummie-apk-metadata.txt"; then
+            echo 'Distributed APK must not be debuggable.' >&2
+            exit 1
+          fi
       - name: Remove temporary signing key
         if: always()
         shell: bash
@@ -168,8 +173,48 @@ jobs:
           name: android
           path: release/android/*
           if-no-files-found: error
+  android-install:
+    needs: [validate, android]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      APP_VERSION: ${{ needs.validate.outputs.version }}
+      SIGNED: ${{ needs.android.outputs.signed }}
+      API_LEVEL: ${{ matrix.api }}
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 35]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: release/android
+      - name: Enable KVM access
+        run: |
+          sudo chmod a+rw /dev/kvm
+      - name: Install and launch the actual distributed APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          script: bash scripts/android-install-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-install-api-${{ matrix.api }}
+          path: test-results/android-install/*
+          if-no-files-found: warn
   release:
-    needs: [validate, windows, android]
+    needs: [validate, windows, android, android-install]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
@@ -177,8 +222,16 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          name: windows
           path: artifacts
-          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: offline-html
+          path: artifacts
       - name: Publish both platforms together
         env:
           GH_TOKEN: ${{ github.token }}
@@ -193,7 +246,7 @@ jobs:
           flags=()
           if [ "$SIGNED" != true ]; then
             flags+=(--prerelease)
-            printf '\n%s\n' 'Android TEST: instala como app separado por versão, mantendo instalações e dados anteriores. Para reutilizar seus dados, exporte o backup no app anterior e importe no novo. Requer Android 10 ou superior. Configure os quatro secrets Android para releases com assinatura estável e atualizações normais.' >> notes.md
+            printf '\n%s\n' 'Android TEST: build release, sem depuração, com assinatura de teste e identificador separado por versão. Mantém instalações e dados anteriores. Exporte/importe o backup para transferir a biblioteca. Requer Android 8 ou superior e WebView/Chrome atualizado (107+). Galaxy S7 Edge precisa estar atualizado para Android 8. Configure os quatro secrets Android para assinatura estável e atualizações normais. Actions instala e abre o APK nos emuladores API26 e API35 antes de publicar; em WebView antigo, o app mostra instrução de atualização.' >> notes.md
           fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk ./*.html SHA256SUMS.txt --clobber

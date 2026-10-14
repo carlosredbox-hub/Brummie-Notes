@@ -387,15 +387,19 @@ export function exampleDocument(kind) {
         : "Transporte executivo com conforto, discrição e atendimento personalizado.",
     }));
   }
+  const exampleContacts = {
+    taxId: "00.000.000/0000-00",
+    address: "Rua de demonstração, 100 • Sala 201\nRio de Janeiro • Brasil",
+    phone: "+55 (00) 00000-0000",
+    email: "contato@brummie.example",
+    website: "https://brummie.example",
+  };
   const company = documentCompany(
     {
+      ...exampleContacts,
+      brandProfiles: { [d.brand]: exampleContacts },
       name: "Brummie Lines",
-      taxId: "00.000.000/0000-00",
       color: "#0089cf",
-      address: "Rua de demonstração, 100 • Sala 201\nRio de Janeiro • Brasil",
-      phone: "+55 (00) 00000-0000",
-      email: "contato@brummie.example",
-      website: "https://brummie.example",
       payment:
         "Banco de demonstração\nAgência0001 • Conta000000-0\nPIX: financeiro@brummie.example",
       terms:

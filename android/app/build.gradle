@@ -7,7 +7,7 @@ android {
     compileSdk 35
     defaultConfig {
         applicationId 'com.brummie.documents'
-        minSdk 29
+        minSdk 26
         targetSdk 35
         versionCode parts[0] * 1000000 + parts[1] * 1000 + parts[2]
         versionName releaseVersion
@@ -24,7 +24,15 @@ android {
         }
     }
     buildTypes {
-        release { if (hasSigning) signingConfig signingConfigs.release }
+        release {
+            // Always distribute the non-debuggable release build. Without a
+            // production key, keep the isolated TEST identity and test signing.
+            signingConfig(hasSigning ? signingConfigs.release : signingConfigs.debug)
+            if (!hasSigning) {
+                applicationIdSuffix ".test.v${releaseVersion.replace('.', '_')}"
+                manifestPlaceholders = [appLabel: "Brummie TEST ${releaseVersion}"]
+            }
+        }
         debug {
             if (!hasSigning) {
                 // Temporary test keys differ between runners. Isolate each test

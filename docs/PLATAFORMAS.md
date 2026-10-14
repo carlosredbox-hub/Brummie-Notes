@@ -1,6 +1,6 @@
 # Windows e Android offline
 
-Windows (Electron) e Android (WebView, Android 10+) incluem o mesmo HTML completo. Não carregam servidor remoto. O Android não declara permissão INTERNET. Cadastros, PDFs e modelos ficam no dispositivo; backup JSON exportado/restaurado é a forma de transferir os dados. A restauração substitui a biblioteca inteira após confirmação; não mescla alterações de dois dispositivos.
+Windows (Electron) e Android (WebView, Android 8+, WebView/Chrome 107+) incluem o mesmo HTML completo. Não carregam servidor remoto. O Android não declara permissão INTERNET. Cadastros, PDFs e modelos ficam no dispositivo; backup JSON exportado/restaurado é a forma de transferir os dados. A restauração substitui a biblioteca inteira após confirmação; não mescla alterações de dois dispositivos.
 
 Windows salva PDFs e backups pelo navegador integrado. Android abre o seletor nativo para importar arquivos e escolher onde salvar, sem permissão ampla de armazenamento. O ícone do pássaro também aparece na interface e nos documentos.
 
@@ -55,3 +55,12 @@ O fluxo offline foi testado no Chromium com a rede desativada, incluindo documen
 A partir de1.4.2, os APKs TEST usam identificador próprio por versão (`com.brummie.documents.test.v1_4_2`) e nome no launcher `Brummie TEST 1.4.2`. Isso evita o conflito entre as chaves debug temporárias dos runners e mantém a instalação anterior intacta. Exporte o backup no app anterior e importe no novo para reutilizar a biblioteca. Não há migração automática entre apps distintos. Para produção e atualizações convencionais, configure os quatro secrets e preserve a chave privada de assinatura. Nenhuma chave privada é publicada no Git.
 
 Min Android10 (API29); o código não altera nem remove apps/dados existentes. Nos APKs1.4.0/1.4.1 foi confirmado que os certificados públicos de assinatura são diferentes, por isso não podem atualizar um ao outro. A nova variante elimina essa colisão; outras causas de instalação dependem da versão do Android e da mensagem do aparelho.
+
+
+## Compatibilidade Android 1.4.8
+
+O Galaxy S7 Edge recebeu oficialmente até Android 8 (API26). APKs anteriores exigiam Android 10 (API29), portanto eram incompatíveis com esse aparelho. A partir de 1.4.8, o mínimo é Android 8. Se o aparelho ainda usa Android 6/7, precisa ser atualizado para Android 8.
+
+O editor precisa de WebView/Chrome 107 ou superior. Em um WebView antigo, o app abre uma tela nativa com instrução de atualização, em vez de ficar parado em uma página sem funcionar. Após atualizar pela Play Store, reabra o app. Não é necessário conceder acesso amplo ao armazenamento nem conexão ao app; importar e salvar continuam usando o seletor do Android.
+
+O APK TEST passa a usar a build release sem depuração, assinada com chave de teste e identificador separado por versão. O APK continua sendo de teste: isso não substitui uma assinatura de distribuição estável. O workflow inclui instalação e abertura do APK final em API26 e API35 antes da publicação, guardando capturas/logs em artifacts separados dos instaladores. API26 pode exibir a instrução de atualização se o WebView da imagem for antigo; API35 deve abrir o editor. Resultados desta execução devem ser conferidos no Actions, não inferidos do build local. Não houve teste físico no Galaxy S7 Edge.
