@@ -27,6 +27,8 @@ O ícone enviado em `Brummie Icon.png` é usado no app, aba do navegador, Window
 
 A interface agora tem textos e controles maiores; Windows abre maximizado. A saudação genérica foi substituída por “Seus documentos Brummie”. A logo branca identifica apenas o app; as marcas coloridas dos PDFs permanecem intactas. Android TEST1.4.2 instala lado a lado com versões anteriores para evitar conflito de assinaturas temporárias, preservando seus dados; use backup para transferir a biblioteca.
 
+**Novo: [roteiro por dia e período](docs/itinerary.md)** — agenda editável, notas do concierge e [exemplo completo em imagens](docs/examples/roteiro-agenda.md).
+
 ## Criar, conferir e ajustar
 
 Uma única tela **Criar documentos** reúne 15 formatos, cada um com **Criar** e **Exemplo completo**. Os exemplos são fictícios, incluem vários serviços/fotos e não alteram a biblioteca.

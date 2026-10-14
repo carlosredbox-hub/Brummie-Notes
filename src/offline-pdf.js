@@ -1,10 +1,11 @@
+import { makeItineraryPdf } from "./itinerary-pdf.js";
 import { applyFreeElements } from "./free-pdf-elements.js";
 import { makeCommercialPdf } from "./commercial-pdf.js";
 import { isCommercial } from "./commercial.jsx";
 import { addDocumentCover } from "./pdf-cover.js";
 import { makeConciergePdf } from "./concierge-pdf.js";
 import { EditorialPdf, imageBox, moneyFor, dateFor } from "./pdf-design.js";
-export const PDF_RENDER_VERSION = 10;
+export const PDF_RENDER_VERSION = 11;
 const names = {
   invoice: ["INVOICE", "INVOICE"],
   fatura: ["FATURA", "STATEMENT"],
@@ -17,6 +18,12 @@ export async function makePdf(d) {
   return applyFreeElements(await makeBasePdf(d), d.freeElements);
 }
 async function makeBasePdf(d) {
+  if (
+    d.type === "guia" &&
+    d.category === "itinerary" &&
+    d.guide?.presentation === "schedule"
+  )
+    return makeItineraryPdf(d);
   if (isCommercial(d)) return makeCommercialPdf(d);
   if (["guia", "hospedagem", "proposta", "horas", "interno"].includes(d.type))
     return makeConciergePdf(d);

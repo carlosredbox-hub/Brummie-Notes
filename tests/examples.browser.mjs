@@ -74,7 +74,7 @@ try {
         `${n}/${pdf.numPages}`,
       ])
         assert.ok(text.includes(token), `${label} page${n}: ${token}`);
-      if (n === 1 && i !== 11) continue;
+      if (n === 1 && i !== 11 && i !== 13) continue;
       const ops = await p.getOperatorList();
       let matrix = [1, 0, 0, 1, 0, 0];
       const stack = [];
@@ -94,6 +94,22 @@ try {
       }
     }
     assert.ok(bodyImages >= 2, `${label} has at least two content photos`);
+    if (i === 13) {
+      for (const token of [
+        "ÍCONES E TRADIÇÃO",
+        "LEGADO E VANGUARDA",
+        "NATUREZA",
+        "MANHÃ",
+        "ALMOÇO",
+        "TARDE",
+        "JANTAR",
+        "NOITE",
+        "NOTAS DO CONCIERGE",
+        "Reservas gastronômicas",
+      ])
+        assert.ok(allText.includes(token), `${label}: ${token}`);
+      assert.ok(!allText.includes("R$"), "itinerary never includes prices");
+    }
     if (i === 6) {
       for (const token of [
         "EX-RJ001",

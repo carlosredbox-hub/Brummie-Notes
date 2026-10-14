@@ -1,3 +1,4 @@
+import { rioItinerarySections, rioConciergeNotes } from "./itinerary-model.js";
 import propertyRio from "./assets/example-property-rio.jpeg";
 import propertyBuzios from "./assets/example-property-buzios.jpeg";
 import propertyAngra from "./assets/example-property-angra.jpeg";
@@ -350,34 +351,25 @@ export function exampleDocument(kind) {
     };
   }
   if (kind === "itinerary") {
+    d.brand = "lines";
     d.category = kind;
     d.showPrices = false;
     d.cover.title = "ROTEIRO DE VIAGEM";
     d.guide = {
       ...d.guide,
-      title: "Três dias no Rio — demonstração",
+      title: "EXPERIÊNCIA RIO DE JANEIRO",
       propertyCode: "",
       address: "Rio de Janeiro",
       accessInstructions: "Horários ilustrativos, sujeitos a confirmação.",
       wifi: { ssid: "", password: "", encryption: "WPA" },
       coverImage: "",
-      sections: [
-        {
-          title: "Dia 1 · Ícones e tradição",
-          text: "09:00 — Visita panorâmica. 14:00 — Passeio cultural. Confirmar ingressos antes da emissão.",
-          image: rio,
-        },
-        {
-          title: "Dia 2 · Cidade e cultura",
-          text: "10:00 — Recepção no hotel. 15:00 — Roteiro de museus e arquitetura.",
-          image: hotelRio,
-        },
-        {
-          title: "Dia 3 · Natureza e litoral",
-          text: "09:00 — Saída para o litoral. 17:00 — Retorno e assistência de concierge.",
-          image: hotelSp,
-        },
-      ],
+      presentation: "schedule",
+      travelPeriod: "10 · 11 · 12 DE OUTUBRO — exemplo sem ano definido",
+      conciergeNotes: rioConciergeNotes(),
+      sections: rioItinerarySections().map((section, index) => ({
+        ...section,
+        image: index === 2 ? rio : index === 10 ? hotelRio : "",
+      })),
     };
   }
   if (kind === "portfolio") {

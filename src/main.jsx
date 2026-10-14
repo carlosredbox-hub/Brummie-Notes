@@ -1,3 +1,4 @@
+import { rioItinerarySections, rioConciergeNotes } from "./itinerary-model.js";
 import { EditorPreview } from "./editor-preview.jsx";
 import { documentThemes } from "./document-themes.js";
 import { commercialDefault, isCommercial } from "./commercial.jsx";
@@ -287,6 +288,7 @@ function App() {
         doc: {
           ...base,
           category: type,
+          ...(itinerary ? { brand: "lines" } : {}),
           showPrices: false,
           cover: {
             ...base.cover,
@@ -297,11 +299,11 @@ function App() {
                 guide: {
                   ...base.guide,
                   title: "Roteiro personalizado",
-                  sections: [1, 2, 3].map((n) => ({
-                    title: `Dia ${n}`,
-                    text: "",
-                    image: "",
-                  })),
+                  address: "Rio de Janeiro",
+                  presentation: "schedule",
+                  travelPeriod: "",
+                  sections: rioItinerarySections(),
+                  conciergeNotes: rioConciergeNotes(),
                 },
               }
             : {

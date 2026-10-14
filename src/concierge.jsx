@@ -302,11 +302,45 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
           {d.type === "guia" && (
             <>
               <div className="form-section">
-                <h3>02 · Imóvel & acesso</h3>
+                <h3>
+                  {d.category === "itinerary"
+                    ? "02 · Roteiro & período"
+                    : "02 · Imóvel & acesso"}
+                </h3>
                 <div className="form-grid">
                   {nested("Título do guia", "guide", "title", true)}
-                  {nested("Código do imóvel", "guide", "propertyCode")}
-                  {nested("Endereço do imóvel", "guide", "address", true)}
+                  {d.category !== "itinerary" &&
+                    nested("Código do imóvel", "guide", "propertyCode")}
+                  {nested(
+                    d.category === "itinerary"
+                      ? "Destino do roteiro"
+                      : "Endereço do imóvel",
+                    "guide",
+                    "address",
+                    true,
+                  )}
+                  {d.category === "itinerary" && (
+                    <>
+                      {nested(
+                        "Período da viagem (texto livre)",
+                        "guide",
+                        "travelPeriod",
+                      )}
+                      <Field label="Estilo do roteiro">
+                        <select
+                          value={g.presentation || "editorial"}
+                          onChange={(e) =>
+                            patch("guide", "presentation", e.target.value)
+                          }
+                        >
+                          <option value="editorial">Editorial com fotos</option>
+                          <option value="schedule">
+                            Agenda por dia e período
+                          </option>
+                        </select>
+                      </Field>
+                    </>
+                  )}
                   <Field label="Layout do guia">
                     <select
                       value={g.layout}
@@ -329,63 +363,121 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                   />
                 </Field>
               </div>
-              <div className="form-section">
-                <h3>03 · Wi-Fi com QR local</h3>
-                <div className="form-grid three">
-                  <Field label="Nome da rede Wi-Fi">
-                    <input
-                      value={g.wifi.ssid}
-                      onChange={(e) =>
-                        patch("guide", "wifi", {
-                          ...g.wifi,
-                          ssid: e.target.value,
-                        })
-                      }
+              {d.category !== "itinerary" && (
+                <div className="form-section">
+                  <h3>03 · Wi-Fi com QR local</h3>
+                  <div className="form-grid three">
+                    <Field label="Nome da rede Wi-Fi">
+                      <input
+                        value={g.wifi.ssid}
+                        onChange={(e) =>
+                          patch("guide", "wifi", {
+                            ...g.wifi,
+                            ssid: e.target.value,
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Senha do Wi-Fi">
+                      <input
+                        value={g.wifi.password}
+                        onChange={(e) =>
+                          patch("guide", "wifi", {
+                            ...g.wifi,
+                            password: e.target.value,
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Segurança do Wi-Fi">
+                      <select
+                        value={g.wifi.encryption}
+                        onChange={(e) =>
+                          patch("guide", "wifi", {
+                            ...g.wifi,
+                            encryption: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="WPA">WPA / WPA2</option>
+                        <option value="WEP">WEP</option>
+                        <option value="nopass">Sem senha</option>
+                      </select>
+                    </Field>
+                  </div>
+                  {qr && (
+                    <img
+                      src={qr}
+                      className="wifi-qr"
+                      alt="QR Wi-Fi gerado localmente"
                     />
-                  </Field>
-                  <Field label="Senha do Wi-Fi">
-                    <input
-                      value={g.wifi.password}
-                      onChange={(e) =>
-                        patch("guide", "wifi", {
-                          ...g.wifi,
-                          password: e.target.value,
-                        })
-                      }
-                    />
-                  </Field>
-                  <Field label="Segurança do Wi-Fi">
-                    <select
-                      value={g.wifi.encryption}
-                      onChange={(e) =>
-                        patch("guide", "wifi", {
-                          ...g.wifi,
-                          encryption: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="WPA">WPA / WPA2</option>
-                      <option value="WEP">WEP</option>
-                      <option value="nopass">Sem senha</option>
-                    </select>
-                  </Field>
+                  )}
+                  <p>
+                    O QR é criado neste dispositivo. Preencha apenas os dados
+                    que deseja compartilhar com seus hóspedes.
+                  </p>
                 </div>
-                {qr && (
-                  <img
-                    src={qr}
-                    className="wifi-qr"
-                    alt="QR Wi-Fi gerado localmente"
-                  />
-                )}
-                <p>
-                  O QR é criado neste dispositivo. Preencha apenas os dados que
-                  deseja compartilhar com seus hóspedes.
-                </p>
-              </div>
+              )}
               <div className="form-section">
-                <h3>04 · Seções do Home Guide</h3>
+                <h3>
+                  {d.category === "itinerary"
+                    ? "03 · Atividades por dia"
+                    : "04 · Seções do Home Guide"}
+                </h3>
                 {g.sections.map((section, index) => (
                   <div className="concierge-block" key={section.id}>
+                    {d.category === "itinerary" && (
+                      <div className="form-grid">
+                        <Field label={`Dia da atividade ${index + 1}`}>
+                          <input
+                            type="number"
+                            min="1"
+                            max="365"
+                            value={section.day || 1}
+                            onChange={(e) =>
+                              listPatch(
+                                "guide",
+                                "sections",
+                                index,
+                                "day",
+                                Number(e.target.value),
+                              )
+                            }
+                          />
+                        </Field>
+                        <Field label={`Tema do dia da atividade ${index + 1}`}>
+                          <input
+                            value={section.dayTitle || ""}
+                            onChange={(e) =>
+                              patch(
+                                "guide",
+                                "sections",
+                                g.sections.map((s) =>
+                                  (s.day || 1) === (section.day || 1)
+                                    ? { ...s, dayTitle: e.target.value }
+                                    : s,
+                                ),
+                              )
+                            }
+                          />
+                        </Field>
+                        <Field label={`Período da atividade ${index + 1}`}>
+                          <input
+                            placeholder="MANHÃ, ALMOÇO, TARDE, JANTAR..."
+                            value={section.period || ""}
+                            onChange={(e) =>
+                              listPatch(
+                                "guide",
+                                "sections",
+                                index,
+                                "period",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </Field>
+                      </div>
+                    )}
                     <Field label={`Título da seção ${index + 1}`}>
                       <input
                         required
@@ -459,6 +551,68 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
                   Adicionar seção
                 </button>
               </div>
+              {d.category === "itinerary" && (
+                <div className="form-section">
+                  <h3>04 · Notas do concierge</h3>
+                  {(g.conciergeNotes || []).map((note, index) => (
+                    <div className="concierge-block" key={index}>
+                      <Field label={`Título da nota concierge ${index + 1}`}>
+                        <input
+                          value={note.title}
+                          onChange={(e) =>
+                            listPatch(
+                              "guide",
+                              "conciergeNotes",
+                              index,
+                              "title",
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </Field>
+                      <Field label={`Texto da nota concierge ${index + 1}`}>
+                        <textarea
+                          value={note.text}
+                          onChange={(e) =>
+                            listPatch(
+                              "guide",
+                              "conciergeNotes",
+                              index,
+                              "text",
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </Field>
+                      <button
+                        type="button"
+                        className="text-button"
+                        onClick={() =>
+                          patch(
+                            "guide",
+                            "conciergeNotes",
+                            g.conciergeNotes.filter((_, i) => i !== index),
+                          )
+                        }
+                      >
+                        Remover nota
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() =>
+                      patch("guide", "conciergeNotes", [
+                        ...(g.conciergeNotes || []),
+                        { title: "Nova nota", text: "" },
+                      ])
+                    }
+                  >
+                    Adicionar nota do concierge
+                  </button>
+                </div>
+              )}
             </>
           )}
           {d.type === "hospedagem" && (

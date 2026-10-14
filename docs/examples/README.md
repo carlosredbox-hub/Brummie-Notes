@@ -1,5 +1,7 @@
 # Galeria visual — Brummie
 
+**Novo: [roteiro por dia/período com notas do concierge](roteiro-agenda.md)**, inspirado no último ZIP enviado.
+
 Fotos do PDF realmente exportado, com dados fictícios e imagens ilustrativas. Os cinco painéis mostram todos os 15 formatos e todas as páginas no tema Clássico azul; o sexto compara quatro temas. O conjunto entregue ao usuário inclui 60 PDFs renderizados em 169 páginas: cada formato nos quatro temas.
 
 **Veja todas as páginas dos 60 exemplos diretamente no GitHub:**
