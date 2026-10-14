@@ -25,7 +25,7 @@ export async function imageBox(
   y,
   width,
   height,
-  { crop = false, radius = 0, trim = false } = {},
+  { crop = false, radius = 0, trim = false, clearWhiteBackdrop = false } = {},
 ) {
   if (!source) return false;
   try {
@@ -70,6 +70,47 @@ export async function imageBox(
             cropped.height,
           );
         img = cropped;
+      }
+    }
+    if (clearWhiteBackdrop) {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const bitmap = ctx.getImageData(0, 0, canvas.width, canvas.height),
+        data = bitmap.data,
+        w = canvas.width,
+        h = canvas.height;
+      const white = (i) =>
+        data[i * 4 + 3] > 240 &&
+        data[i * 4] > 245 &&
+        data[i * 4 + 1] > 245 &&
+        data[i * 4 + 2] > 245;
+      const corners = [0, w - 1, (h - 1) * w, w * h - 1];
+      // Only remove an opaque white matte. Transparent brand artwork stays intact.
+      if (corners.filter(white).length >= 2) {
+        const seen = new Uint8Array(w * h),
+          queue = new Int32Array(w * h);
+        let read = 0,
+          write = 0;
+        const visit = (i) => {
+          if (i >= 0 && i < w * h && !seen[i] && white(i)) {
+            seen[i] = 1;
+            queue[write++] = i;
+          }
+        };
+        corners.forEach(visit);
+        while (read < write) {
+          const i = queue[read++];
+          if (i % w) visit(i - 1);
+          if (i % w < w - 1) visit(i + 1);
+          visit(i - w);
+          visit(i + w);
+        }
+        for (let i = 0; i < write; i++) data[queue[i] * 4 + 3] = 0;
+        ctx.putImageData(bitmap, 0, 0);
+        img = canvas;
       }
     }
     if (!crop && !radius) {

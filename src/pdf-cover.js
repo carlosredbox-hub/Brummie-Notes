@@ -26,6 +26,7 @@ export async function addDocumentCover(pdf, d) {
   if (
     !(await imageBox(pdf, c.logo, left + width * 0.125, 12, width * 0.75, 67, {
       trim: true,
+      clearWhiteBackdrop: !!t.header || (d.theme || c.documentTheme) === "gold",
     }))
   ) {
     pdf.setFont(t.serif, "bold");

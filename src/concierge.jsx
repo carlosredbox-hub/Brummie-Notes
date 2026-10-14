@@ -1377,6 +1377,14 @@ export function ConciergeForm({ initial, type, state, onClose, onSave, ui }) {
               onChange={(e) => set("notes", e.target.value)}
             />
           </Field>
+          {isSelection(d) && (
+            <Field label="Observações em inglês (opcional)">
+              <textarea
+                value={d.notesEn || ""}
+                onChange={(e) => set("notesEn", e.target.value)}
+              />
+            </Field>
+          )}
           {d.type !== "guia" && !isSelection(d) && !isCommercial(d) && (
             <div className="editor-summary">
               {new Intl.NumberFormat("pt-BR", {

@@ -23,7 +23,7 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
     );
   return (
     <section className="form-section property-selection-editor">
-      <h3>03 · Alternativas de hospedagem</h3>
+      <h3>03 · Alternativas e experiências</h3>
       <p>
         Cada opção tem foto e preço próprios. Os valores não são somados: o
         cliente escolhe uma alternativa.
@@ -66,6 +66,103 @@ export function PropertySelectionEditor({ options, onChange, currency, ui }) {
                 </Field>
               </div>
             </div>
+            <details>
+              <summary>Fotos complementares</summary>
+              {(option.images || []).map((image, i) => (
+                <div key={i}>
+                  <Field label={`Foto complementar ${index + 1}.${i + 1}`}>
+                    <Photo
+                      value={image}
+                      onChange={(value) =>
+                        patch(
+                          index,
+                          "images",
+                          option.images.map((v, j) => (j === i ? value : v)),
+                        )
+                      }
+                    />
+                  </Field>
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() =>
+                      patch(
+                        index,
+                        "images",
+                        option.images.filter((_, j) => j !== i),
+                      )
+                    }
+                  >
+                    Remover foto
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="secondary"
+                onClick={() =>
+                  patch(index, "images", [...(option.images || []), ""])
+                }
+              >
+                Adicionar foto complementar
+              </button>
+            </details>
+            <div className="form-grid">
+              <Field label={`Categoria da opção ${index + 1}`}>
+                <select
+                  value={option.kind || "property"}
+                  onChange={(e) => patch(index, "kind", e.target.value)}
+                >
+                  <option value="property">Imóvel / hospedagem</option>
+                  <option value="transport">Transporte</option>
+                  <option value="yacht">Passeio náutico</option>
+                </select>
+              </Field>
+              <Field label={`Qualificador de preço ${index + 1}`}>
+                <select
+                  value={option.priceQualifier || ""}
+                  onChange={(e) =>
+                    patch(index, "priceQualifier", e.target.value)
+                  }
+                >
+                  <option value="">Valor informado</option>
+                  <option value="from">A partir de</option>
+                </select>
+              </Field>
+            </div>
+            <details>
+              <summary>
+                Versão inglesa dos textos desta opção (opcional)
+              </summary>
+              <Field
+                label={`Título em inglês da opção ${index + 1}`}
+                value={option.titleEn || ""}
+                onChange={(e) => patch(index, "titleEn", e.target.value)}
+              />
+              <Field label={`Descrição em inglês da opção ${index + 1}`}>
+                <textarea
+                  value={option.descriptionEn || ""}
+                  onChange={(e) =>
+                    patch(index, "descriptionEn", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label={`Inclusões em inglês da opção ${index + 1}`}>
+                <textarea
+                  value={option.inclusionsEn || ""}
+                  onChange={(e) => patch(index, "inclusionsEn", e.target.value)}
+                />
+              </Field>
+              <Field
+                label={`Período em inglês da opção ${index + 1}`}
+                value={option.periodEn || ""}
+                onChange={(e) => patch(index, "periodEn", e.target.value)}
+              />
+              <p>
+                Em English, os textos ingleses preenchidos são usados; campos
+                vazios preservam o original.
+              </p>
+            </details>
             <div className="form-grid four">
               <Field
                 label={`Código do imóvel ${index + 1}`}

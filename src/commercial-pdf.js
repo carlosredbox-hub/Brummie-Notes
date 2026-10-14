@@ -9,6 +9,7 @@ export async function makeCommercialPdf(d) {
       format: [297, 167],
       compress: true,
     }),
+    en = d.language === "en",
     c = d.company,
     t = d.proposal.commercial;
   registerPdfFonts(pdf);
@@ -33,7 +34,12 @@ export async function makeCommercialPdf(d) {
     font(15, true, false, "#ffffff");
     pdf.text(c.name.toUpperCase(), 42, 14);
     if (t.partnerLogo)
-      await imageBox(pdf, t.partnerLogo, 242, 4, 43, 15, { trim: true });
+      await imageBox(pdf, t.partnerLogo, 242, 4, 43, 15, {
+        trim: true,
+        clearWhiteBackdrop: ["blue", "gold"].includes(
+          d.theme || c.documentTheme,
+        ),
+      });
     else {
       font(20, true, false, "#ffffff");
       pdf.text(t.partnerName || d.client, 284, 14, { align: "right" });
@@ -50,7 +56,7 @@ export async function makeCommercialPdf(d) {
     pdf.setFillColor(brown);
     pdf.rect(13, 53, 271, 14, "F");
     font(8, true, false, "#ffffff");
-    pdf.text("SERVIÇO", 15, 61);
+    pdf.text(en ? "SERVICE" : "SERVIÇO", 15, 61);
     font(7, false, false, "#ffffff");
     t.columns.forEach((name, i) =>
       pdf.text(
@@ -101,7 +107,7 @@ export async function makeCommercialPdf(d) {
         pdf.text(
           value === null
             ? "—"
-            : new Intl.NumberFormat("pt-BR", {
+            : new Intl.NumberFormat(en ? "en-GB" : "pt-BR", {
                 style: "currency",
                 currency: d.currency,
                 minimumFractionDigits: 0,
@@ -122,7 +128,7 @@ export async function makeCommercialPdf(d) {
     for (const line of lines) {
       if (y + 4 > 140) {
         pdf.addPage();
-        await header("Condições");
+        await header(en ? "Conditions" : "Condições");
         y = 56;
       }
       font(9);
@@ -132,7 +138,7 @@ export async function makeCommercialPdf(d) {
   }
   for (let offset = 0; offset < t.fleet.length; offset += 6) {
     pdf.addPage();
-    await header("Veículos");
+    await header(en ? "Vehicles" : "Veículos");
     for (let i = 0; i < Math.min(6, t.fleet.length - offset); i++) {
       const car = t.fleet[offset + i],
         x = 13 + (i % 3) * 92,
@@ -170,7 +176,7 @@ export async function makeCommercialPdf(d) {
     );
     font(7, true, false, gold);
     pdf.text(
-      `PROPOSTA COMERCIAL • ${t.partnerName || d.client} • BRM-${String(d.number).padStart(5, "0")}`,
+      `${en ? "COMMERCIAL PROPOSAL" : "PROPOSTA COMERCIAL"} • ${t.partnerName || d.client} • BRM-${String(d.number).padStart(5, "0")}`,
       13,
       164,
     );

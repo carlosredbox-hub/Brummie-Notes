@@ -5,7 +5,7 @@ import { isCommercial } from "./commercial.jsx";
 import { addDocumentCover } from "./pdf-cover.js";
 import { makeConciergePdf } from "./concierge-pdf.js";
 import { EditorialPdf, imageBox, moneyFor, dateFor } from "./pdf-design.js";
-export const PDF_RENDER_VERSION = 11;
+export const PDF_RENDER_VERSION = 12;
 const names = {
   invoice: ["INVOICE", "INVOICE"],
   fatura: ["FATURA", "STATEMENT"],
@@ -39,7 +39,11 @@ async function makeBasePdf(d) {
     design.paintPage();
   }
   if (!d.cover?.enabled) {
-    await imageBox(pdf, c.logo, 70, 12, 70, 30, { trim: true });
+    await imageBox(pdf, c.logo, 70, 12, 70, 30, {
+      trim: true,
+      clearWhiteBackdrop:
+        !!design.theme.header || (d.theme || c.documentTheme) === "gold",
+    });
     design.y = 51;
   }
   design.heading(

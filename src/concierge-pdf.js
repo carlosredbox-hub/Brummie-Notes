@@ -28,7 +28,7 @@ export async function makeConciergePdf(d) {
       const details = [];
       if (option.period)
         details.push({
-          text: `${en ? "Period" : "Período"}: ${option.period}`,
+          text: `${en ? "Period" : "Período"}: ${en && option.periodEn ? option.periodEn : option.period}`,
           bold: true,
         });
       if (d.showPrices !== false)
@@ -38,16 +38,24 @@ export async function makeConciergePdf(d) {
               ? en
                 ? "Price on request"
                 : "Valor sob consulta"
-              : `${en ? "Total price per stay" : "Valor total"}: ${money(option.total)}`,
+              : `${option.priceQualifier === "from" ? (en ? "Starting at" : "A partir de") : en ? "Total price" : "Valor total"}: ${money(option.total)}`,
           bold: true,
         });
-      if (!option.suites && !option.period)
+      if (
+        !option.suites &&
+        !option.period &&
+        (!option.kind || option.kind === "property")
+      )
         details.push({
           text: `(${option.rooms} ${en ? "rooms" : "quartos"} • ${option.nights} ${en ? "nights" : "noites"})`,
           bold: true,
         });
       if (option.inclusions)
-        details.push({ text: option.inclusions, bold: true });
+        details.push({
+          text:
+            en && option.inclusionsEn ? option.inclusionsEn : option.inclusions,
+          bold: true,
+        });
       if (option.link)
         details.push({
           text: `Link: ${option.propertyCode || option.title}`,
@@ -55,26 +63,49 @@ export async function makeConciergePdf(d) {
           bold: true,
         });
       const property = !!(
-        option.propertyCode ||
-        option.suites ||
-        option.period
+        option.kind === "property" ||
+        (!option.kind &&
+          (option.propertyCode || option.suites || option.period))
       );
       await design.card({
         image: option.image,
         city: property ? option.city : "",
         eyebrow: property ? "" : option.city?.toUpperCase(),
-        title: [option.propertyCode, option.title].filter(Boolean).join(" — "),
+        title: [
+          option.propertyCode,
+          en && option.titleEn ? option.titleEn : option.title,
+        ]
+          .filter(Boolean)
+          .join(" — "),
         description: [
-          option.suites
+          (!option.kind || option.kind === "property") && option.suites
             ? `${option.suites} ${en ? "suites" : "suítes"}${option.bathrooms ? ` • ${option.bathrooms} ${en ? "bathrooms" : "banheiros"}` : ""}`
             : "",
-          option.description,
+          en && option.descriptionEn
+            ? option.descriptionEn
+            : option.description,
         ]
           .filter(Boolean)
           .join("\n\n"),
         details,
         height: 56,
       });
+      if (option.images?.length) {
+        for (let offset = 0; offset < option.images.length; offset += 2) {
+          design.room(55);
+          for (let i = 0; i < Math.min(2, option.images.length - offset); i++)
+            await imageBox(
+              pdf,
+              option.images[offset + i],
+              design.left + i * 92,
+              design.y,
+              86,
+              49,
+              { crop: d.visualLayout?.imageFit !== "contain", radius: 3 },
+            );
+          design.y += 56;
+        }
+      }
     }
     if (d.proposal.paymentTerms) {
       design.section(en ? "Conditions" : "Condições");
@@ -386,7 +417,7 @@ export async function makeConciergePdf(d) {
   }
   if (d.notes) {
     design.section(en ? "Additional information" : "Informações adicionais");
-    design.text(d.notes, { size: 9 });
+    design.text(en && d.notesEn ? d.notesEn : d.notes, { size: 9 });
   }
   if (d.attachments?.length) {
     design.section(en ? "Original attachments" : "Documentos originais anexos");

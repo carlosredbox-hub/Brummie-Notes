@@ -134,3 +134,13 @@ node scripts/capture-screenshots.mjs
 ```
 
 A captura usa um navegador isolado, rede desativada e dados fictícios; não altera a biblioteca do usuário. O HTML público de demonstração está em `docs/demo/Brummie-Offline.html`. O HTML de demonstração acompanha a branch main; os instaladores são gerados a partir da tag da release.
+
+## Atlas → Aurum — New Time, PT/EN e logos claras preservadas
+
+Lidos PDF 5p e ZIP 5JPEGs de New Time. Documento composto: 5 imóveis, 4 veículos sem preço, yacht “a partir de” e catamaran com preço informado. Original PDF preservado byte a byte em pack privado v6 (31 modelos/15 arquivos). Novo template guarda fotos/links/descrições e traduções inglesas editáveis; BR-RJ094 imprime 8.9 banheiros, sinalizado sem inventar correção. Nenhum dado real/Drive link privado vai ao Git.
+
+Carlos confirmou escolher português OU inglês por documento. Contrato adicional de opção: kind property|transport|yacht, priceQualifier from ou vazio, titleEn/descriptionEn/inclusionsEn/periodEn, images[] complementares. Observações da proposta aceitam notesEn. Mantemos a validação de alternativas independentes e o domínio/presets seus intactos. Transporte não informado é null/onrequest, não zero; não somar barcos ou imóveis como seleção cumulativa. English usa textos ingleses fornecidos, sem auto tradução de conteúdo pessoal.
+
+Carlos corrigiu interpretação do logo: fundo branco ORIGINAL é permitido em modelos claros; somente a placa branca nos azuis/pretos deve sumir. Assets das marcas intactos. imageBox passa a aceitar clearWhiteBackdrop, aplicado só em logos em superfícies azul/escura: limpa branco opaco de borda, sem tocar a arte transparente original ou fotos. Casos claros preservam arquivo branco. Ver docs/new-time-reference.md e comparação em docs/examples/logo-backgrounds.md.
+
+Teste com dados reais expôs erro de render do editor de galeria (Field recebeu dois filhos, incompatível com cloneElement); corrigido, sem remover fotos. Novo modelo emitiu PT/EN com preço mínimo e ausências preservadas. Não confundir alterações main com a release v1.4.3 publicada anteriormente.

@@ -40,3 +40,5 @@ Fontes e estrutura originais preservadas; corpo mais legível, espaçamento e pa
 A logo branca é exclusiva do app. PDFs usam as marcas coloridas anteriores; Lines tem asset de rodapé separado do ícone do aplicativo. A composição lateral foi retirada; valores não são colocados automaticamente na capa.
 
 As logos transparentes ficam diretamente sobre o fundo do tema, sem retângulo branco adicional nas capas azul e escura.
+
+[Correção das logos: original preservado no claro, sem placa branca no azul/escuro](logo-backgrounds.md).
