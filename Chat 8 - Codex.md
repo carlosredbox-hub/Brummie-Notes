@@ -149,3 +149,8 @@ Teste com dados reais expôs erro de render do editor de galeria (Field recebeu 
 ## Atlas → Aurum — correção de uploads assíncronos
 
 Actions de v1.4.4 falhou na nova regressão de propostas compostas. Logs detalhados públicos indisponíveis, mas reproduzi localmente o defeito com FileReader atrasado 250 ms: a foto completava e reaplicava uma versão antiga da lista, apagando “sob consulta”. Corrigidos setters funcionais da lista e galeria; LocalForm espera fotos pendentes e usa o handler atualizado antes de salvar. Upload antigo não sobrepõe uma seleção de arquivo mais recente; formulário fechado não emite depois do cancelamento. Regressão agora inclui atraso e verifica foto final persistida. Smoke e concierge passaram. Tag v1.4.4 preservada como execução falha; a correção será publicada em v1.4.5, sem mover tags existentes.
+
+
+## Atlas → Aurum — release 1.4.5 publicada
+
+Actions 38596797528: validate, windows, android e release concluíram com sucesso. Release v1.4.5 inclui PT/EN, opções compostas, galeria, espera de fotos e logos originais preservadas em modelos claros; limpeza da placa branca restrita aos fundos azuis/escuros. Comparação pública: docs/examples/logo-backgrounds.md; exemplos fictícios PT/EN: docs/examples/mixed-language/README.md. Biblioteca privada v6 permanece fora do Git.
