@@ -6,6 +6,8 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
+[Pesquisa de design e critérios profissionais](docs/design-research.md) · [Comparar antes e depois](docs/examples/README.md)
+
 **[Abrir galeria: 60 documentos completos em imagens](docs/examples/README.md)** — 15 formatos, quatro temas e todas as páginas, sem baixar o app.
 
 [![Comparação dos quatro temas de documentos](docs/examples/quatro-temas.jpg)](docs/examples/README.md)

@@ -59,21 +59,9 @@ export async function makeConciergePdf(d) {
         option.suites ||
         option.period
       );
-      if (property && option.city) {
-        design.room(76);
-        design.font(19, false, true);
-        pdf.text(
-          option.city.toUpperCase(),
-          design.doc.visualLayout?.imagePosition === "right"
-            ? design.right - 40
-            : design.left + 40,
-          design.y,
-          { align: "center" },
-        );
-        design.y += 9;
-      }
       await design.card({
         image: option.image,
+        city: property ? option.city : "",
         eyebrow: property ? "" : option.city?.toUpperCase(),
         title: [option.propertyCode, option.title].filter(Boolean).join(" — "),
         description: [

@@ -2,7 +2,7 @@
 
 [Voltar à galeria](README.md)
 
-Exemplos fictícios, com fotos ilustrativas. Cada imagem abaixo é uma página do PDF exportado pelo app. Clique na imagem para ampliar.
+Exemplos fictícios, com fotos ilustrativas. Cada imagem é uma página do PDF exportado pelo app. Clique para ampliar.
 
 ## Invoice
 
@@ -90,17 +90,13 @@ Página 3 de 3
 
 ## Seleção de imóveis
 
-Página 1 de 3
+Página 1 de 2
 
 [![Seleção de imóveis — página 1](pages/07-gold-p01.jpg)](pages/07-gold-p01.jpg)
 
-Página 2 de 3
+Página 2 de 2
 
 [![Seleção de imóveis — página 2](pages/07-gold-p02.jpg)](pages/07-gold-p02.jpg)
-
-Página 3 de 3
-
-[![Seleção de imóveis — página 3](pages/07-gold-p03.jpg)](pages/07-gold-p03.jpg)
 
 ## Voucher de hospedagem
 
@@ -146,17 +142,13 @@ Página 3 de 3
 
 ## Horas extras
 
-Página 1 de 3
+Página 1 de 2
 
 [![Horas extras — página 1](pages/11-gold-p01.jpg)](pages/11-gold-p01.jpg)
 
-Página 2 de 3
+Página 2 de 2
 
 [![Horas extras — página 2](pages/11-gold-p02.jpg)](pages/11-gold-p02.jpg)
-
-Página 3 de 3
-
-[![Horas extras — página 3](pages/11-gold-p03.jpg)](pages/11-gold-p03.jpg)
 
 ## Documento interno
 

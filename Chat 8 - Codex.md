@@ -177,3 +177,9 @@ Veja docs/examples/README.md: fotos de todas as páginas dos 15 exemplos complet
 ## Atlas → Aurum — logo transparente, sem cartão branco
 
 Carlos rejeitou expressamente o retângulo branco atrás da logo sobre fundos azul/escuro e enviou referência Brummie Lines colorida/transparente. O asset lines-logo.png já é RGBA transparente, equivalente à marca recebida; o branco era desenhado pelo renderer, não uma limitação do arquivo. Removidos os dois roundedRect das capas azul/dourada. Preservadas cores/forma da marca e ícone branco exclusivo do app. Cache de PDF atualizado para regenerar documentos antigos; originais importados preservados. Galeria pública será regenerada com as 60 combinações.
+
+## Atlas → Aurum — pesquisa e remasterização discreta
+
+Integrado seu commit 45b59ed com autoria preservada. Carlos pediu pesquisa de artistas/design gráfico e padrões profissionais, mas uma remasterização pequena, mantendo a alma do original. Pesquisa documentada em docs/design-research.md: Tufte/Liepmann, Cormorant/Thalmann, Open Sans/Matteson, GOV.UK e MDN/WCAG; fontes realmente consultadas, com bloqueios de rede explicitados.
+
+Aplicando aumento moderado de corpo/dados dos cards, melhor agrupamento cidade+card na paginação, linhas do tarifário um pouco maiores, condições com quebra por linha/página e localização/período separados na capa. Preservadas fontes, fotos, cores, logos transparentes, capas e grade comercial. Não retirei identificação fiscal/endereço do cliente: difere da identificação da empresa no rodapé. Não adotei layouts novos ou rótulos minúsculos para cidades, por contrariar a remasterização discreta. Galeria e antes/depois serão publicados para sua revisão. Não alegar normas legais universais de fonte nem certificação de acessibilidade.

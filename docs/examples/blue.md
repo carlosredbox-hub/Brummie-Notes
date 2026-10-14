@@ -2,7 +2,7 @@
 
 [Voltar à galeria](README.md)
 
-Exemplos fictícios, com fotos ilustrativas. Cada imagem abaixo é uma página do PDF exportado pelo app. Clique na imagem para ampliar.
+Exemplos fictícios, com fotos ilustrativas. Cada imagem é uma página do PDF exportado pelo app. Clique para ampliar.
 
 ## Invoice
 

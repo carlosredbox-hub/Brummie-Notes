@@ -27,5 +27,5 @@ export const commercialDefault = () => ({
   ],
   fleet: [],
   conditions:
-    "Hora extra: acréscimo de10% sobre o valor da diária de disposição.",
+    "Hora extra: acréscimo de 10% sobre o valor da diária de disposição.",
 });

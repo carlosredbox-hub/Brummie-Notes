@@ -345,7 +345,7 @@ export function exampleDocument(kind) {
           { name: "Van luxo • exemplo", image: van },
         ],
         conditions:
-          "EXEMPLO com valores e categorias fictícios. Hora extra:10% da diária por hora. Confirmar disponibilidade.",
+          "EXEMPLO com valores e categorias fictícios. Hora extra: 10% da diária por hora. Confirmar disponibilidade.",
       },
     };
   }
@@ -400,7 +400,7 @@ export function exampleDocument(kind) {
       name: "Brummie Lines",
       taxId: "00.000.000/0000-00",
       color: "#0089cf",
-      address: "Rua de demonstração,100 • Sala201\nRio de Janeiro • Brasil",
+      address: "Rua de demonstração, 100 • Sala 201\nRio de Janeiro • Brasil",
       phone: "+55 (00) 00000-0000",
       email: "contato@brummie.example",
       website: "https://brummie.example",

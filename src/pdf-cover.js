@@ -47,7 +47,7 @@ export async function addDocumentCover(pdf, d) {
     fatura: "STATEMENT",
     voucher: "BOOKING CONFIRMATION",
     nota: "SERVICE INFORMATION",
-    orcamento: "CAR SELECTION",
+    orcamento: "QUOTATION",
     recibo: "PAYMENT RECEIPT",
     guia: "HOME GUIDE",
     hospedagem: "BOOKING VOUCHER",
@@ -60,10 +60,25 @@ export async function addDocumentCover(pdf, d) {
   pdf.setFont(t.serif, "normal");
   pdf.setTextColor(t.ink);
   pdf.setFontSize(26);
+  const portugueseTitles = {
+    invoice: "INVOICE",
+    fatura: "FATURA",
+    voucher: "CONFIRMAÇÃO DE SERVIÇO",
+    nota: "INFORMAÇÕES DO ATENDIMENTO",
+    orcamento: "ORÇAMENTO",
+    recibo: "RECIBO",
+    guia: "HOME GUIDE",
+    hospedagem: "VOUCHER DE HOSPEDAGEM",
+    horas: "HORAS EXTRAS",
+    proposta:
+      d.proposal?.layout === "property-selection"
+        ? "SELEÇÃO DE PROPRIEDADES"
+        : "SELEÇÃO DE EXPERIÊNCIAS",
+  };
   const title =
     d.cover.title ||
     (d.type === "guia" ? d.guide?.title : "") ||
-    titles[d.type];
+    (d.language === "en" ? titles[d.type] : portugueseTitles[d.type]);
   const centered = (
     value,
     maxSize,
@@ -116,14 +131,12 @@ export async function addDocumentCover(pdf, d) {
   }
   pdf.setFont(t.serif, "bold");
   pdf.setFontSize(16);
-  centered(
-    [d.cover.place, label].filter(Boolean).join(" • "),
-    16,
-    255,
-    17,
-    180,
-    "bold",
-  );
+  if (d.cover.place) {
+    centered(d.cover.place, 14, 251, 9, 180, "bold");
+    centered(label, 14, 260, 8, 180, "bold");
+  } else {
+    centered(label, 16, 255, 17, 180, "bold");
+  }
   pdf.setFont(t.serif, "bolditalic");
   pdf.setFontSize(21);
   centered(d.client, 21, 268, 14, 178, "bolditalic");

@@ -51,7 +51,7 @@ export async function makeCommercialPdf(d) {
     pdf.rect(13, 53, 271, 14, "F");
     font(8, true, false, "#ffffff");
     pdf.text("SERVIÇO", 15, 61);
-    font(6, false, false, "#ffffff");
+    font(7, false, false, "#ffffff");
     t.columns.forEach((name, i) =>
       pdf.text(
         pdf.splitTextToSize(name, col - 3),
@@ -68,7 +68,7 @@ export async function makeCommercialPdf(d) {
     const groupHeader = () => {
       pdf.setFillColor(gold);
       pdf.rect(13, y, 271, 7, "F");
-      font(8, true, false, "#ffffff");
+      font(8, true, false, theme.ink);
       pdf.text(group.title, 15, y + 5);
       y += 7;
     };
@@ -80,9 +80,9 @@ export async function makeCommercialPdf(d) {
     groupHeader();
     for (let r = 0; r < group.rows.length; r++) {
       const row = group.rows[r];
-      font(7);
+      font(8);
       const labels = pdf.splitTextToSize(row.label, 77),
-        height = Math.max(8, labels.length * 3.2 + 3);
+        height = Math.max(9, labels.length * 3.6 + 3);
       if (y + height > 138) {
         pdf.addPage();
         await header(t.title);
@@ -92,7 +92,7 @@ export async function makeCommercialPdf(d) {
       pdf.setFillColor(r % 2 ? (basic ? "#eee9d8" : theme.panel) : cream);
       pdf.setDrawColor("#d4cab1");
       pdf.rect(13, y, 271, height, "FD");
-      font(7);
+      font(8);
       pdf.text(labels, 15, y + 5);
       const col = (271 - 82) / t.columns.length;
       t.columns.forEach((_, i) => {
@@ -116,14 +116,19 @@ export async function makeCommercialPdf(d) {
     }
   }
   if (t.conditions) {
-    font(8, true);
+    font(9);
     const lines = pdf.splitTextToSize(t.conditions, 267);
-    if (y + 8 + lines.length * 3.4 > 140) {
-      pdf.addPage();
-      await header("Condições");
-      y = 56;
+    y += 8;
+    for (const line of lines) {
+      if (y + 4 > 140) {
+        pdf.addPage();
+        await header("Condições");
+        y = 56;
+      }
+      font(9);
+      pdf.text(line, 14, y);
+      y += 4.1;
     }
-    pdf.text(lines, 14, y + 8);
   }
   for (let offset = 0; offset < t.fleet.length; offset += 6) {
     pdf.addPage();

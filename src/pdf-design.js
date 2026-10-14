@@ -132,7 +132,11 @@ export class EditorialPdf {
     this.color = /^#[a-f0-9]{6}$/i.test(doc.company.color || "")
       ? doc.company.color
       : "#0089cf";
-    this.color = this.theme.accent || this.color;
+    // Reserve bright accents for decoration; values need readable contrast.
+    this.color =
+      (doc.theme || doc.company.documentTheme) === "gold"
+        ? this.theme.accent
+        : this.theme.ink;
     this.paintPage();
     this.en = doc.language === "en";
     this.covers = new Set();
@@ -222,7 +226,7 @@ export class EditorialPdf {
     this.y += gap;
   }
   heading(title, subtitle) {
-    this.text(title, { size: 25, serif: true, align: "center", gap: 6 });
+    this.text(title, { size: 24, serif: true, align: "center", gap: 6 });
     if (subtitle)
       this.text(subtitle, { size: 9, bold: true, align: "center", gap: 9 });
     if (this.doc.clientTaxId || this.doc.clientAddress)
@@ -242,6 +246,7 @@ export class EditorialPdf {
     image,
     title,
     eyebrow,
+    city,
     description,
     details = [],
     height = 59,
@@ -250,7 +255,7 @@ export class EditorialPdf {
       onRight = this.doc.visualLayout?.imagePosition === "right",
       textX = image && !onRight ? this.left + photoWidth + 6 : this.left,
       width = this.right - this.left - (image ? photoWidth + 6 : 0);
-    this.font(9);
+    this.font(10);
     const count = this.pdf.splitTextToSize(
       String(description || ""),
       width,
@@ -262,22 +267,34 @@ export class EditorialPdf {
     ).length;
     const rowHeight = Math.max(
       height,
-      count * 4.05 +
+      count * 4.5 +
         titleCount * 5 +
         details.reduce((n, detail) => {
-          this.font(detail.size || 9, detail.bold);
+          this.font(detail.size || 9.5, detail.bold);
           return (
             n +
             this.pdf.splitTextToSize(String(detail.text), width).length *
-              (detail.size || 9) *
+              (detail.size || 9.5) *
               0.45 +
-            4
+            3
           );
         }, 0) +
         (eyebrow ? 8 : 0) +
-        10,
+        6,
     );
-    this.room(Math.min(rowHeight, this.bottom - 22));
+    this.room(
+      Math.min(rowHeight + (city ? 8 : 0), this.bottom - this.theme.top),
+    );
+    if (city) {
+      this.font(17, false, true);
+      this.pdf.text(
+        city.toUpperCase(),
+        onRight ? this.right - 40 : this.left + 40,
+        this.y,
+        { align: "center" },
+      );
+      this.y += 8;
+    }
     let rowStart = this.y;
     if (image)
       await imageBox(
@@ -291,18 +308,18 @@ export class EditorialPdf {
       );
     if (eyebrow)
       this.text(eyebrow, { x: textX, width, size: 8, bold: true, gap: 3 });
-    this.text(title, { x: textX, width, size: 11, bold: true, gap: 4 });
+    this.text(title, { x: textX, width, size: 11, bold: true, gap: 3 });
     if (description)
-      this.text(description, { x: textX, width, size: 9, gap: 4 });
+      this.text(description, { x: textX, width, size: 10, gap: 3 });
     for (const detail of details)
       this.text(detail.text, {
         x: textX,
         width,
-        size: detail.size || 9,
+        size: detail.size || 9.5,
         bold: detail.bold,
         italic: detail.italic,
         color: detail.color,
-        gap: 4,
+        gap: 3,
         link: detail.link,
       });
     // A long card may continue across pages; text() handles each line without clipping.
@@ -311,7 +328,7 @@ export class EditorialPdf {
         Math.max(
           this.y,
           rowStart + Math.min(rowHeight, this.bottom - rowStart),
-        ) + 9;
+        ) + 7;
   }
   async footer() {
     const c = this.doc.company,
