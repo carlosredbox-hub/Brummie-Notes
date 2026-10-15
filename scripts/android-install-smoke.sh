@@ -3,9 +3,31 @@ set -euo pipefail
 
 output=test-results/android-install
 mkdir -p "$output"
+stage=prepare
 collect() {
+  result=$?
+  set +e
   adb logcat -d > "$output/logcat.txt" || true
   adb exec-out screencap -p > "$output/screen.png" || true
+  if [ "$result" -ne 0 ]; then
+    echo "::error title=Android install smoke::Failed at stage: $stage (API $API_LEVEL)"
+  fi
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+      echo "## Android API $API_LEVEL — stage: $stage — exit: $result"
+      for file in install.txt launch.txt ui.xml; do
+        echo "### $file"
+        echo '```text'
+        head -c 5000 "$output/$file" 2>/dev/null
+        printf '\n```\n'
+      done
+      echo '### Native crash diagnostics'
+      echo '```text'
+      adb logcat -d -s AndroidRuntime:E | tail -70
+      echo '```'
+    } >> "$GITHUB_STEP_SUMMARY"
+  fi
+  return "$result"
 }
 trap collect EXIT
 
@@ -18,13 +40,16 @@ else
 fi
 
 adb logcat -c
+stage=install
 timeout 120 adb install "$apk" | tee "$output/install.txt"
 grep -Fx Success "$output/install.txt"
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell input keyevent 82
+stage=launch
 timeout 30 adb shell am start -W -n "$package/com.brummie.documents.MainActivity" | tee "$output/launch.txt"
 grep -F 'Status: ok' "$output/launch.txt"
 
+stage=visible-interface
 for attempt in $(seq 1 15); do
   adb shell uiautomator dump /sdcard/brummie-ui.xml >/dev/null
   adb pull /sdcard/brummie-ui.xml "$output/ui.xml" >/dev/null
@@ -44,3 +69,4 @@ if grep -q 'Atualize o Android System WebView' "$output/ui.xml"; then
 else
   echo 'APK installed and opened the offline document editor.'
 fi
+stage=complete
