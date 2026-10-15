@@ -15,3 +15,5 @@ offline/Brummie-Offline.html
 
 offline/*Referencias*.html
 private-reference-data/
+
+__pycache__/

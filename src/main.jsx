@@ -216,7 +216,7 @@ function Modal({ title, onClose, children, wide = false }) {
             <X />
           </button>
         </header>
-        {children}
+        <div className="modal-content">{children}</div>
       </section>
     </div>
   );
@@ -230,9 +230,58 @@ function App() {
     [filter, setFilter] = useState("Todos"),
     [toast, setToast] = useState(""),
     [mobile, setMobile] = useState(false),
+    [toolsOpen, setToolsOpen] = useState(false),
     [connected, setConnected] = useState(true),
     [startupError, setStartupError] = useState("");
   const polling = useRef(false);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
+  useEffect(() => {
+    if (!modal && !mobile) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [modal, mobile]);
+  useEffect(() => {
+    function resize() {
+      document.documentElement.style.setProperty(
+        "--app-height",
+        `${Math.round(window.visualViewport?.height || window.innerHeight)}px`,
+      );
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    window.visualViewport?.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.visualViewport?.removeEventListener("resize", resize);
+    };
+  }, []);
+  useEffect(() => {
+    function back(event) {
+      if (modal) {
+        event.preventDefault();
+        if (
+          modal.kind !== "document" ||
+          window.confirm(
+            "Descartar esta edição e voltar? O documento ainda não gerado não será salvo.",
+          )
+        )
+          setModal(null);
+      } else if (mobile) {
+        event.preventDefault();
+        setMobile(false);
+      } else if (page !== "dashboard") {
+        event.preventDefault();
+        setPage("dashboard");
+      }
+    }
+    window.addEventListener("brummie-back", back);
+    return () => window.removeEventListener("brummie-back", back);
+  }, [modal, mobile, page]);
   async function refresh(quiet = false) {
     if (quiet && polling.current) return;
     polling.current = true;
@@ -469,7 +518,21 @@ function App() {
         )}
     >
       <div className="shell">
+        {mobile && (
+          <button
+            className="drawer-backdrop"
+            aria-label="Fechar menu"
+            onClick={() => setMobile(false)}
+          />
+        )}
         <aside className={mobile ? "open" : ""}>
+          <button
+            className="icon drawer-close"
+            aria-label="Fechar menu de navegação"
+            onClick={() => setMobile(false)}
+          >
+            <X />
+          </button>
           <div className="brand">
             <svg
               className="brand-bird"
@@ -575,6 +638,8 @@ function App() {
           <header className="topbar">
             <button
               className="icon mobile-menu"
+              aria-label="Abrir menu de navegação"
+              aria-expanded={mobile}
               onClick={() => setMobile(!mobile)}
             >
               <Menu />
@@ -593,6 +658,42 @@ function App() {
               </span>
             </div>
           </header>
+          {!modal && (
+            <nav
+              className="mobile-bottom-nav"
+              aria-label="Navegação do celular"
+            >
+              <button
+                aria-current={page === "dashboard" ? "page" : undefined}
+                onClick={() => {
+                  setPage("dashboard");
+                  setMobile(false);
+                }}
+              >
+                <LayoutDashboard size={21} />
+                <span>Início</span>
+              </button>
+              <button
+                aria-current={page === "concierge" ? "page" : undefined}
+                onClick={() => create()}
+              >
+                <Plus size={24} />
+                <span>Criar</span>
+              </button>
+              <button
+                aria-current={page === "documents" ? "page" : undefined}
+                onClick={() => {
+                  setPage("documents");
+                  setFilter("Todos");
+                  setSearch("");
+                  setMobile(false);
+                }}
+              >
+                <FileText size={21} />
+                <span>Documentos</span>
+              </button>
+            </nav>
+          )}
           <div className="content">
             {state.storageMode === "session" && (
               <div className="import-warning" role="status">
@@ -648,73 +749,84 @@ function App() {
             </div>
             <div className="offline-tools">
               <button
-                className="secondary"
-                onClick={() => setModal({ kind: "import" })}
+                className="secondary mobile-tools-toggle"
+                aria-expanded={toolsOpen}
+                onClick={() => setToolsOpen((open) => !open)}
               >
-                <Plus size={16} />
-                Importar PDF anterior
+                Biblioteca e backup <ChevronDown size={16} />
               </button>
-              <button
-                className="secondary"
-                onClick={async () => {
-                  try {
-                    await exportBackup();
-                    notify("Backup exportado.");
-                  } catch (e) {
-                    notify(e.message);
-                  }
-                }}
-              >
-                <Download size={16} />
-                Exportar backup
-              </button>
-              <label className="secondary restore-label">
-                Restaurar backup
-                <input
-                  type="file"
-                  accept="application/json,.json"
-                  onChange={async (e) => {
-                    const file = e.target.files[0];
-                    e.target.value = "";
-                    if (
-                      !file ||
-                      !confirm(
-                        "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
+              <div className={"library-tools " + (toolsOpen ? "open" : "")}>
+                <button
+                  className="secondary"
+                  onClick={() => setModal({ kind: "import" })}
+                >
+                  <Plus size={16} />
+                  Importar PDF anterior
+                </button>
+                <button
+                  className="secondary"
+                  onClick={async () => {
+                    try {
+                      await exportBackup();
+                      notify("Backup exportado.");
+                    } catch (e) {
+                      notify(e.message);
+                    }
+                  }}
+                >
+                  <Download size={16} />
+                  Exportar backup
+                </button>
+                <label className="secondary restore-label">
+                  Restaurar backup
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      e.target.value = "";
+                      if (
+                        !file ||
+                        !confirm(
+                          "Restaurar substituirá os dados locais. Exporte um backup antes de continuar.",
+                        )
                       )
-                    )
-                      return;
-                    try {
-                      await restoreBackup(file);
-                      await refresh();
-                      notify("Backup restaurado.");
-                    } catch (e) {
-                      notify(e.message);
-                    }
-                  }}
-                />
-              </label>
-              <label className="secondary library-import-label">
-                Adicionar biblioteca
-                <input
-                  type="file"
-                  accept="application/json,.json"
-                  onChange={async (e) => {
-                    const file = e.target.files[0];
-                    e.target.value = "";
-                    if (!file) return;
-                    try {
-                      await importReferenceLibrary(file);
-                      await refresh();
-                      notify(
-                        "Biblioteca adicionada sem substituir seus documentos.",
-                      );
-                    } catch (e) {
-                      notify(e.message);
-                    }
-                  }}
-                />
-              </label>
-              <small>Sem login. Sem servidor. Seus arquivos ficam aqui.</small>
+                        return;
+                      try {
+                        await restoreBackup(file);
+                        await refresh();
+                        notify("Backup restaurado.");
+                      } catch (e) {
+                        notify(e.message);
+                      }
+                    }}
+                  />
+                </label>
+                <label className="secondary library-import-label">
+                  Adicionar biblioteca
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      try {
+                        await importReferenceLibrary(file);
+                        await refresh();
+                        notify(
+                          "Biblioteca adicionada sem substituir seus documentos.",
+                        );
+                      } catch (e) {
+                        notify(e.message);
+                      }
+                    }}
+                  />
+                </label>
+                <small>
+                  Sem login. Sem servidor. Seus arquivos ficam aqui.
+                </small>
+              </div>
             </div>
             {page === "templates" && (
               <div className="record-grid">

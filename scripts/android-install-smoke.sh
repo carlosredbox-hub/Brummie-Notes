@@ -73,4 +73,8 @@ if grep -q 'Atualize o Android System WebView' "$output/ui.xml"; then
 else
   echo 'APK installed and opened the offline document editor.'
 fi
+if [ "$API_LEVEL" -ge 35 ]; then
+  stage=phone-keyboard-and-back
+  python3 scripts/android-phone-smoke.py
+fi
 stage=complete

@@ -1,10 +1,11 @@
-name: Android 8 compatibility
+name: Android compatibility
 on:
   push:
     branches: [main]
     paths:
       - android/**
       - scripts/android-install-smoke.sh
+      - scripts/android-phone-smoke.py
       - .github/workflows/android-compatibility.yml
   workflow_dispatch:
 permissions:
@@ -13,9 +14,13 @@ jobs:
   android8:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 35]
     env:
       SIGNED: "false"
-      API_LEVEL: "26"
+      API_LEVEL: ${{ matrix.api }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -46,10 +51,10 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk ../release/android/Brummie-Android-TEST.apk
       - name: Enable KVM access
         run: sudo chmod a+rw /dev/kvm
-      - name: Install and launch on Android 8
+      - name: Install and exercise Android app
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 26
+          api-level: ${{ matrix.api }}
           arch: x86_64
           target: google_apis
           disable-animations: true
@@ -58,5 +63,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: android8-diagnostics
+          name: android-api-${{ matrix.api }}-diagnostics
           path: test-results/android-install/*
