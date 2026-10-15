@@ -4,11 +4,14 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.inputmethod.InputMethodManager;
+import android.util.DisplayMetrics;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.ValueCallback;
@@ -226,6 +229,22 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
+        View root = getWindow().getDecorView();
+        boolean keyboard;
+        if (Build.VERSION.SDK_INT >= 30 && root.getRootWindowInsets() != null) {
+            keyboard = root.getRootWindowInsets().isVisible(WindowInsets.Type.ime());
+        } else {
+            Rect visible = new Rect();
+            root.getWindowVisibleDisplayFrame(visible);
+            DisplayMetrics display = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getRealMetrics(display);
+            keyboard = display.heightPixels - visible.bottom > 100 * display.density;
+        }
+        if (keyboard) {
+            InputMethodManager input = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            input.hideSoftInputFromWindow(root.getWindowToken(), 0);
+            return;
+        }
         if (web == null || web.getUrl() == null) { super.onBackPressed(); return; }
         web.evaluateJavascript("(function(){var e=new Event('brummie-back',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;})()", handled -> {
             if (isDestroyed() || "true".equals(handled)) return;

@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 out = Path('test-results/android-install')
+phase = 'open-document'
 
 def adb(*args):
     return subprocess.run(['adb', *args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30).stdout
@@ -28,7 +29,8 @@ def find(text, attempts=8):
                 if len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]:
                     return node
         time.sleep(1)
-    raise AssertionError('Visible Android control not found: ' + text)
+    labels = [node.get('text') or node.get('content-desc') for node in root.iter('node') if node.get('text') or node.get('content-desc')]
+    raise AssertionError('Visible Android control not found: ' + text + '; labels: ' + ' | '.join(labels)[:1600])
 
 def tap(text):
     left, top, right, bottom = rect(find(text))
@@ -37,6 +39,7 @@ def tap(text):
 try:
     tap('Novo documento')
     tap('Criar Invoice')
+    phase = 'initial-form-action'
     bottom_before = rect(find('Gerar documento'))[3]
     root = snapshot()
     fields = [node for node in root.iter('node') if node.get('class') == 'android.widget.EditText' and len(rect(node)) == 4 and rect(node)[3] > rect(node)[1]]
@@ -45,6 +48,7 @@ try:
     adb('shell', 'settings', 'put', 'secure', 'show_ime_with_hard_keyboard', '1')
     adb('shell', 'input', 'tap', str((left+right)//2), str((top+bottom)//2))
     adb('shell', 'input', 'text', 'ClienteAndroid')
+    phase = 'keyboard-resize'
     keyboard_adjusted = False
     for _ in range(8):
         root = snapshot()
@@ -56,7 +60,9 @@ try:
         time.sleep(1)
     assert keyboard_adjusted, 'The form action must move above the actual Android keyboard while retaining typed text'
     (out / 'phone-keyboard.png').write_bytes(adb('exec-out', 'screencap', '-p'))
+    phase = 'first-back-hides-keyboard'
     adb('shell', 'input', 'keyevent', '4')
+    phase = 'second-back-confirms-discard'
     find('Gerar documento')
     adb('shell', 'input', 'keyevent', '4')
     for _ in range(8):
@@ -73,5 +79,5 @@ try:
     (out / 'phone-check.txt').write_text('PASS: native touch navigation, actual IME resize, Back confirmation and retained input.\n')
     print('Native phone flow passed: real keyboard, visible form action, Android Back and retained input.')
 except Exception as error:
-    print('::error title=Android phone flow::' + str(error).replace('\n', ' ')[:900], flush=True)
+    print('::error title=Android phone flow::' + phase + ': ' + str(error).replace('\n', ' ')[:2400], flush=True)
     raise

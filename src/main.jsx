@@ -342,6 +342,7 @@ function App() {
       .toLowerCase()
       .includes(search.toLowerCase());
   const create = (type) => {
+    setMobile(false);
     if (!type) {
       setPage("concierge");
       setMobile(false);
@@ -544,7 +545,13 @@ function App() {
             </svg>
             brummie<span>OFFLINE STUDIO</span>
           </div>
-          <button className="workspace" onClick={() => setPage("settings")}>
+          <button
+            className="workspace"
+            onClick={() => {
+              setPage("settings");
+              setMobile(false);
+            }}
+          >
             <span className="workspace-logo">
               {state.company.name.slice(0, 1)}
             </span>
@@ -634,7 +641,7 @@ function App() {
             </button>
           </div>
         </aside>
-        <main>
+        <main inert={mobile}>
           <header className="topbar">
             <button
               className="icon mobile-menu"

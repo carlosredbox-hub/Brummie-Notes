@@ -233,6 +233,14 @@ jobs:
         with:
           name: offline-html
           path: artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-install-api-35
+          path: ${{ runner.temp }}/android-phone-proof
+      - name: Include native Android screenshots
+        run: |
+          cp "$RUNNER_TEMP/android-phone-proof/phone-keyboard.png" artifacts/Brummie-Android-Teclado.png
+          cp "$RUNNER_TEMP/android-phone-proof/phone-form.png" artifacts/Brummie-Android-Formulario.png
       - name: Publish both platforms together
         env:
           GH_TOKEN: ${{ github.token }}
@@ -244,17 +252,19 @@ jobs:
           cd artifacts
           sha256sum * > SHA256SUMS.txt
           printf '%s\n' 'Windows e Android funcionam offline. PDFs, modelos e cadastros são guardados localmente; backup JSON permite transferir entre dispositivos. Windows: instalador sem assinatura Authenticode.' > notes.md
+          printf '\n%s\n' 'Android: navegação inferior, edição em tela inteira, teclado sem cobrir as ações, botão Voltar com confirmação e compartilhamento após salvar PDF. Capturas abaixo feitas no emulador Android 15 com dados fictícios. Android 8 também passa no teste de instalação/abertura; WebView antigo precisa ser atualizado.' >> notes.md
+          printf '\n%s\n' "![Formulário com teclado Android](https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/Brummie-Android-Teclado.png)" "![Edição preservada ao cancelar Voltar](https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/Brummie-Android-Formulario.png)" >> notes.md
           flags=()
           if [ "$SIGNED" != true ]; then
             flags+=(--prerelease)
             printf '\n%s\n' 'Android TEST: build release, sem depuração, com assinatura de teste e identificador separado por versão. Mantém instalações e dados anteriores. Exporte/importe o backup para transferir a biblioteca. Requer Android 8 ou superior e WebView/Chrome atualizado (107+). Galaxy S7 Edge precisa estar atualizado para Android 8. Configure os quatro secrets Android para assinatura estável e atualizações normais. Actions instala e abre o APK nos emuladores API26 e API35 antes de publicar; em WebView antigo, o app mostra instrução de atualização.' >> notes.md
           fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk ./*.html SHA256SUMS.txt --clobber
+            gh release upload "$RELEASE_TAG" ./*.exe ./*.zip ./*.apk ./*.html ./*.png SHA256SUMS.txt --clobber
             if [ "$SIGNED" = true ]; then gh release edit "$RELEASE_TAG" --prerelease=false --notes-file notes.md; else gh release edit "$RELEASE_TAG" --prerelease --notes-file notes.md; fi
             if compgen -G '*.aab' >/dev/null; then gh release upload "$RELEASE_TAG" ./*.aab --clobber; fi
           else
-            assets=( ./*.exe ./*.zip ./*.apk ./*.html SHA256SUMS.txt )
+            assets=( ./*.exe ./*.zip ./*.apk ./*.html ./*.png SHA256SUMS.txt )
             if compgen -G '*.aab' >/dev/null; then assets+=( ./*.aab ); fi
             gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "Brummie Documents $RELEASE_TAG" --notes-file notes.md "${flags[@]}"
           fi
