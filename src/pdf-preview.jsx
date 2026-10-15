@@ -3,9 +3,11 @@ import { makePdf } from "./offline-pdf.js";
 import React, { useEffect, useRef, useState } from "react";
 import { openLocalPdf } from "./pdf-import.js";
 import { documentPdf, draftDocumentPdf } from "./offline-store.js";
+import { PdfPageThumbnails } from "./pdf-page-thumbnails.jsx";
 
 export function PdfPreview({ document, freeEditor }) {
   const [pageSize, setPageSize] = useState({ width: 595, height: 842 });
+  const [showThumbnails, setShowThumbnails] = useState(false);
   const canvas = useRef(null),
     [loaded, setLoaded] = useState(null),
     [number, setNumber] = useState(1),
@@ -87,6 +89,15 @@ export function PdfPreview({ document, freeEditor }) {
           <button
             type="button"
             className="secondary"
+            disabled={!loaded}
+            aria-expanded={showThumbnails}
+            onClick={() => setShowThumbnails((shown) => !shown)}
+          >
+            {showThumbnails ? "Ocultar miniaturas" : "Mostrar miniaturas"}
+          </button>
+          <button
+            type="button"
+            className="secondary"
             disabled={!loaded || number === 1 || busy}
             onClick={() => setNumber((n) => n - 1)}
           >
@@ -107,6 +118,15 @@ export function PdfPreview({ document, freeEditor }) {
           </button>
         </div>
       </div>
+      {showThumbnails && loaded && (
+        <PdfPageThumbnails
+          pdf={loaded}
+          number={number}
+          onSelect={setNumber}
+          busy={busy}
+          freeElements={freeEditor?.elements}
+        />
+      )}
       {error && (
         <p className="error" role="alert">
           Não foi possível mostrar a prévia: {error}. Você pode tentar baixar o

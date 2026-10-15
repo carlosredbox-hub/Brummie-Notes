@@ -40,6 +40,45 @@ try {
   await page.getByText(/Página 1 de/).waitFor();
   assert.equal(await page.locator('canvas[role="img"]').count(), 1);
   await page
+    .getByRole("button", { name: "Mostrar miniaturas", exact: true })
+    .click();
+  const thumbnails = page.getByRole("navigation", {
+    name: "Miniaturas das páginas",
+  });
+  await thumbnails.locator("img").first().waitFor();
+  const pageCount = await thumbnails
+    .getByRole("button", { name: /^Ir para a página / })
+    .count();
+  assert.ok(
+    pageCount >= 2,
+    "Multipage documents expose clickable page previews",
+  );
+  await page
+    .getByRole("button", { name: "Ir para a página 2", exact: true })
+    .click();
+  await page.getByText(/Página 2 de/).waitFor();
+  await page
+    .getByRole("status")
+    .filter({ hasText: "Renderizando página…" })
+    .waitFor({ state: "hidden" });
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Ir para a página 2", exact: true })
+      .getAttribute("aria-current"),
+    "page",
+  );
+  fs.mkdirSync("test-results/editor-preview", { recursive: true });
+  await page
+    .locator(".pdf-thumbnails")
+    .screenshot({ path: "test-results/editor-preview/page-thumbnails.png" });
+  await page
+    .getByRole("button", { name: "Ir para a página 1", exact: true })
+    .click();
+  await page
+    .getByRole("status")
+    .filter({ hasText: "Renderizando página…" })
+    .waitFor({ state: "hidden" });
+  await page
     .getByRole("button", { name: "Próxima página", exact: true })
     .click();
   await page.getByText(/Página 2 de/).waitFor();
@@ -49,9 +88,17 @@ try {
     .waitFor({ state: "hidden" });
   await page.getByLabel("Posição das fotos nos blocos").selectOption("left");
   await page
+    .getByRole("status")
+    .filter({ hasText: "A prévia está desatualizada" })
+    .waitFor();
+  await page
     .getByRole("button", { name: "Atualizar prévia", exact: true })
     .click();
   await page.getByText(/Página 1 de/).waitFor();
+  await page
+    .getByRole("status")
+    .filter({ hasText: "A prévia está desatualizada" })
+    .waitFor({ state: "hidden" });
   await page
     .getByText("Edição visual livre · opcional", { exact: true })
     .click();
@@ -65,6 +112,12 @@ try {
     .getByLabel("Adicionar imagem livre", { exact: true })
     .setInputFiles("src/assets/example-sedan.png");
   await page.locator(".free-element img").waitFor();
+  await page.locator(".pdf-thumbnail-overlay img").waitFor();
+  assert.equal(
+    await page.locator(".pdf-thumbnail-overlay").filter({ hasText: "Observação visual — confirmação" }).count(),
+    1,
+    "Live free-layout edits also appear in the page thumbnail",
+  );
   const object = page.getByRole("button", {
     name: "Mover Observação visual — confirmação",
     exact: true,

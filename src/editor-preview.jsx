@@ -36,6 +36,21 @@ export function EditorPreview({ draft, company, onChange }) {
   }
   const [preview, setPreview] = useState(null),
     [error, setError] = useState("");
+  const previewSource = useRef(null);
+  const stale =
+    preview &&
+    previewSource.current &&
+    (previewSource.current.company !== company ||
+      [
+        ...new Set([
+          ...Object.keys(draft),
+          ...Object.keys(previewSource.current.draft),
+        ]),
+      ].some(
+        (key) =>
+          key !== "freeElements" &&
+          draft[key] !== previewSource.current.draft[key],
+      ));
   const commercial = draft.proposal?.layout === "commercial";
   function refresh() {
     try {
@@ -44,6 +59,7 @@ export function EditorPreview({ draft, company, onChange }) {
         client: draft.client || "Cliente — prévia",
         email: draft.email || "",
       });
+      previewSource.current = { draft: { ...draft }, company };
       setPreview({
         ...prepared,
         company: documentCompany(company, draft.brand),
@@ -139,6 +155,12 @@ export function EditorPreview({ draft, company, onChange }) {
       {error && (
         <p className="error" role="alert">
           {error}
+        </p>
+      )}
+      {stale && (
+        <p className="preview-stale" role="status">
+          A prévia está desatualizada. Clique em Atualizar prévia para conferir
+          suas últimas alterações.
         </p>
       )}
       {preview && (

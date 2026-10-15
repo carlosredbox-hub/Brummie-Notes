@@ -6,17 +6,25 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
-[Pesquisa de design e critérios profissionais](docs/design-research.md) · [Comparar antes e depois](docs/examples/README.md)
+[Pesquisa de design e critérios profissionais](docs/design-research.md) · [Pesquisa de ferramentas e relatos de uso](docs/pesquisa-fluxo-documentos.md) · [Comparar antes e depois](docs/examples/README.md)
 
 **[Abrir galeria: 60 documentos completos em imagens](docs/examples/README.md)** — 15 formatos, quatro temas e todas as páginas, sem baixar o app.
 
 [![Comparação dos quatro temas de documentos](docs/examples/quatro-temas.jpg)](docs/examples/README.md)
 
-[Baixar o HTML para testar](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) · [Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.5)
+[Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.5)
 
 ![Início: criar documentos, usar modelos e reutilizar informações](docs/screenshots/08-inicio.png)
 
 O app é um criador de documentos: a abertura oferece criar, usar modelos, reutilizar documentos e consultar PDFs. Indicadores de contas a receber/pagamentos, colunas de valor/status no histórico e alteração de status na prévia foram retirados.
+
+## Confira as páginas antes de finalizar
+
+A prévia agora oferece miniaturas clicáveis do PDF real. Confira capa, fotos e páginas internas sem percorrer o documento inteiro. Depois de alterar conteúdo ou enquadramento, um aviso lembra de atualizar a prévia. Ajustes livres também aparecem nas miniaturas.
+
+![Miniaturas das páginas, com destaque da página selecionada](docs/screenshots/10-miniaturas-paginas.png)
+
+As miniaturas são opcionais e carregam até oito páginas por grupo, uma por vez, para limitar o uso de memória em celulares. [Pesquisa e fontes que orientaram estas mudanças](docs/pesquisa-fluxo-documentos.md).
 
 ## Do atendimento ao documento, com menos preenchimento
 

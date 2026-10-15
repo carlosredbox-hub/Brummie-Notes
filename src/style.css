@@ -1880,3 +1880,15 @@ aside {
 .launcher-brand small { font-size: 13px; font-weight: 600; }
 .launcher-card button.primary { display: flex; flex-direction: column; align-items: center; }
 .launcher-card button.secondary { white-space: normal; overflow-wrap: anywhere; text-align: center; }
+.preview-stale { padding: 12px 16px; border-left: 4px solid #ca8b20; background: #fff4d9; color: #69420a; margin: 12px 0; }
+.pdf-thumbnails { margin: 16px 0; padding: 12px; border-radius: 8px; background: #dce2ec; }
+.pdf-thumbnail-controls, .pdf-thumbnail-controls > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pdf-thumbnail-grid { display: flex; gap: 10px; overflow-x: auto; padding: 12px 0 4px; }
+.pdf-thumbnail { flex: 0 0 114px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px; border: 2px solid transparent; border-radius: 6px; background: #f6f8fc; color: #173663; font-size: 13px; }
+.pdf-thumbnail[aria-current="page"] { border-color: #245fa6; background: #ecf3ff; }
+.pdf-thumbnail-frame, .pdf-thumbnail-placeholder { width: 96px; height: 144px; display: grid; place-items: center; }
+.pdf-thumbnail-sheet { position: relative; display: block; overflow: hidden; container-type: inline-size; background: white; }
+.pdf-thumbnail-sheet > img { width: 100%; height: 100%; display: block; }
+.pdf-thumbnail-overlay { position: absolute; white-space: pre; line-height: 1.15; font-family: BrummieFreeSans; text-align: left; }
+.pdf-thumbnail-overlay img { width: 100%; display: block; }
+.pdf-thumbnail-placeholder { display: grid; place-items: center; color: #657389; }

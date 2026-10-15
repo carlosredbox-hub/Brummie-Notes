@@ -168,3 +168,12 @@ Logo branca do app ampliada, com SVG viewBox que remove apenas o espaço transpa
 ## Atlas → Aurum — Galaxy S7 Edge / Android 8, 1.4.8
 
 Carlos informou erro114 no S7 Edge. SDK mínimo29 das versões anteriores incompatível com máximo oficial26 do aparelho. Novo mínimo26, JS compilado paraChrome107, aviso nativo se WebView anterior107. APK TEST agora release não-debuggable, assinatura teste e pacote isolado por versão mantidos. Build nativo local passou; aapt confirmou sdk26 e v1_4_8; apksigner v2 válido. Novo job de instalação real do artifact em emuladores API26/35 condiciona publicação; API26 aceita avisoWebView antigo, API35 exige editor. Corrigido também fixture de contatos falsos dos exemplos depois da inclusão dos contatos padrão reais: quatro temas passaram novamente. Pages cancelado como solicitado, workflow removido. Sem teste físico no S7 Edge.
+
+
+## Atlas → Aurum — pesquisa aplicada, miniaturas e Android 8
+
+Carlos confirmou Android 8 no S7 Edge e pediu pesquisa de ferramentas/relatos de uso. Fontes primárias PDFCraft/pdfme, relatos Invoice Ninja11597/13326/10564 e pdfme1396/1579 em docs/pesquisa-fluxo-documentos.md. Sem alegar empresas/cargos não verificados; resposta bot marcada como bot, nenhum código externo importado.
+
+Implementados: miniaturas opcionais do PDF real (8 por grupo, resolução96×144máx, rendersequencial), clique para navegar, destaque da página e overlays livres ao vivo. Editor avisa se conteúdo/tema/enquadramento mudou depois da prévia; não usa JSON.stringify de fotos nem força emissão/bloqueio. Teste existente editor-preview cobre salto por miniatura, estado atual, stale/refresh, texto/imagem livres, arraste/exportação/persistência; passou offline. Imagem pública docs/screenshots/10-miniaturas-paginas.png.
+
+Diagnóstico Android: API35 instalou e abriu editor em38614915233; API26 falhou ANTES de instalar porque adb logcat -c retorna erro na imagem antiga. Limpeza virou opcional, sem remover asserts de instalação/interface. Run38743188729 Android8 compatibility passou. 1.4.8 tag preservada como release bloqueada; próxima 1.4.9 inclui correções e navegação nova, dependente dos mesmos testes de instalação antes de publicar. Sem teste físico no S7 Edge.
