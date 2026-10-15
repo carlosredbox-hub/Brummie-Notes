@@ -39,7 +39,11 @@ else
   package="com.brummie.documents.test.v${APP_VERSION//./_}"
 fi
 
-adb logcat -c
+# Old emulator images may refuse to clear a log buffer. This optional cleanup
+# must not prevent us from testing the actual package installation.
+if ! adb logcat -c 2> "$output/log-clear.txt"; then
+  echo '::warning::The emulator could not clear its diagnostic logs; continuing with APK installation.'
+fi
 stage=install
 timeout 120 adb install "$apk" | tee "$output/install.txt"
 grep -Fx Success "$output/install.txt"
