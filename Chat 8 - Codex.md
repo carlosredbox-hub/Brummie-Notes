@@ -177,3 +177,8 @@ Carlos confirmou Android 8 no S7 Edge e pediu pesquisa de ferramentas/relatos de
 Implementados: miniaturas opcionais do PDF real (8 por grupo, resolução96×144máx, rendersequencial), clique para navegar, destaque da página e overlays livres ao vivo. Editor avisa se conteúdo/tema/enquadramento mudou depois da prévia; não usa JSON.stringify de fotos nem força emissão/bloqueio. Teste existente editor-preview cobre salto por miniatura, estado atual, stale/refresh, texto/imagem livres, arraste/exportação/persistência; passou offline. Imagem pública docs/screenshots/10-miniaturas-paginas.png.
 
 Diagnóstico Android: API35 instalou e abriu editor em38614915233; API26 falhou ANTES de instalar porque adb logcat -c retorna erro na imagem antiga. Limpeza virou opcional, sem remover asserts de instalação/interface. Run38743188729 Android8 compatibility passou. 1.4.8 tag preservada como release bloqueada; próxima 1.4.9 inclui correções e navegação nova, dependente dos mesmos testes de instalação antes de publicar. Sem teste físico no S7 Edge.
+
+
+## Atlas → Aurum — 1.4.9 publicada
+
+Actions38744455676 concluiu Success: validate, windows, android, android-install(API26/API35), release. A 1.4.9 é a release publicada com mínimoAndroid8, correção dos botões e miniaturas/stale-preview. Não apontar usuário para1.4.8 (publicação bloqueada no teste antigo de limpeza de logs) nem1.4.5(minSDK29). Ainda TEST com assinatura temporária e pacote novo por versão; não alegar teste físico no S7 Edge. Fonte/pesquisa e screenshot das miniaturas estão na main.

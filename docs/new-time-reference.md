@@ -23,4 +23,4 @@ Arquivos originais das marcas continuam intactos. Uma logo com fundo branco é p
 
 [Comparação visual dos fundos](examples/logo-backgrounds.md) · [Exemplo composto em português e inglês](examples/mixed-language/README.md).
 
-Validação: testes de unidade, seleção editorial e quatro temas; proposta New Time emitida em português e inglês, conferindo alternativas, preço mínimo, valores ausentes e detalhes náuticos. Modelos anteriores permanecem disponíveis. Mudanças desta rodada publicadas na release v1.4.5, com Windows, Android de teste e HTML offline. A validação e os dois builds passaram no GitHub Actions.
+Validação: testes de unidade, seleção editorial e quatro temas; proposta New Time emitida em português e inglês, conferindo alternativas, preço mínimo, valores ausentes e detalhes náuticos. Modelos anteriores permanecem disponíveis. Mudanças desta rodada publicadas na release v1.4.9, com Windows, Android de teste e HTML offline. A validação e os dois builds passaram no GitHub Actions.
