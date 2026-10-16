@@ -12,7 +12,7 @@ def adb(*args):
     return subprocess.run(['adb', *args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30).stdout
 
 def snapshot():
-    adb('shell', 'uiautomator', 'dump', '/sdcard/brummie-phone.xml')
+    adb('shell', 'uiautomator', 'dump', '--compressed', '/sdcard/brummie-phone.xml')
     raw = adb('exec-out', 'cat', '/sdcard/brummie-phone.xml')
     (out / 'phone-ui.xml').write_bytes(raw)
     return ET.fromstring(raw)
@@ -20,7 +20,7 @@ def snapshot():
 def rect(node):
     return tuple(map(int, re.findall(r'-?\d+', node.get('bounds', ''))))
 
-def find(text, attempts=8):
+def find(text, attempts=20):
     for _ in range(attempts):
         root = snapshot()
         for node in root.iter('node'):
@@ -50,6 +50,10 @@ def tap(text):
 try:
     tap('Novo documento')
     tap('Preparar um orçamento')
+    # WebView accessibility caches can lag a React screen change on the emulator.
+    # Native keyboard focus requests a fresh accessibility tree without invoking JS.
+    adb('shell', 'input', 'keyevent', '61')
+    time.sleep(3)
     phase = 'initial-form-action'
     bottom_before = rect(find('Continuar para serviços'))[3]
     root = snapshot()
