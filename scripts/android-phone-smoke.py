@@ -28,7 +28,7 @@ def find(text, attempts=20):
     for _ in range(attempts):
         root = snapshot()
         for node in root.iter('node'):
-            if text in (node.get('text'), node.get('content-desc')):
+            if text.casefold() in ((node.get('text') or '').strip().casefold(), (node.get('content-desc') or '').strip().casefold()):
                 bounds = rect(node)
                 if len(bounds) == 4 and bounds[2] > bounds[0] and bounds[3] > bounds[1]:
                     return node
@@ -41,15 +41,19 @@ def tap(text):
     width, height = size[-2:]
     for _ in range(18):
         root = snapshot()
-        nodes = [n for n in root.iter('node') if text in (n.get('text'), n.get('content-desc')) and len(rect(n)) == 4]
+        nodes = [n for n in root.iter('node') if text.casefold() in ((n.get('text') or '').strip().casefold(), (n.get('content-desc') or '').strip().casefold()) and len(rect(n)) == 4]
+        nodes.sort(key=lambda n: not n.get('resource-id', '').startswith('android:id/'))
+        nav = next((n for n in root.iter('node') if 'Navegação do celular' in (n.get('text') or n.get('content-desc') or '') and len(rect(n)) == 4 and rect(n)[1] > 0), None)
+        bottom_limit = rect(nav)[1] if nav is not None else height-24
         for node in nodes:
             left, top, right, bottom = rect(node)
-            if right > left and bottom > top and 80 < (top+bottom)//2 < height-180:
+            if right > left and bottom > top and 24 < (top+bottom)//2 < bottom_limit:
                 adb('shell', 'input', 'tap', str((left+right)//2), str((top+bottom)//2))
                 time.sleep(1)
                 return
         adb('shell', 'input', 'swipe', str(width//2), str(height-220), str(width//2), '160', '400')
-    raise AssertionError('Could not scroll to and tap: ' + text)
+    labels = [n.get('text') or n.get('content-desc') for n in root.iter('node') if n.get('text') or n.get('content-desc')]
+    raise AssertionError('Could not scroll to and tap: ' + text + '; labels: ' + ' | '.join(labels)[:1200])
 
 try:
     tap('Novo documento')
@@ -84,7 +88,12 @@ try:
     (out / 'phone-keyboard.png').write_bytes(adb('exec-out', 'screencap', '-p'))
     phase = 'first-back-hides-keyboard'
     adb('shell', 'input', 'keyevent', '4')
-    find('Continuar para serviços')
+    for _ in range(15):
+        if rect(find('Continuar para serviços'))[3] >= bottom_before - 20:
+            break
+        time.sleep(0.3)
+    else:
+        raise AssertionError('First Back must restore the full form height before the second Back')
     phase = 'second-back-confirms-discard'
     adb('shell', 'input', 'keyevent', '4')
     for _ in range(8):
