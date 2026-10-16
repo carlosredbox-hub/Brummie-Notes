@@ -49,9 +49,9 @@ def tap(text):
 
 try:
     tap('Novo documento')
-    tap('Criar Invoice')
+    tap('Preparar um orçamento')
     phase = 'initial-form-action'
-    bottom_before = rect(find('Gerar documento'))[3]
+    bottom_before = rect(find('Continuar para serviços'))[3]
     root = snapshot()
     fields = [node for node in root.iter('node') if node.get('class') == 'android.widget.EditText' and len(rect(node)) == 4 and rect(node)[3] > rect(node)[1]]
     assert fields, 'The document form must expose editable fields to Android accessibility'
@@ -64,7 +64,7 @@ try:
     for _ in range(8):
         root = snapshot()
         if any('ClienteAndroid' in node.get('text', '') for node in root.iter('node')):
-            action = next((node for node in root.iter('node') if node.get('text') == 'Gerar documento' or node.get('content-desc') == 'Gerar documento'), None)
+            action = next((node for node in root.iter('node') if node.get('text') == 'Continuar para serviços' or node.get('content-desc') == 'Continuar para serviços'), None)
             if action is not None and len(rect(action)) == 4 and 0 < rect(action)[3] < bottom_before - 100:
                 keyboard_adjusted = True
                 break
@@ -73,8 +73,8 @@ try:
     (out / 'phone-keyboard.png').write_bytes(adb('exec-out', 'screencap', '-p'))
     phase = 'first-back-hides-keyboard'
     adb('shell', 'input', 'keyevent', '4')
+    find('Continuar para serviços')
     phase = 'second-back-confirms-discard'
-    find('Gerar documento')
     adb('shell', 'input', 'keyevent', '4')
     for _ in range(8):
         root = snapshot()

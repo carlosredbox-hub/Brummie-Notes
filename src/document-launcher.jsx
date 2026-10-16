@@ -64,6 +64,7 @@ export function DocumentLauncher({ onCreate, onExample }) {
         ].map(([type, title, description, number]) => (
           <button
             className="guided-start"
+            aria-label={title}
             key={type}
             onClick={() => onCreate(type, true)}
           >
