@@ -33,3 +33,13 @@ Capturas com dados fictícios no navegador de teste, tamanho de celular. Não s�
 - [W3C — Focus Not Obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html): cabeçalhos e rodapés fixos não devem esconder o campo em uso. O fluxo foi verificado com viewport reduzido e com teclado Android real em emulador.
 
 São referências de projeto; não constituem uma certificação completa de acessibilidade. A observação de uso com os funcionários continua recomendada.
+
+## Teste no Android instalado
+
+Capturas do APK no emulador Android 15, com dados fictícios: teclado aberto e formulário preservado depois de cancelar a saída. O teste de [compatibilidade Android](https://github.com/carlosredbox-hub/Brummie-Notes/actions/runs/38915950342) passou em API26 e API35. A [release 2.0.6](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v2.0.6) também instalou o APK distribuído nos dois emuladores antes de publicar.
+
+| Teclado sem cobrir as ações | Dados preservados ao voltar |
+| --- | --- |
+| ![Teclado Android](screenshots/17-android-teclado.png) | ![Edição preservada](screenshots/18-android-formulario.png) |
+
+Não houve teste físico no Galaxy S7 Edge. Android 8 é o mínimo; o WebView/Chrome precisa estar atualizado (107+). O APK TEST instala separadamente de versões anteriores: transfira sua biblioteca por backup.

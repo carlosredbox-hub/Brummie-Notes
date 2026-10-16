@@ -25,3 +25,7 @@ Capturas do fluxo touch em 360×640, no Chromium de teste. Elas mostram o layout
 O teste mobile cobre navegação por toque, menu/Voltar, viewport reduzido como com teclado, rotação, preservação dos campos e geração de PDF offline. O teste de instalação do APK cobre API26 e API35. Em API35, um roteiro adicional usa o teclado real do emulador e confere ações acima dele, confirmação de Voltar e retenção do texto. Publicação fica condicionada aos testes; consulte a execução da release para o resultado, sem inferi-lo do build local.
 
 No Android 8, o WebView/Chrome precisa estar atualizado (107+); com motor antigo, aparece uma orientação nativa. Enviar o PDF a um aplicativo de terceiro ainda depende dos aplicativos instalados e deve ser conferido no dispositivo físico.
+
+## Verificação da release 2.0.6
+
+[Actions 38915953884](https://github.com/carlosredbox-hub/Brummie-Notes/actions/runs/38915953884) passou em validação, Windows, Android, instalação em API26/API35 e publicação. A [galeria do modo guiado](criacao-guiada.md#teste-no-android-instalado) mostra o teclado nativo e os dados preservados depois de cancelar a saída. Os arquivos publicados foram conferidos por SHA256; o APK contém exatamente o HTML do editor testado e a assinatura Android foi verificada.

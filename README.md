@@ -1,3 +1,5 @@
+# Brummie Offline Studio
+
 ## Novo: criar com ajuda
 
 [Veja as fotos e o funcionamento da versão 2.0](docs/criacao-guiada.md).
@@ -6,11 +8,9 @@ Orçamento, invoice e atendimento agora têm um caminho em três passos: cliente
 
 ![Criação guiada no celular](docs/screenshots/14-cliente-guiado.png)
 
-# Brummie Offline Studio
-
 **Seu próximo documento começa com o que você já fez.**
 
-Um facilitador para transporte executivo: transforme serviços recorrentes e PDFs anteriores em novos invoices, faturas, orçamentos e confirmações de atendimento. Guarde seus modelos, reutilize informações e gere documentos em português ou inglês — mesmo sem internet.
+Um facilitador para Brummie Lines e Brummie Real Estate: transforme serviços recorrentes e PDFs anteriores em novos invoices, faturas, orçamentos e confirmações de atendimento. Guarde seus modelos, reutilize informações e gere documentos em português ou inglês — mesmo sem internet.
 
 **Offline · PDF · Modelos reutilizáveis · Windows e Android**
 
@@ -20,7 +20,7 @@ Um facilitador para transporte executivo: transforme serviços recorrentes e PDF
 
 [![Comparação dos quatro temas de documentos](docs/examples/quatro-temas.jpg)](docs/examples/README.md)
 
-[Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.9)
+[Instaladores Windows e Android](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v2.0.6)
 
 ![Início: criar documentos, usar modelos e reutilizar informações](docs/screenshots/08-inicio.png)
 
@@ -43,7 +43,7 @@ As miniaturas são opcionais e carregam até oito páginas por grupo, uma por ve
 
 O ícone enviado em `Brummie Icon.png` é usado no app, aba do navegador, Windows (EXE, instalador, atalhos e janela) e Android (ícones adaptativo e temático). Para atualizar as imagens derivadas, execute `python scripts/generate-icons.py` com Pillow instalado.
 
-A interface agora tem textos e controles maiores; Windows abre maximizado. A saudação genérica foi substituída por “Seus documentos Brummie”. A logo branca identifica apenas o app; as marcas coloridas dos PDFs permanecem intactas. Android TEST1.4.9 instala lado a lado com versões anteriores para evitar conflito de assinaturas temporárias, preservando seus dados; use backup para transferir a biblioteca.
+A interface agora tem textos e controles maiores; Windows abre maximizado. A saudação genérica foi substituída por “Seus documentos Brummie”. A logo branca identifica apenas o app; as marcas coloridas dos PDFs permanecem intactas. Android TEST2.0.6 instala lado a lado com versões anteriores para evitar conflito de assinaturas temporárias, preservando seus dados; use backup para transferir a biblioteca.
 
 **Novo: [roteiro por dia e período](docs/itinerary.md)** — agenda editável, notas do concierge e [exemplo completo em imagens](docs/examples/roteiro-agenda.md).
 
@@ -59,7 +59,7 @@ Antes de salvar, **Visualizar antes de finalizar** mostra as páginas do própri
 
 ![Edição visual opcional sobre a página do PDF](docs/screenshots/09-visual-editor.png)
 
-A [execução da release 1.4.9](https://github.com/carlosredbox-hub/Brummie-Notes/actions/runs/38744455676) passou em validação, Windows, Android, instalação/abertura em emuladores Android 8 e 15 e publicação. HTML da release conferido por SHA256; APK de teste e Windows sem assinatura de distribuição.
+A [execução da release 2.0.6](https://github.com/carlosredbox-hub/Brummie-Notes/actions/runs/38915953884) passou em validação, Windows, Android, instalação/abertura em emuladores Android 8 e 15 e publicação. HTML da release conferido por SHA256; APK de teste e Windows sem assinatura de distribuição.
 
 ## Revisão visual no Studio 1.4
 
@@ -67,7 +67,7 @@ Guias de hospedagem com QR de Wi-Fi e exportação HTML, vouchers de hotel com q
 
 **Documentos internos** ficam em uma área própria, como moldes editáveis de fechamento e repasse, com aviso de confidencialidade. Não aparecem no painel de clientes. Adicional de cartão opcional, desligado por padrão, aparece separado no documento quando selecionado.
 
-**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML e os instaladores da release v1.4.9 incluem a revisão visual. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
+**Adicionar biblioteca** importa pacotes privados de forma aditiva, preservando os dados existentes. Esses pacotes não são publicados no GitHub. O HTML e os instaladores da release v2.0.6 incluem a revisão visual. Clientes, motoristas e frota ficam em Configurações. A colaboração Atlas/Aurum está registrada nos arquivos `Chat 8 - Codex.md` e `Chat 8 - Claude.md`.
 
 ![Guias, hospedagem, experiências e horas extras](docs/screenshots/07-concierge.png)
 
@@ -107,7 +107,7 @@ _Screenshots reais do app, com dados fictícios de demonstração. A imagem móv
 
 ## Escolha como testar
 
-O [HTML único](https://github.com/carlosredbox-hub/Brummie-Notes/raw/refs/heads/main/docs/demo/Brummie-Offline.html) abre no Chrome/Edge, sem instalar o app nem configurar servidor. A [release v1.4.9](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v1.4.9) também inclui Windows EXE/ZIP e Android APK de teste. O workflow valida e gera os pacotes Windows e Android; acompanhe a execução da versão na aba Actions.
+Veja as [fotos do modo guiado](docs/criacao-guiada.md) antes de instalar. A [release v2.0.6](https://github.com/carlosredbox-hub/Brummie-Notes/releases/tag/v2.0.6) também inclui Windows EXE/ZIP e Android APK de teste. O workflow valida e gera os pacotes Windows e Android; acompanhe a execução da versão na aba Actions.
 
 Cada dispositivo guarda sua própria biblioteca. Transfira dados por backup; não há sincronização automática. A restauração substitui os dados existentes após confirmação. A distribuição pública inclui modelos genéricos; sua biblioteca privada é carregada por backup. Os documentos são informativos, sem integração fiscal oficial.
 
