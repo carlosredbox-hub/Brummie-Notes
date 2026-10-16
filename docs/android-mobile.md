@@ -1,6 +1,6 @@
 # Android: uma interface para o celular
 
-A versão 2.0.0 adapta a interface ao uso no celular, mantendo o mínimo Android 8 e o funcionamento offline. A instalação continua sendo um APK TEST com identificador separado por versão; não substitui instalações anteriores nem suas bibliotecas.
+A versão 2.0.1 adapta a interface ao uso no celular, mantendo o mínimo Android 8 e o funcionamento offline. A instalação continua sendo um APK TEST com identificador separado por versão; não substitui instalações anteriores nem suas bibliotecas.
 
 - Navegação inferior: Início, Criar e Documentos.
 - Biblioteca e backup agrupados para deixar a criação à frente.
