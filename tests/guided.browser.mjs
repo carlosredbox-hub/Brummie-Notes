@@ -49,7 +49,9 @@ try {
     .getByLabel("Nome do serviço", { exact: true })
     .fill("Airport transfer");
   await page.getByLabel("Valor por serviço (R$)").fill("450");
-  await page.getByLabel("Foto do serviço ou veículo (opcional)").setInputFiles("src/assets/example-sedan.png");
+  await page
+    .getByLabel("Foto do serviço ou veículo (opcional)")
+    .setInputFiles("src/assets/example-sedan.png");
   await page
     .getByRole("button", { name: "+ Adicionar outro serviço", exact: true })
     .click();
@@ -58,7 +60,10 @@ try {
     .nth(1)
     .fill("City tour");
   await page.getByLabel("Valor por serviço (R$)").nth(1).fill("900");
-  await page.getByLabel("Foto do serviço ou veículo (opcional)").nth(1).setInputFiles("src/assets/example-van.jpeg");
+  await page
+    .getByLabel("Foto do serviço ou veículo (opcional)")
+    .nth(1)
+    .setInputFiles("src/assets/example-van.jpeg");
   await page.screenshot({ path: "test-results/guided/04-servicos.png" });
   await page
     .getByRole("button", { name: "Conferir documento", exact: true })
@@ -99,7 +104,11 @@ try {
     });
   });
   assert.ok(JSON.stringify(saved).includes("City tour"));
-  assert.ok(saved[0].documents.at(-1).items.every(x => x.image?.startsWith("data:image/")));
+  assert.ok(
+    saved[0].documents
+      .at(-1)
+      .items.every((x) => x.image?.startsWith("data:image/")),
+  );
   assert.ok(JSON.stringify(saved).includes('"language":"en"'));
   assert.deepEqual(errors, []);
   console.log(

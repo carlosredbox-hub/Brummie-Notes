@@ -27,9 +27,17 @@ export function GuidedDocument({
       "items",
       d.items.map((x, i) => (i === index ? { ...x, [key]: value } : x)),
     );
+  const close = () => {
+    if (
+      window.confirm(
+        "Descartar esta edição? Os dados ainda não finalizados serão perdidos.",
+      )
+    )
+      onClose();
+  };
   const financial = !["nota", "voucher"].includes(d.type);
   return (
-    <Modal title="Criar com ajuda" onClose={onClose} wide>
+    <Modal title="Criar com ajuda" onClose={close} wide>
       <LocalForm
         onSubmit={async (e) => {
           e.preventDefault();
@@ -326,7 +334,7 @@ export function GuidedDocument({
           <button
             type="button"
             className="secondary"
-            onClick={() => (step ? setStep(step - 1) : onClose())}
+            onClick={() => (step ? setStep(step - 1) : close())}
           >
             {step ? "Voltar" : "Cancelar"}
           </button>

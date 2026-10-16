@@ -21,3 +21,5 @@ Capturas com dados fictícios no navegador de teste, tamanho de celular. Não s�
 | Escolher | Preencher | Conferir |
 | --- | --- | --- |
 | ![Escolher](screenshots/13-criar-com-ajuda.png) | ![Cliente](screenshots/14-cliente-guiado.png) | ![Conferir](screenshots/15-conferir-guiado.png) |
+
+![Serviços com upload de foto por cartão](screenshots/16-servicos-guiados.png)
