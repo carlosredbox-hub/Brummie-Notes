@@ -37,7 +37,45 @@ export const documentFormats = [
 export function DocumentLauncher({ onCreate, onExample }) {
   return (
     <section className="document-launcher">
-      <h2>Escolha o documento</h2>
+      <h2>O que você quer enviar ao cliente?</h2>
+      <p>
+        Escolha abaixo. Vamos ajudar você a preencher, conferir e gerar o PDF.
+      </p>
+      <div className="guided-start-grid">
+        {[
+          [
+            "orcamento",
+            "Preparar um orçamento",
+            "Apresente serviços, fotos e preços.",
+            "01",
+          ],
+          [
+            "invoice",
+            "Enviar uma invoice",
+            "Organize os serviços e o pagamento.",
+            "02",
+          ],
+          [
+            "nota",
+            "Confirmar um atendimento",
+            "Mostre o serviço, motorista e veículo.",
+            "03",
+          ],
+        ].map(([type, title, description, number]) => (
+          <button
+            className="guided-start"
+            key={type}
+            onClick={() => onCreate(type, true)}
+          >
+            <img src={linesLogo} alt="Brummie Lines" />
+            <span className="guided-start-number">{number}</span>
+            <strong>{title}</strong>
+            <span>{description}</span>
+            <b>Criar com ajuda →</b>
+          </button>
+        ))}
+      </div>
+      <h2>Todos os modelos e exemplos</h2>
       <p>
         Comece vazio ou abra um exemplo completo. Na prévia, use Reutilizar para
         editar.

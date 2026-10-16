@@ -2,6 +2,7 @@ import { rioItinerarySections, rioConciergeNotes } from "./itinerary-model.js";
 import { EditorPreview } from "./editor-preview.jsx";
 import { documentThemes } from "./document-themes.js";
 import { commercialDefault, isCommercial } from "./commercial.jsx";
+import { GuidedDocument } from "./guided-document.jsx";
 import { DocumentLauncher } from "./document-launcher.jsx";
 import { exampleDocument } from "./document-examples.js";
 import { makePdf } from "./offline-pdf.js";
@@ -341,7 +342,7 @@ function App() {
     (d.client + " " + TYPES[d.type] + " " + String(d.number).padStart(5, "0"))
       .toLowerCase()
       .includes(search.toLowerCase());
-  const create = (type) => {
+  const create = (type, guided = false) => {
     setMobile(false);
     if (!type) {
       setPage("concierge");
@@ -420,7 +421,7 @@ function App() {
           },
         },
       });
-    } else setModal({ kind: "document", type });
+    } else setModal({ kind: "document", type, guided });
   };
   const titles = {
     dashboard: "Meu facilitador",
@@ -1291,6 +1292,7 @@ function App() {
             {
               ui: { Modal, Field, Photo, LocalForm },
               initial: modal.doc,
+              guided: modal.guided,
               type: modal.type,
               state,
               onClose: () => setModal(null),
@@ -1592,7 +1594,8 @@ const newItem = () => ({
   extra: 0,
   flight: "",
 });
-function DocForm({ initial, type, state, onClose, onSave }) {
+function DocForm({ initial, type, state, onClose, onSave, guided = false }) {
+  const [simple, setSimple] = useState(guided);
   const [d, setD] = useState(
       initial
         ? {
@@ -1659,6 +1662,18 @@ function DocForm({ initial, type, state, onClose, onSave }) {
       onChange={(e) => set(k, e.target.value)}
     />
   );
+  if (simple)
+    return (
+      <GuidedDocument
+        draft={d}
+        onChange={setD}
+        state={state}
+        ui={{ Modal, Field, Photo, LocalForm }}
+        onClose={onClose}
+        onSave={onSave}
+        onFull={() => setSimple(false)}
+      />
+    );
   return (
     <Modal title="Novo documento" onClose={onClose} wide>
       <LocalForm

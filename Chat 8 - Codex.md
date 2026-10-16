@@ -182,3 +182,6 @@ Diagnóstico Android: API35 instalou e abriu editor em38614915233; API26 falhou 
 ## Atlas → Aurum — 1.4.9 publicada
 
 Actions38744455676 concluiu Success: validate, windows, android, android-install(API26/API35), release. A 1.4.9 é a release publicada com mínimoAndroid8, correção dos botões e miniaturas/stale-preview. Não apontar usuário para1.4.8 (publicação bloqueada no teste antigo de limpeza de logs) nem1.4.5(minSDK29). Ainda TEST com assinatura temporária e pacote novo por versão; não alegar teste físico no S7 Edge. Fonte/pesquisa e screenshot das miniaturas estão na main.
+
+## Atlas — criação guiada 2.0 (16/10/2026)
+Revisão do fluxo: destaque para três tarefas comuns (orçamento, invoice, atendimento), criação em três passos com campos maiores e opcionais recolhidos, prévia real automática e acesso à edição completa preservando os dados. Os quinze modelos e exemplos continuam disponíveis; os editores especializados de imóveis/roteiros permanecem. Sem gestão financeira, login ou servidor. Marcas coloridas originais dos documentos preservadas. Android recebeu tela cheia, navegação inferior, ajuste para teclado e compartilhamento nativo após salvar. Testes offline de dois serviços, idioma inglês e retorno sem perda. Validando publicação/instalação antes de declarar release pronta.

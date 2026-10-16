@@ -101,13 +101,14 @@ public class MainActivity extends Activity {
 
     private void setAppView(View view) {
         FrameLayout host = new FrameLayout(this);
+        host.setBackgroundColor(android.graphics.Color.rgb(18, 27, 43));
         host.addView(view, new FrameLayout.LayoutParams(-1, -1));
         setContentView(host);
         // Android 15 enforces edge-to-edge. Older Android uses the normal
         // window and adjustResize; applying IME padding there would count it twice.
         if (Build.VERSION.SDK_INT >= 35) {
             host.setOnApplyWindowInsetsListener((target, insets) -> {
-                android.graphics.Insets safe = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.ime());
+                android.graphics.Insets safe = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
                 target.setPadding(safe.left, safe.top, safe.right, safe.bottom);
                 return WindowInsets.CONSUMED;
             });
@@ -137,6 +138,7 @@ public class MainActivity extends Activity {
             layout.addView(update);
         }
         ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(android.graphics.Color.rgb(246, 247, 248));
         scroll.addView(layout);
         setAppView(scroll);
     }

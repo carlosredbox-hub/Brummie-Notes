@@ -1,5 +1,5 @@
 import { documentCompany } from "./document-branding.js";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { PdfPreview } from "./pdf-preview.jsx";
 import { validateDoc } from "./editorial-document.js";
 import { documentThemes } from "./document-themes.js";
@@ -7,7 +7,13 @@ import { documentThemes } from "./document-themes.js";
 const elementId = () =>
   globalThis.crypto?.randomUUID?.() ||
   `element-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-export function EditorPreview({ draft, company, onChange }) {
+export function EditorPreview({
+  draft,
+  company,
+  onChange,
+  autoPreview = false,
+  compact = false,
+}) {
   const history = useRef({ past: [], future: [], last: 0 });
   function changeElements(elements) {
     const h = history.current;
@@ -76,79 +82,90 @@ export function EditorPreview({ draft, company, onChange }) {
       setError(`Preencha os campos necessários para a prévia: ${e.message}`);
     }
   }
+  useEffect(() => {
+    if (autoPreview) refresh();
+  }, []);
+  const LayoutControls = compact ? "details" : "div";
   return (
-    <section className="form-section editor-live-preview">
+    <section
+      className={
+        "form-section editor-live-preview" + (compact ? " compact-preview" : "")
+      }
+    >
       <h3>Conferir a composição antes de finalizar</h3>
       <p>
         Confira todas as páginas do PDF sem salvar. Depois de alterar textos,
         fotos ou posições, atualize a prévia.
       </p>
-      <div className="form-grid">
-        <label>
-          Tema do documento
-          <select
-            value={draft.theme || "default"}
-            onChange={(e) =>
-              onChange({
-                ...draft,
-                theme:
-                  e.target.value === "default" ? undefined : e.target.value,
-              })
-            }
-          >
-            <option value="default">Usar padrão atual</option>
-            {Object.entries(documentThemes).map(([id, t]) => (
-              <option key={id} value={id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {!commercial && (
+      <LayoutControls className="preview-layout-options">
+        {compact && <summary>Ajustar tema e posição das fotos</summary>}
+        <div className="form-grid">
           <label>
-            Posição das fotos nos blocos
+            Tema do documento
             <select
-              value={draft.visualLayout?.imagePosition || "left"}
+              value={draft.theme || "default"}
               onChange={(e) =>
                 onChange({
                   ...draft,
-                  visualLayout: {
-                    ...draft.visualLayout,
-                    imagePosition: e.target.value,
-                  },
+                  theme:
+                    e.target.value === "default" ? undefined : e.target.value,
                 })
               }
             >
-              <option value="left">Foto à esquerda · texto à direita</option>
-              <option value="right">Texto à esquerda · foto à direita</option>
+              <option value="default">Usar padrão atual</option>
+              {Object.entries(documentThemes).map(([id, t]) => (
+                <option key={id} value={id}>
+                  {t.label}
+                </option>
+              ))}
             </select>
           </label>
-        )}
-        {!commercial && (
-          <label>
-            Enquadramento das fotos nos blocos
-            <select
-              value={draft.visualLayout?.imageFit || "crop"}
-              onChange={(e) =>
-                onChange({
-                  ...draft,
-                  visualLayout: {
-                    ...draft.visualLayout,
-                    imageFit: e.target.value,
-                  },
-                })
-              }
-            >
-              <option value="crop">Preencher o espaço</option>
-              <option value="contain">Mostrar a imagem inteira</option>
-            </select>
-          </label>
-        )}
-      </div>
-      <p className="muted">
-        A capa mantém sua composição; catálogos de veículos usam a grade de
-        fotos.
-      </p>
+          {!commercial && (
+            <label>
+              Posição das fotos nos blocos
+              <select
+                value={draft.visualLayout?.imagePosition || "left"}
+                onChange={(e) =>
+                  onChange({
+                    ...draft,
+                    visualLayout: {
+                      ...draft.visualLayout,
+                      imagePosition: e.target.value,
+                    },
+                  })
+                }
+              >
+                <option value="left">Foto à esquerda · texto à direita</option>
+                <option value="right">Texto à esquerda · foto à direita</option>
+              </select>
+            </label>
+          )}
+          {!commercial && (
+            <label>
+              Enquadramento das fotos nos blocos
+              <select
+                value={draft.visualLayout?.imageFit || "crop"}
+                onChange={(e) =>
+                  onChange({
+                    ...draft,
+                    visualLayout: {
+                      ...draft.visualLayout,
+                      imageFit: e.target.value,
+                    },
+                  })
+                }
+              >
+                <option value="crop">Preencher o espaço</option>
+                <option value="contain">Mostrar a imagem inteira</option>
+              </select>
+            </label>
+          )}
+        </div>
+        <p className="muted">
+          A capa mantém sua composição; catálogos de veículos usam a grade de
+          fotos.
+        </p>
+      </LayoutControls>
       <button type="button" className="secondary" onClick={refresh}>
         {preview ? "Atualizar prévia" : "Visualizar antes de finalizar"}
       </button>

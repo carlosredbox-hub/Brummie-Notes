@@ -1932,3 +1932,209 @@ aside {
   .editor-live-preview { padding: 12px; }
   .field, .form-section, .form-grid > * { min-width: 0; }
 }
+
+
+/* Guided creation: recognition first, one task per screen. */
+.guided-start-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 24px 0 38px;
+}
+.guided-start {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 15px;
+  background: #edf3fc;
+  color: #18345f;
+  border: 2px solid #c7d7ef;
+  border-radius: 16px;
+  padding: 25px;
+  min-height: 240px;
+  white-space: normal;
+}
+.guided-start:hover,
+.guided-start:focus-visible {
+  border-color: #2459aa;
+  background: #e3edfc;
+}
+.guided-start img {
+  width: 150px;
+  height: 55px;
+  object-fit: contain;
+}
+.guided-start strong {
+  font-size: 23px;
+  line-height: 1.3;
+}
+.guided-start > b {
+  margin-top: auto;
+}
+.guided-start-number {
+  position: absolute;
+  right: 20px;
+  top: 23px;
+  color: #496994;
+  font-size: 21px;
+}
+.guided-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  color: #52647a;
+}
+.guided-heading img {
+  width: 180px;
+  height: 62px;
+  object-fit: contain;
+}
+.guided-progress {
+  display: flex;
+  list-style: none;
+  gap: 14px;
+  padding: 0;
+  margin: 25px 0;
+}
+.guided-progress li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  color: #536579;
+}
+.guided-progress li > span {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e5ebf3;
+}
+.guided-progress li.active {
+  color: #153e77;
+  font-weight: 700;
+}
+.guided-progress li.active > span {
+  background: #224f92;
+  color: white;
+}
+.guided-body h3 {
+  font-size: 25px;
+  line-height: 1.3;
+}
+.guided-body p {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.guided-body label {
+  font-size: 16px;
+}
+.guided-body input,
+.guided-body textarea,
+.guided-body select {
+  font-size: 18px;
+  min-height: 50px;
+}
+.guided-body details {
+  border: 1px solid #ccd8e8;
+  border-radius: 10px;
+  margin: 22px 0;
+  padding: 16px;
+}
+.guided-body summary {
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 600;
+  min-height: 30px;
+}
+.guided-body details[open] > summary {
+  margin-bottom: 18px;
+}
+.guided-language {
+  border: 0;
+  padding: 0;
+  margin: 25px 0;
+}
+.guided-language legend {
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+.guided-language button,
+.guided-choices button {
+  min-height: 50px;
+  background: #f5f8fd;
+  border: 2px solid #c6d4e7;
+  border-radius: 9px;
+  margin: 0 12px 10px 0;
+  padding: 10px 25px;
+  color: #203e68;
+}
+.guided-language button[aria-pressed="true"] {
+  background: #193f79;
+  border-color: #193f79;
+  color: white;
+}
+.guided-service {
+  border: 1px solid #c7d6eb;
+  background: #f5f8fd;
+  border-radius: 13px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.guided-service h4 {
+  font-size: 20px;
+  margin: 0 0 18px;
+}
+.guided-add {
+  min-height: 52px;
+  width: 100%;
+}
+.guided-actions button {
+  min-height: 52px;
+  font-size: 17px;
+}
+.guided-body .text-button {
+  white-space: normal;
+  text-align: left;
+  min-height: 48px;
+}
+@media (max-width: 800px) {
+  .guided-start-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .guided-start {
+    min-height: 195px;
+    padding: 20px;
+  }
+  .guided-start strong {
+    font-size: 22px;
+  }
+  .guided-progress {
+    gap: 5px;
+  }
+  .guided-progress li {
+    flex-direction: column;
+    text-align: center;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .guided-body h3 {
+    font-size: 23px;
+  }
+  .guided-service {
+    padding: 14px;
+  }
+  .guided-actions {
+    justify-content: space-between;
+  }
+  .guided-actions button {
+    flex: 1;
+  }
+}
+.compact-preview>h3,.compact-preview>p:not(.error):not(.preview-stale){display:none}
+.compact-preview{padding:0;border:0}.compact-preview .preview-layout-options{margin:0 0 12px}.compact-preview .free-tools{font-size:15px}

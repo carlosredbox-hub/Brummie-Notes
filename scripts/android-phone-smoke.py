@@ -33,8 +33,19 @@ def find(text, attempts=8):
     raise AssertionError('Visible Android control not found: ' + text + '; labels: ' + ' | '.join(labels)[:1600])
 
 def tap(text):
-    left, top, right, bottom = rect(find(text))
-    adb('shell', 'input', 'tap', str((left + right)//2), str((top + bottom)//2))
+    size = list(map(int, re.findall(r'\d+', adb('shell', 'wm', 'size').decode().splitlines()[0])))
+    width, height = size[-2:]
+    for _ in range(18):
+        root = snapshot()
+        nodes = [n for n in root.iter('node') if text in (n.get('text'), n.get('content-desc')) and len(rect(n)) == 4]
+        for node in nodes:
+            left, top, right, bottom = rect(node)
+            if right > left and bottom > top and 80 < (top+bottom)//2 < height-180:
+                adb('shell', 'input', 'tap', str((left+right)//2), str((top+bottom)//2))
+                time.sleep(1)
+                return
+        adb('shell', 'input', 'swipe', str(width//2), str(height-220), str(width//2), '160', '400')
+    raise AssertionError('Could not scroll to and tap: ' + text)
 
 try:
     tap('Novo documento')

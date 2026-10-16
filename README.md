@@ -1,3 +1,11 @@
+## Novo: criar com ajuda
+
+[Veja as fotos e o funcionamento da versão 2.0](docs/criacao-guiada.md).
+
+Orçamento, invoice e atendimento agora têm um caminho em três passos: cliente, serviços/fotos e conferência do PDF. Botões maiores, idioma por documento e opções adicionais recolhidas. Os outros modelos permanecem disponíveis no catálogo.
+
+![Criação guiada no celular](docs/screenshots/14-cliente-guiado.png)
+
 # Brummie Offline Studio
 
 **Seu próximo documento começa com o que você já fez.**

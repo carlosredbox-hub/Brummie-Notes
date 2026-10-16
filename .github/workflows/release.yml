@@ -34,6 +34,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: npm run test:mobile
+      - run: npm run test:guided
       - run: npm run test:preview
       - run: npm run test:concierge
       - run: npm run test:editorial
@@ -254,6 +255,7 @@ jobs:
           printf '%s\n' 'Windows e Android funcionam offline. PDFs, modelos e cadastros são guardados localmente; backup JSON permite transferir entre dispositivos. Windows: instalador sem assinatura Authenticode.' > notes.md
           printf '\n%s\n' 'Android: navegação inferior, edição em tela inteira, teclado sem cobrir as ações, botão Voltar com confirmação e compartilhamento após salvar PDF. Capturas abaixo feitas no emulador Android 15 com dados fictícios. Android 8 também passa no teste de instalação/abertura; WebView antigo precisa ser atualizado.' >> notes.md
           printf '\n%s\n' "![Formulário com teclado Android](https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/Brummie-Android-Teclado.png)" "![Edição preservada ao cancelar Voltar](https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/Brummie-Android-Formulario.png)" >> notes.md
+          printf '\n%s\n' 'Novo modo Criar com ajuda: orçamento, invoice e atendimento em três passos, com idioma por documento, vários serviços/fotos e prévia real antes de finalizar. Veja fotos em https://github.com/carlosredbox-hub/Brummie-Notes/blob/main/docs/criacao-guiada.md' >> notes.md
           flags=()
           if [ "$SIGNED" != true ]; then
             flags+=(--prerelease)
