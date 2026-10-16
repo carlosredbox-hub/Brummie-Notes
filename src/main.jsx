@@ -197,6 +197,14 @@ function LocalForm({ onSubmit, children, ...props }) {
   );
 }
 function Modal({ title, onClose, children, wide = false }) {
+  const dialog = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    dialog.current?.focus({ preventScroll: true });
+    return () => {
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, []);
   return (
     <div
       className="overlay"
@@ -204,6 +212,31 @@ function Modal({ title, onClose, children, wide = false }) {
     >
       <section
         className={"modal " + (wide ? "wide" : "")}
+        ref={dialog}
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key !== "Tab") return;
+          const controls = [
+            ...dialog.current.querySelectorAll(
+              'button,input,select,textarea,a[href],[tabindex="0"]',
+            ),
+          ].filter(
+            (node) => !node.disabled && node.getClientRects().length > 0,
+          );
+          const first = controls[0],
+            last = controls.at(-1);
+          if (
+            event.shiftKey &&
+            (document.activeElement === first ||
+              document.activeElement === dialog.current)
+          ) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -527,7 +560,7 @@ function App() {
             onClick={() => setMobile(false)}
           />
         )}
-        <aside className={mobile ? "open" : ""}>
+        <aside className={mobile ? "open" : ""} inert={!!modal}>
           <button
             className="icon drawer-close"
             aria-label="Fechar menu de navegação"
@@ -642,7 +675,7 @@ function App() {
             </button>
           </div>
         </aside>
-        <main inert={mobile}>
+        <main inert={mobile || !!modal}>
           <header className="topbar">
             <button
               className="icon mobile-menu"

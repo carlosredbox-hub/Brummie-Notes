@@ -10,6 +10,8 @@ Orçamento, invoice e nota de atendimento têm um caminho guiado:
 
 A edição completa mantém todos os campos anteriores e recebe os dados já digitados ao sair do modo guiado. Os outros modelos, incluindo imóveis, hospedagem, roteiro e tarifário, continuam no catálogo com exemplos completos. Esta primeira versão guiada cobre os três caminhos destacados; os outros modelos ainda usam seus editores específicos.
 
+As janelas de edição recebem o foco de teclado e tornam o conteúdo atrás delas inativo. A navegação por Tab permanece dentro da janela.
+
 Foram aplicados textos diretos, botões com área de toque de pelo menos 48 px, campos maiores e divulgação progressiva das opções. Isso melhora a operação, mas não substitui uma rodada de observação com os funcionários que vão usar o app. Próximo passo recomendado: pedir que duas pessoas criem um orçamento sem ajuda e registrar onde hesitam.
 
 O teste offline verifica nome obrigatório, idioma inglês, dois serviços, prévia PDF, retorno sem perda e documento persistido. O fluxo completo anterior e a edição visual livre também continuam testados. Não há login nem servidor; o backup é necessário para transferir dados entre aparelhos.
