@@ -49,6 +49,12 @@ timeout 120 adb install "$apk" | tee "$output/install.txt"
 grep -Fx Success "$output/install.txt"
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell input keyevent 82
+# This disposable Google APIs emulator can surface a Pixel Launcher ANR over
+# an otherwise working app. Disable only that unrelated launcher fixture;
+# Brummie crashes/ANRs and all installation/UI assertions remain failures.
+if [ "$API_LEVEL" -ge 35 ]; then
+  adb shell pm disable-user --user 0 com.google.android.apps.nexuslauncher
+fi
 stage=launch
 timeout 30 adb shell am start -W -n "$package/com.brummie.documents.MainActivity" | tee "$output/launch.txt"
 grep -F 'Status: ok' "$output/launch.txt"
