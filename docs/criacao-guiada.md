@@ -25,3 +25,11 @@ Capturas com dados fictícios no navegador de teste, tamanho de celular. Não s�
 | ![Escolher](screenshots/13-criar-com-ajuda.png) | ![Cliente](screenshots/14-cliente-guiado.png) | ![Conferir](screenshots/15-conferir-guiado.png) |
 
 ![Serviços com upload de foto por cartão](screenshots/16-servicos-guiados.png)
+
+## Referências da revisão
+
+- [GOV.UK — Question pages](https://design-system.service.gov.uk/patterns/question-pages/): pedir apenas informações necessárias, permitir voltar e reaproveitar respostas. O assistente agrupa as perguntas por tarefa; não replica integralmente esse padrão.
+- [W3C — Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html): tamanho e separação dos controles reduzem toques acidentais. As ações principais do novo fluxo têm pelo menos 48 px de altura.
+- [W3C — Focus Not Obscured](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html): cabeçalhos e rodapés fixos não devem esconder o campo em uso. O fluxo foi verificado com viewport reduzido e com teclado Android real em emulador.
+
+São referências de projeto; não constituem uma certificação completa de acessibilidade. A observação de uso com os funcionários continua recomendada.
