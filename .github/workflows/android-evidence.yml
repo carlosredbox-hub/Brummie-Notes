@@ -1,29 +1,21 @@
-name: Inspect Android test evidence
+name: Cancel superseded release attempts
 on:
   push:
     branches: [main]
     paths: [.github/workflows/android-evidence.yml]
 permissions:
-  contents: write
-  actions: read
+  contents: read
+  actions: write
 jobs:
-  evidence:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: android-api-35-diagnostics
-          run-id: 38914889966
-          github-token: ${{ github.token }}
-          path: /tmp/android-evidence
-      - name: Publish fictitious emulator screenshot for inspection
+      - name: Keep the current release and stop only our obsolete attempts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          mkdir -p docs/android-evidence
-          cp /tmp/android-evidence/screen.png docs/android-evidence/emulator.png
-          cp /tmp/android-evidence/phone-ui.xml docs/android-evidence/phone-ui.xml
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/android-evidence
-          git commit -m 'docs: show emulator evidence for Android touch investigation'
-          git push origin HEAD:main
+          for run in 38914054039 38914585719 38914893373 38915161779; do
+            status="$(gh api "repos/$GH_REPO/actions/runs/$run" --jq .status)"
+            if [ "$status" != completed ]; then gh run cancel "$run"; fi
+          done
