@@ -197,6 +197,10 @@ jobs:
         with:
           name: android
           path: release/android
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install uiautomator2==3.7.0
       - name: Enable KVM access
         run: |
           sudo chmod a+rw /dev/kvm

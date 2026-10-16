@@ -3,17 +3,21 @@ import re
 import subprocess
 import time
 import xml.etree.ElementTree as ET
+import uiautomator2 as u2
 from pathlib import Path
 
 out = Path('test-results/android-install')
 phase = 'open-document'
+device = u2.connect()
+device.jsonrpc.setConfigurator({'waitForIdleTimeout': 0, 'waitForSelectorTimeout': 0})
 
 def adb(*args):
     return subprocess.run(['adb', *args], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30).stdout
 
 def snapshot():
-    adb('shell', 'uiautomator', 'dump', '--compressed', '/sdcard/brummie-phone.xml')
-    raw = adb('exec-out', 'cat', '/sdcard/brummie-phone.xml')
+    # Capture the current accessibility hierarchy directly. The shell dumper
+    # can time out waiting for idle yet leave its previous XML file in place.
+    raw = device.dump_hierarchy(compressed=False).encode('utf-8')
     (out / 'phone-ui.xml').write_bytes(raw)
     return ET.fromstring(raw)
 
@@ -50,10 +54,6 @@ def tap(text):
 try:
     tap('Novo documento')
     tap('Preparar um orçamento')
-    # WebView accessibility caches can lag a React screen change on the emulator.
-    # Native keyboard focus requests a fresh accessibility tree without invoking JS.
-    adb('shell', 'input', 'keyevent', '61')
-    time.sleep(3)
     phase = 'initial-form-action'
     bottom_before = rect(find('Continuar para serviços'))[3]
     root = snapshot()
