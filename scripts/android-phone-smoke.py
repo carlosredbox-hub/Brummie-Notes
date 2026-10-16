@@ -58,6 +58,13 @@ try:
     bottom_before = rect(find('Continuar para serviços'))[3]
     root = snapshot()
     fields = [node for node in root.iter('node') if node.get('class') == 'android.widget.EditText' and len(rect(node)) == 4 and rect(node)[3] > rect(node)[1]]
+    for _ in range(8):
+        if fields:
+            break
+        screen_width, screen_height = device.window_size()
+        adb('shell', 'input', 'swipe', str(screen_width//2), str(screen_height-180), str(screen_width//2), '180', '350')
+        root = snapshot()
+        fields = [node for node in root.iter('node') if node.get('class') == 'android.widget.EditText' and len(rect(node)) == 4 and rect(node)[3] > rect(node)[1]]
     assert fields, 'The document form must expose editable fields to Android accessibility'
     left, top, right, bottom = rect(fields[0])
     adb('shell', 'settings', 'put', 'secure', 'show_ime_with_hard_keyboard', '1')

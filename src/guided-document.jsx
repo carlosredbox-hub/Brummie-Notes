@@ -59,7 +59,7 @@ export function GuidedDocument({
           <div className="guided-heading">
             <img src={linesLogo} alt="Brummie Lines" />
             <span>
-              Passo {step + 1} de 3 • Salvo neste aparelho ao finalizar
+              Passo {step + 1} de 3
             </span>
           </div>
           <ol className="guided-progress" aria-label="Etapas da criação">
