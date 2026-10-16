@@ -1,0 +1,29 @@
+name: Inspect Android test evidence
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/android-evidence.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-api-35-diagnostics
+          run-id: 38912512491
+          github-token: ${{ github.token }}
+          path: /tmp/android-evidence
+      - name: Publish fictitious emulator screenshot for inspection
+        run: |
+          mkdir -p docs/android-evidence
+          cp /tmp/android-evidence/screen.png docs/android-evidence/emulator.png
+          cp /tmp/android-evidence/phone-ui.xml docs/android-evidence/phone-ui.xml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/android-evidence
+          git commit -m 'docs: show emulator evidence for Android touch investigation'
+          git push origin HEAD:main
