@@ -13,15 +13,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: android-install-api-35
-          run-id: 38912659705
+          name: android-api-35-diagnostics
+          run-id: 38914889966
           github-token: ${{ github.token }}
           path: /tmp/android-evidence
       - name: Publish fictitious emulator screenshot for inspection
         run: |
           mkdir -p docs/android-evidence
           cp /tmp/android-evidence/screen.png docs/android-evidence/emulator.png
-          cp /tmp/android-evidence/ui.xml docs/android-evidence/phone-ui.xml
+          cp /tmp/android-evidence/phone-ui.xml docs/android-evidence/phone-ui.xml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add docs/android-evidence
